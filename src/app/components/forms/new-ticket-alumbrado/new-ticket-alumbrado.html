@@ -1,0 +1,105 @@
+<mat-card class="report-form">
+  <form [formGroup]="reportForm" (ngSubmit)="submitForm()">
+    <div class="form-grid">
+      <!-- Datos personales -->
+      <mat-form-field appearance="outline">
+        <mat-label>Nombre</mat-label>
+        <input matInput formControlName="nombre" required />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Apellido Paterno</mat-label>
+        <input matInput formControlName="apellidoPaterno" required />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Apellido Materno</mat-label>
+        <input matInput formControlName="apellidoMaterno" required />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Teléfono</mat-label>
+        <input matInput formControlName="telefono" required />
+      </mat-form-field>
+
+      <!-- Dirección con botón para abrir mapa -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Dirección</mat-label>
+        <textarea
+          matInput
+          formControlName="direccion"
+          rows="2"
+          placeholder="Selecciona la ubicación en el mapa o escribe aquí"
+        ></textarea>
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          aria-label="Abrir mapa"
+          (click)="toggleMap()"
+        >
+          <mat-icon>location_on</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <!-- Contenedor para el mapa, vinculado a ViewChild -->
+      <div *ngIf="showMap" #mapContainer class="map-container" style="height: 300px;"></div>
+      <mat-form-field appearance="outline" class="full-width" >
+        <mat-label>Origen</mat-label>
+        <mat-select formControlName="origen">
+          <mat-option *ngFor="let origen of ['Web','Facebook','WhatsApp','Otro']" [value]="origen">
+            {{ origen }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <!-- Tema y luminaria -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Problema</mat-label>
+        <mat-select formControlName="tema" (selectionChange)="onTemaChange()">
+          <mat-option *ngFor="let option of temas" [value]="option">
+            {{ option }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width" *ngIf="showLuminarias">
+        <mat-label>Luminaria</mat-label>
+        <mat-select formControlName="luminaria" (selectionChange)="onLuminariaChange()">
+          <mat-option *ngFor="let luminaria of luminarias" [value]="luminaria">
+            {{ luminaria }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width" *ngIf="showCuadrillas">
+        <mat-label>Cuadrilla</mat-label>
+        <mat-select formControlName="cuadrilla">
+          <mat-option *ngFor="let cuadrilla of cuadrillas" [value]="cuadrilla">
+            {{ cuadrilla }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <!-- Imagen -->
+      <div class="full-width image-upload">
+        <label for="fileInput">Evidencia Fotográfica:</label>
+        <input
+          type="file"
+          id="fileInput"
+          (change)="onFileSelected($event)"
+          accept="image/*"
+        />
+        <img *ngIf="previewUrl" [src]="previewUrl" class="preview-img" />
+      </div>
+
+      <div class="full-width button-row">
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="!reportForm.valid"
+        >
+          Enviar Reporte
+        </button>
+      </div>
+    </div>
+  </form>
+</mat-card>

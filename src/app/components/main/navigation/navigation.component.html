@@ -1,0 +1,19 @@
+<div class="navigation" [class.collapsed]="isCollapsed">
+  <button mat-icon-button class="toggle-btn" (click)="onToggle()">
+    <mat-icon>menu</mat-icon>
+  </button>
+
+  <nav>
+    @for ( item of navItems; track item.route) {
+      <button mat-button (click)="navigate(item)">
+        <mat-icon>{{ item.icon }}</mat-icon>
+        <span class="nav-label">{{ item.label }}</span>
+      </button>
+    }
+
+    <button mat-button (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      <span class="nav-label">Cerrar sesión</span>
+    </button>
+  </nav>
+</div>

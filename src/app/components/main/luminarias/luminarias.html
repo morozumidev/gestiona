@@ -1,0 +1,158 @@
+<div class="container" [@fadeInOut]>
+  <h1 class="title">Luminarias de Alumbrado Público</h1>
+<div class="status-chips">
+  <div class="chip verde" >
+    <span class="color-dot"></span>
+    <span class="label">Funcionando</span>
+    <span class="count">{{ semaforoCounts().verde }}</span>
+  </div>
+
+  <div class="chip rojo">
+    <span class="color-dot"></span>
+    <span class="label">Dañadas</span>
+    <span class="count">{{ semaforoCounts().rojo }}</span>
+  </div>
+</div>
+  <mat-form-field appearance="outline" class="filter-input">
+    <mat-label>Filtrar luminarias</mat-label>
+    <input matInput (input)="applyFilter($event)" placeholder="Busca por nomenclatura, tipo, estado..." />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <div class="table-wrapper" [@fadeInOut]>
+    <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+
+      <!-- ID -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
+        <td mat-cell *matCellDef="let row"> {{row.id}} </td>
+      </ng-container>
+
+      <!-- Nomenclatura -->
+      <ng-container matColumnDef="nomenclatura">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Nomenclatura </th>
+        <td mat-cell *matCellDef="let row"> {{row.nomenclatura}} </td>
+      </ng-container>
+
+      <!-- Estado con badge -->
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Estado </th>
+        <td mat-cell *matCellDef="let row">
+          <span
+            class="status-badge"
+            [ngClass]="{
+              'status-operativa': row.estado === 'Operativa',
+              'status-mantenimiento': row.estado === 'En mantenimiento',
+              'status-fuera': row.estado === 'Fuera de servicio'
+            }"
+          >
+            {{row.estado}}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Tipo con icono -->
+      <ng-container matColumnDef="tipo">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Tipo </th>
+        <td mat-cell *matCellDef="let row" class="icon-cell">
+          <div class="icon-content">
+            <mat-icon *ngIf="row.tipo === 'LED'">lightbulb</mat-icon>
+            <mat-icon *ngIf="row.tipo === 'Sodio'">wb_sunny</mat-icon>
+            <mat-icon *ngIf="row.tipo === 'Halógeno'">flash_on</mat-icon>
+            <span>{{row.tipo}}</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Potencia con badge -->
+      <ng-container matColumnDef="potencia">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Potencia </th>
+        <td mat-cell *matCellDef="let row">
+          <span class="potencia-badge">{{row.potencia}} W</span>
+        </td>
+      </ng-container>
+
+      <!-- Ubicación con icono -->
+      <ng-container matColumnDef="ubicacion">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Ubicación </th>
+        <td mat-cell *matCellDef="let row" class="icon-cell">
+          <mat-icon color="primary" aria-hidden="false" aria-label="Ubicación">place</mat-icon>
+          <span class="ubicacion-text">{{row.ubicacion}}</span>
+        </td>
+      </ng-container>
+
+      <!-- Fecha Instalación con icono y formato -->
+      <ng-container matColumnDef="fechaInstalacion">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Fecha Instalación </th>
+        <td mat-cell *matCellDef="let row" class="icon-cell">
+          <mat-icon color="accent" aria-hidden="false" aria-label="Fecha">event</mat-icon>
+          <span class="fecha-text">{{row.fechaInstalacion | date:'mediumDate'}}</span>
+        </td>
+      </ng-container>
+
+      <!-- Status con badge e icono -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Status </th>
+        <td mat-cell *matCellDef="let row">
+          <span
+            class="status-badge-small"
+            [ngClass]="{
+              'status-activo': row.status === 'Activo',
+              'status-inactivo': row.status === 'Inactivo'
+            }"
+          >
+            <mat-icon *ngIf="row.status === 'Activo'">check_circle</mat-icon>
+            <mat-icon *ngIf="row.status === 'Inactivo'">highlight_off</mat-icon>
+            {{row.status}}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Acciones -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef> Acciones </th>
+        <td mat-cell *matCellDef="let row">
+          <button mat-icon-button color="primary" (click)="selectLuminaria(row)" matTooltip="Ver detalles">
+            <mat-icon>visibility</mat-icon>
+          </button>
+          <button mat-icon-button color="accent" (click)="printLuminaria()" [disabled]="!selectedLuminaria || selectedLuminaria.id !== row.id" matTooltip="Imprimir">
+            <mat-icon>print</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <!-- Filas -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;" [class.selected]="selectedLuminaria?.id === row.id"></tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+  </div>
+
+  <section class="details" *ngIf="selectedLuminaria" [@fadeInOut]>
+    <h2>Detalle de Luminaria: {{selectedLuminaria.nomenclatura}}</h2>
+    <div class="details-content">
+      <div class="info">
+        <p><strong>Estado:</strong> {{selectedLuminaria.estado}}</p>
+        <p><strong>Tipo:</strong> {{selectedLuminaria.tipo}}</p>
+        <p><strong>Potencia:</strong> {{selectedLuminaria.potencia}}</p>
+        <p><strong>Ubicación:</strong> {{selectedLuminaria.ubicacion}}</p>
+        <p><strong>Fecha Instalación:</strong> {{selectedLuminaria.fechaInstalacion}}</p>
+        <p><strong>Status:</strong> {{selectedLuminaria.status}}</p>
+        <p><strong>Observaciones:</strong> {{selectedLuminaria.observaciones}}</p>
+        <button mat-stroked-button color="warn" (click)="clearSelection()">Cerrar detalle</button>
+      </div>
+      <div class="image-map">
+        <img [src]="selectedLuminaria.fotoUrl" alt="Foto Luminaria" />
+        <iframe
+          width="640"
+          height="480"
+          frameborder="0"
+          style="border:0; border-radius: 10px; margin-top: 15px;"
+          src="https://www.google.com/maps/d/embed?mid=1XyTGGmoo8GdUUdUlB24ySUCdRcGMOWw&ehbc=2E312F"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+  </section>
+</div>

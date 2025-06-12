@@ -1,0 +1,80 @@
+<div class="login-wrapper">
+  <div class="login-side login-image-side">
+    <canvas class="neural-bg"></canvas>
+    <svg
+      class="bg-shape"
+      viewBox="0 0 200 200"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path id="morph" fill="#ffffff10" d=""></path>
+    </svg>
+    <div class="logo-container">
+      <img src="assets/escudo_veracruz.svg" alt="Logo" class="logo" />
+      <h1 class="branding-title">CIVIS</h1>
+      <p class="slogan">Sistema de Atención Ciudadana</p>
+    </div>
+  </div>
+
+  <div class="login-side login-form-side">
+    <form
+      [formGroup]="loginForm"
+      (ngSubmit)="login()"
+      autocomplete="on"
+      class="login-form"
+    >
+      <mat-card class="login-card">
+        <mat-card-header>
+          <mat-card-title>Iniciar sesión</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <!-- Mensaje de error o éxito -->
+          @if (loginError) {
+          <div class="login-error">{{ loginError }}</div>
+          }
+
+          <mat-form-field appearance="fill" class="login-field">
+            <mat-label>Celular</mat-label>
+            <input
+              matInput
+              formControlName="username"
+              autocomplete="username"
+              name="username"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="login-field">
+            <mat-label>Contraseña</mat-label>
+            <input
+              matInput
+              [type]="hidePassword ? 'password' : 'text'"
+              formControlName="password"
+              autocomplete="current-password"
+              name="current-password"
+            />
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              (click)="hidePassword = !hidePassword"
+            >
+              <mat-icon
+                >{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon
+              >
+            </button>
+          </mat-form-field>
+
+          <div class="login-links">
+            <a routerLink="/forgot-password">¿Olvidaste tu contraseña?</a>
+            <a routerLink="/register">Crear una cuenta</a>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-flat-button color="primary" type="submit">
+            Iniciar sesión
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </form>
+  </div>
+</div>

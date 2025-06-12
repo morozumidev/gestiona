@@ -1,0 +1,80 @@
+
+.success-modal {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+  max-width: 380px;
+  width: 100%;
+  animation: scaleIn 0.4s ease-out;
+  position: relative;
+}
+
+.icon-wrapper {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.animated-check {
+  width: 80px;
+  height: 80px;
+}
+
+.check-circle {
+  stroke: #4caf50;
+  stroke-width: 3;
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: stroke 0.6s forwards;
+}
+
+.check-mark {
+  stroke: #4caf50;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: stroke 0.4s 0.6s forwards;
+}
+
+.title {
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: #2e7d32;
+  margin: 0 0 0.5rem;
+}
+
+.message {
+  font-size: 1rem;
+  color: #444;
+  margin: 0;
+}
+
+@keyframes stroke {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

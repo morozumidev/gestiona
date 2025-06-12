@@ -1,0 +1,214 @@
+$primary: #5f1f1f; //cambiar
+$secondary: #521212; //cambiar
+$light: #f5f3f4;
+@use 'sass:color';
+
+.login-wrapper {
+  display: flex;
+  height: 100vh;
+  font-family: 'Roboto', sans-serif;
+  overflow: hidden;
+  flex-direction: row;
+
+  .login-side {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .login-image-side {
+    background: linear-gradient(135deg, $primary, $secondary);
+    color: white;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(6px);
+      z-index: 1;
+    }
+
+    .bg-shape {
+      position: absolute;
+      top: 20%;
+      left: -10%;
+      width: 300px;
+      height: 300px;
+      z-index: 0;
+      opacity: 0.3;
+    }
+
+    .logo-container {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 30px;
+      max-width: 320px;
+
+      .logo {
+        width: 100px;
+        margin-bottom: 20px;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        fill: white;
+      }
+
+      .branding-title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: white;
+      }
+
+      .slogan {
+        font-size: 1rem;
+        font-weight: 300;
+        opacity: 0.85;
+      }
+    }
+  }
+
+  .login-form-side {
+    background-color: $light;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 40px;
+    padding-right: 40px;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    box-sizing: border-box;
+
+    .login-form {
+      max-width: 400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+
+    .login-card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      padding: 30px;
+
+      mat-card-header {
+        justify-content: center;
+        margin-bottom: 16px;
+
+        mat-card-title {
+          font-size: 1.5rem;
+          color: $primary;
+        }
+      }
+
+      .login-field {
+        width: 100%;
+        margin-bottom: 20px;
+
+        mat-label {
+          color: $primary;
+        }
+
+        .mat-input-element {
+          color: #333;
+        }
+      }
+
+      mat-card-actions {
+        justify-content: center;
+        margin-top: 20px;
+
+        button {
+          width: 100%;
+          background-color: $primary;
+          color: #fff;
+
+          &:hover {
+            background-color: color.adjust($primary, $lightness: -10%);
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    height: auto;
+
+    .login-image-side {
+      flex: none;
+      width: 100%;
+      min-height: 200px;
+      padding: 20px 0;
+      order: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      .overlay {
+        display: none;
+      }
+
+      .bg-shape {
+        display: none;
+      }
+
+      .logo-container {
+        padding: 0 20px;
+        max-width: 100%;
+      }
+    }
+
+    .login-form-side {
+      flex: none;
+      width: 100%;
+      padding-left: 20px;
+      padding-right: 20px;
+      padding-top: 20px;
+      padding-bottom: 20px;
+      order: 1;
+      background-color: $light;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .login-form {
+        max-width: 400px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+    }
+  }
+}
+.login-error {
+  color: red;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.login-links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+
+  a {
+    font-size: 0.85rem;
+    color: $primary;
+    text-decoration: underline;
+    transition: color 0.2s;
+
+    &:hover {
+      color: color.adjust($primary, $lightness: -10%);
+    }
+  }
+}

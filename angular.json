@@ -21,14 +21,13 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
+              "src/assets",
               {
                 "glob": "**/*",
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ],
+            "styles": ["node_modules/leaflet/dist/leaflet.css","src/styles.scss", "src/m3-theme.scss"],
             "server": "src/main.server.ts",
             "outputMode": "server",
             "ssr": {
@@ -61,6 +60,11 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "host": "0.0.0.0",
+            "port": 8787,
+            "buildTarget": "gestiona:build"
+          },
           "configurations": {
             "production": {
               "buildTarget": "gestiona:build:production"
@@ -80,17 +84,19 @@
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [
+              "src/assets",
               {
                 "glob": "**/*",
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ]
+            "styles": ["node_modules/leaflet/dist/leaflet.css","src/styles.scss", "src/m3-theme.scss"]
           }
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "dea83a5b-23c1-43bd-a0bf-5617ad7b074c"
   }
 }

@@ -1,0 +1,67 @@
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.navigation {
+  background-color: #ffffff;
+  color: #333;
+  height: 100vh;
+  width: 250px;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+
+  &.collapsed {
+    width: 60px;
+
+    .nav-label {
+      display: none;
+    }
+  }
+
+  .toggle-btn {
+    align-self: flex-end;
+    margin: 1rem;
+    z-index: 10; // Que el botón esté encima
+  }
+
+  nav {
+    display: flex;
+    flex-direction: column;
+    padding: 0 0.5rem;
+    flex-grow: 1;
+
+    button {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      color: #333;
+      text-decoration: none;
+      white-space: nowrap;
+
+      mat-icon {
+        margin-right: 0.75rem;  // espacio entre icono y texto
+        padding-left: 0.5rem;   // espacio desde el borde izquierdo
+        flex-shrink: 0;
+      }
+
+      &:hover {
+        background-color: #f0f0f0;
+      }
+    }
+  }
+}
+
+.content {
+  flex-grow: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+}
