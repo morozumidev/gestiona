@@ -1,5 +1,5 @@
+import { adminOnlyGuard } from './guards/admin.guard';
 import { Routes } from '@angular/router';
-import { Login } from './components/login/login/login';
 import { Tickets } from './components/main/tickets/tickets';
 import { NavigationComponent } from './components/main/navigation/navigation.component';
 import { Dashboard } from './components/main/dashboard/dashboard';
@@ -8,12 +8,14 @@ import { DashboardAlumbrado } from './components/main/dashboard-alumbrado/dashbo
 import { NewTicketAlumbrado } from './components/forms/new-ticket-alumbrado/new-ticket-alumbrado';
 import { Luminarias } from './components/main/luminarias/luminarias';
 import { DashboardCuadrilla } from './components/main/dashboard-cuadrilla/dashboard-cuadrilla';
+import { authGuard } from './guards/auth.guard';
+import { Login } from './components/login/login/login';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
   { path: 'tickets', component: Tickets },
   { path: 'navigation', component: NavigationComponent },
-  { path: 'dashboard', component: Dashboard },
+  { path: 'dashboard', canActivate: [authGuard, adminOnlyGuard], component: Dashboard },
   { path: 'new-ticket', component: NewTicket },
   { path: 'dashboard-alumbrado', component: DashboardAlumbrado },
   { path: 'dashboard-cuadrilla', component: DashboardCuadrilla },

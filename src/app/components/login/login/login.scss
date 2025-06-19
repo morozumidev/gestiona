@@ -1,12 +1,9 @@
-$primary: #5f1f1f; //cambiar
-$secondary: #521212; //cambiar
-$light: #f5f3f4;
-@use 'sass:color';
+@use '../../../../styles' as global;
 
 .login-wrapper {
   display: flex;
   height: 100vh;
-  font-family: 'Roboto', sans-serif;
+  font-family: var(--mat-sys-body-medium-font);
   overflow: hidden;
   flex-direction: row;
 
@@ -19,8 +16,8 @@ $light: #f5f3f4;
   }
 
   .login-image-side {
-    background: linear-gradient(135deg, $primary, $secondary);
-    color: white;
+    @include global.glassmorphism(25px, 0.1, 0.2, 20px);
+    color: var(--mat-sys-on-primary);
     flex-direction: column;
     position: relative;
     overflow: hidden;
@@ -28,7 +25,7 @@ $light: #f5f3f4;
     .overlay {
       position: absolute;
       inset: 0;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.3);
       backdrop-filter: blur(6px);
       z-index: 1;
     }
@@ -53,34 +50,30 @@ $light: #f5f3f4;
       .logo {
         width: 100px;
         margin-bottom: 20px;
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-        fill: white;
+        fill: var(--mat-sys-on-primary);
       }
 
       .branding-title {
-        font-size: 2rem;
-        font-weight: bold;
+        font-size: var(--mat-sys-title-medium-size);
+        font-weight: var(--mat-sys-title-medium-weight);
         margin-bottom: 8px;
-        color: white;
+        color: var(--mat-sys-on-primary);
       }
 
       .slogan {
-        font-size: 1rem;
-        font-weight: 300;
+        font-size: var(--mat-sys-body-medium-size);
+        font-weight: var(--mat-sys-body-medium-weight);
         opacity: 0.85;
+        color: var(--mat-sys-on-primary);
       }
     }
   }
 
   .login-form-side {
-    background-color: $light;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-left: 40px;
-    padding-right: 40px;
-    padding-top: 40px;
-    padding-bottom: 40px;
+    padding: 40px;
     box-sizing: border-box;
 
     .login-form {
@@ -92,9 +85,7 @@ $light: #f5f3f4;
     }
 
     .login-card {
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      @include global.glassmorphism(25px, 0.1, 0.2, 20px);
       padding: 30px;
 
       mat-card-header {
@@ -102,8 +93,8 @@ $light: #f5f3f4;
         margin-bottom: 16px;
 
         mat-card-title {
-          font-size: 1.5rem;
-          color: $primary;
+          font-size: var(--mat-sys-title-medium-size);
+          color: var(--mat-sys-primary);
         }
       }
 
@@ -112,11 +103,11 @@ $light: #f5f3f4;
         margin-bottom: 20px;
 
         mat-label {
-          color: $primary;
+          color: var(--mat-sys-primary);
         }
 
         .mat-input-element {
-          color: #333;
+          color: var(--mat-sys-on-surface);
         }
       }
 
@@ -126,11 +117,11 @@ $light: #f5f3f4;
 
         button {
           width: 100%;
-          background-color: $primary;
-          color: #fff;
+          background-color: var(--mat-sys-primary);
+          color: var(--mat-sys-on-primary);
 
           &:hover {
-            background-color: color.adjust($primary, $lightness: -10%);
+            filter: brightness(0.9);
           }
         }
       }
@@ -152,10 +143,7 @@ $light: #f5f3f4;
       align-items: center;
       justify-content: center;
 
-      .overlay {
-        display: none;
-      }
-
+      .overlay,
       .bg-shape {
         display: none;
       }
@@ -169,12 +157,8 @@ $light: #f5f3f4;
     .login-form-side {
       flex: none;
       width: 100%;
-      padding-left: 20px;
-      padding-right: 20px;
-      padding-top: 20px;
-      padding-bottom: 20px;
+      padding: 20px;
       order: 1;
-      background-color: $light;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -189,9 +173,10 @@ $light: #f5f3f4;
     }
   }
 }
+
 .login-error {
-  color: red;
-  font-size: 0.9rem;
+  color: var(--mat-sys-error);
+  font-size: var(--mat-sys-body-small-size);
   text-align: center;
   margin-bottom: 16px;
 }
@@ -202,13 +187,13 @@ $light: #f5f3f4;
   margin-top: 10px;
 
   a {
-    font-size: 0.85rem;
-    color: $primary;
+    font-size: var(--mat-sys-label-medium-size);
+    color: var(--mat-sys-primary);
     text-decoration: underline;
     transition: color 0.2s;
 
     &:hover {
-      color: color.adjust($primary, $lightness: -10%);
+      filter: brightness(0.85);
     }
   }
 }

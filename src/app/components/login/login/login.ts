@@ -1,91 +1,47 @@
-import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { Component, ViewEncapsulation } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { AuthService } from '../../../services/auth.service';
 import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-
-import { Session } from '../../../services/session'; // Asegúrate de que esta ruta sea correcta
-
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    MatIconModule,
-    MatFormFieldModule,
-    MatCardModule,
-    ReactiveFormsModule,
-    MatInputModule,
-    MatButtonModule,
-  ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
+  encapsulation: ViewEncapsulation.None,
+  imports: [
+  ReactiveFormsModule,
+  FormsModule,
+  MatCardModule,
+  MatFormFieldModule,
+  MatInputModule,
+  MatIconModule,
+  MatButtonModule
+],
+
 })
-export class Login {
-  private readonly router = inject(Router);
-  private readonly formBuilder = inject(FormBuilder);
-
-  loginForm: FormGroup;
-  hidePassword = true;
-  loginError: string | null = null;
-
-  constructor(private sessionService:Session) {
-    this.loginForm = this.formBuilder.group({
-      username: ['', Validators.required],
-      password: ['', Validators.required],
+export  class Login {
+  loginForm;
+loginError: string | null = null;
+hidePassword = true;
+  constructor(private fb: FormBuilder, private authService: AuthService) {
+    this.loginForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required]
     });
   }
 
-  login(): void {
+  login() {
     if (this.loginForm.valid) {
-      const username = this.loginForm.get('username')!.value;
-      const password = this.loginForm.get('password')!.value;
-      const credentialKey = `${username}:${password}`;
-
-      switch (credentialKey) {
-        case 'movil:123':
-          this.sessionService.setUser(username);
-          this.loginError = null;
-          this.router.navigate(['/new-ticket']);
-          break;
-           case 'web:123':
-          this.sessionService.setUser(username);
-          this.loginError = null;
-          this.router.navigate(['/new-ticket']);
-          break;
-        case 'atencion:123':
-          this.sessionService.setUser(username);
-          this.loginError = null;
-          this.router.navigate(['/tickets']);
-          break;
-        case 'alumbrado:123':
-          this.sessionService.setUser(username);
-          this.loginError = null;
-          this.router.navigate(['/dashboard-alumbrado']);
-          break;
-         case 'cuadrilla:123':
-          this.sessionService.setUser(username);
-          this.loginError = null;
-          this.router.navigate(['/dashboard-cuadrilla']);
-          break;
-        case 'admin:123':
-          this.sessionService.setUser(username);
-          this.loginError = null;
-          this.router.navigate(['/tickets']);
-          break;
-        default:
-          this.loginError = 'Credenciales incorrectas. Intenta de nuevo.';
-      }
-    } else {
-      this.loginError = 'Completa todos los campos.';
+      const { email, password } = this.loginForm.value;
+      this.authService.login(email!, password!).subscribe({
+        next: () => console.log('Login correcto'),
+        error: err => alert(err.error.message || 'Error en el login')
+      });
     }
   }
 }

@@ -27,7 +27,7 @@
                 "input": "public"
               }
             ],
-            "styles": ["node_modules/leaflet/dist/leaflet.css","src/styles.scss", "src/m3-theme.scss"],
+            "styles": ["node_modules/leaflet/dist/leaflet.css","src/styles.scss"],
             "server": "src/main.server.ts",
             "outputMode": "server",
             "ssr": {
@@ -90,7 +90,7 @@
                 "input": "public"
               }
             ],
-            "styles": ["node_modules/leaflet/dist/leaflet.css","src/styles.scss", "src/m3-theme.scss"]
+            "styles": ["node_modules/leaflet/dist/leaflet.css","src/styles.scss"]
           }
         }
       }

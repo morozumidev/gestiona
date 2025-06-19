@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ViewEncapsulation } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { NavigationComponent } from './components/main/navigation/navigation.component';
 import { take } from 'rxjs';
@@ -6,11 +6,12 @@ import { take } from 'rxjs';
   selector: 'app-root',
   imports: [RouterOutlet,NavigationComponent],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
+  encapsulation: ViewEncapsulation.None
 })
 export class App {
   showNavigation = true;
-  hydrated = false; // 🧠 solo renderizamos <app-navigation> después de bootstrap
+  hydrated = false; 
   isCollapsed = false;
 
   private noNavRoutes = ['/login', '/register', '/some-other-route'];
