@@ -9,7 +9,6 @@ import { MatTableModule } from '@angular/material/table';
 import { MatSelectModule } from '@angular/material/select';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { Ticket } from '../../../models/ticket.model';
-import { Session } from '../../../services/session';
 import { CookieService } from 'ngx-cookie-service';
 
 enum TicketStatus {
@@ -55,7 +54,7 @@ enum TicketArea {
 })
 export class Tickets {
 
-  constructor(private sessionService: Session) {
+  constructor() {
 
   }
 
@@ -248,7 +247,9 @@ export class Tickets {
       this.currentPage.set(this.totalPages());
     }
   }
+viewTicket(ticket:any){
 
+}
   onPageChange(event: { pageIndex: number; pageSize: number }) {
     this.currentPage.set(event.pageIndex + 1);
     this.itemsPerPage = event.pageSize;

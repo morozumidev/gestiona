@@ -1,55 +1,77 @@
 @use '@angular/material' as mat;
-
-
+@use 'sass:map';
 @use './app_theme-colors' as theme;
+@use './global_variables' as *;
 
-// Cambiar este valor según el color deseado
-$color: azul; // rojo, verde, morado, etc.
+// Obtener la paleta personalizada completa (por ejemplo, 'negro')
+$raw-palette: theme.get-palette($color);
+$primary-palette: $raw-palette;
 
-$primary-palette: theme.get-palette($color);
-$tertiary-palette: theme.get-palette(morado); // o cualquier otro color
+$secondary-palette: map.get($raw-palette, 'secondary');
+$tertiary-palette: map.get($raw-palette, 'secondary'); // usa secondary como tertiary si no tienes otra
+$neutral-palette: map.get($raw-palette, 'neutral');
+$neutral-variant-palette: map.get($raw-palette, 'neutral-variant');
+$error-palette: map.get($raw-palette, 'error');
+
+// Construir el mapa de colores completo requerido por Angular Material
+$color-config: (
+  primary: $primary-palette,
+  secondary: $secondary-palette,
+  tertiary: $tertiary-palette,
+  neutral: $neutral-palette,
+  neutral-variant: $neutral-variant-palette,
+  error: $error-palette,
+  theme-type: light
+);
+
+// Gradiente de fondo dinámico
+$color1: map.get($primary-palette, 10);
+$color2: map.get($primary-palette, 20);
+$color3: map.get($primary-palette, 25);
 
 @include mat.core();
 
+@keyframes animatedGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 html {
   color-scheme: light;
+  background: linear-gradient(270deg, #{$color2}, #{$color2}, #{$color3});
+  background-size: 400% 400%;
+  animation: animatedGradient 6s ease-in-out infinite;
 
-  @include mat.theme((color: (primary: $primary-palette,
-        tertiary: $tertiary-palette,
-        theme-type: light,
-      ),
-      typography: Roboto,
-      density: 0,
-    ));
+  // Aplicar el tema completo
+  @include mat.theme((
+    color: $color-config,
+    typography: Roboto,
+    density: 0,
+  ));
 }
 
-body {
-  
-  color: var(--mat-sys-on-surface);
-}
-
-@mixin glassmorphism($blur: 20px,
-  $opacity: 1,
-  $border-opacity: 1,
-  $radius: 20px) {
-  backdrop-filter: blur($blur);
-  -webkit-backdrop-filter: blur($blur);
-  background: rgba(255, 255, 255, $opacity); // luz blanca sobre fondo oscuro
-  border: 1px solid rgba(255, 255, 255, $border-opacity);
-  border-radius: $radius;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-}
-
-
-html,
+// Fondo y texto globales con tokens del sistema
 body {
   margin: 0;
   padding: 0;
   height: 100vh;
-  background: linear-gradient(135deg, #001764, #0051ad, #004d99);
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-attachment: fixed;
-  color: var(--mat-sys-on-surface);
   font-family: Roboto, sans-serif;
+}
+
+// Canvas decorativo detrás
+canvas#wave-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
 }

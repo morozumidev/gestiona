@@ -1,222 +1,156 @@
-<div class="ticket-summary">
-  <div class="ticket-card open" (click)="onCardClick(TicketStatus.Abierto)">
-    <mat-icon class="ticket-icon">visibility</mat-icon>
-    <div class="ticket-title">Abiertos</div>
-    <div class="ticket-count">{{ countByStatus(TicketStatus.Abierto) }}</div>
+<div class="ticket-admin">
+  <div class="ticket-summary glass-container">
+    <div class="ticket-card open" (click)="onCardClick(TicketStatus.Abierto)">
+      <mat-icon class="ticket-icon">visibility</mat-icon>
+      <div class="ticket-title">Abiertos</div>
+      <div class="ticket-count">{{ countByStatus(TicketStatus.Abierto) }}</div>
+    </div>
+
+    <div class="ticket-card in-progress" (click)="onCardClick(TicketStatus.EnProceso)">
+      <mat-icon class="ticket-icon">autorenew</mat-icon>
+      <div class="ticket-title">En Proceso</div>
+      <div class="ticket-count">{{ countByStatus(TicketStatus.EnProceso) }}</div>
+    </div>
+
+    <div class="ticket-card closed" (click)="onCardClick(TicketStatus.Cerrado)">
+      <mat-icon class="ticket-icon">check_circle</mat-icon>
+      <div class="ticket-title">Cerrados</div>
+      <div class="ticket-count">{{ countByStatus(TicketStatus.Cerrado) }}</div>
+    </div>
+
+    <div class="ticket-card total" (click)="onCardClick(TicketStatus.Todos)">
+      <mat-icon class="ticket-icon">confirmation_number</mat-icon>
+      <div class="ticket-title">Total</div>
+      <div class="ticket-count">{{ filteredTickets().length }}</div>
+    </div>
   </div>
 
-  <div class="ticket-card in-progress" (click)="onCardClick(TicketStatus.EnProceso)">
-    <mat-icon class="ticket-icon">autorenew</mat-icon>
-    <div class="ticket-title">En Proceso</div>
-    <div class="ticket-count">{{ countByStatus(TicketStatus.EnProceso) }}</div>
+  <div class="status-chips glass-container">
+    <div class="chip verde">
+      <span class="color-dot"></span>
+      <span class="count">{{ semaforoCounts().verde }}</span>
+    </div>
+    <div class="chip ambar">
+      <span class="color-dot"></span>
+      <span class="count">{{ semaforoCounts().ambar }}</span>
+    </div>
+    <div class="chip rojo">
+      <span class="color-dot"></span>
+      <span class="count">{{ semaforoCounts().rojo }}</span>
+    </div>
   </div>
 
-  <div class="ticket-card closed" (click)="onCardClick(TicketStatus.Cerrado)">
-    <mat-icon class="ticket-icon">check_circle</mat-icon>
-    <div class="ticket-title">Cerrados</div>
-    <div class="ticket-count">{{ countByStatus(TicketStatus.Cerrado) }}</div>
-  </div>
 
-  <div class="ticket-card total" (click)="onCardClick(TicketStatus.Todos)">
-    <mat-icon class="ticket-icon">confirmation_number</mat-icon>
-    <div class="ticket-title">Total</div>
-    <div class="ticket-count">{{ filteredTickets().length }}</div>
-  </div>
-</div>
-<div class="status-chips">
-  <div class="chip verde" >
-    <span class="color-dot"></span>
-    <span class="label">Verde</span>
-    <span class="count">{{ semaforoCounts().verde }}</span>
-  </div>
-  <div class="chip ambar" >
-    <span class="color-dot"></span>
-    <span class="label">Ámbar</span>
-    <span class="count">{{ semaforoCounts().ambar }}</span>
-  </div>
-  <div class="chip rojo">
-    <span class="color-dot"></span>
-    <span class="label">Rojo</span>
-    <span class="count">{{ semaforoCounts().rojo }}</span>
-  </div>
-</div>
-<div
-  class="controls"
-  style="display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem"
->
-  <mat-form-field appearance="outline" class="flex-grow">
-    <mat-label>Buscar tickets</mat-label>
-    <input
-      matInput
-      placeholder="Palabra clave"
-      (input)="setSearch($any($event.target).value)"
-    />
-  </mat-form-field>
+  <section class="controls glass-container">
+    <mat-form-field appearance="outline" class="flex-grow">
+      <mat-label>Buscar tickets</mat-label>
+      <input matInput placeholder="Palabra clave" (input)="setSearch($any($event.target).value)" />
+    </mat-form-field>
 
-  <mat-form-field appearance="outline">
-    <mat-label>Estado</mat-label>
-    <mat-select
-      [value]="filterStatusSignal()"
-      (valueChange)="setFilterStatus($event)"
-    >
-      <mat-option value="Todos">Todos</mat-option>
-      @for (estado of ['Abierto', 'En Proceso', 'Cerrado']; track estado) {
-      <mat-option [value]="estado">{{ estado }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select [value]="filterStatusSignal()" (valueChange)="setFilterStatus($event)">
+        <mat-option value="Todos">Todos</mat-option>
+        @for (estado of ['Abierto', 'En Proceso', 'Cerrado']; track estado) {
+        <mat-option [value]="estado">{{ estado }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
 
-  <mat-form-field appearance="outline">
-    <mat-label>Prioridad</mat-label>
-    <mat-select
-      [value]="filterPrioritySignal()"
-      (valueChange)="setFilterPriority($event)"
-    >
-      <mat-option value="Todas">Todas</mat-option>
-      @for (prioridad of ['Alta', 'Media', 'Baja']; track prioridad) {
-      <mat-option [value]="prioridad">{{ prioridad }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-  <mat-form-field appearance="outline">
-    <mat-label>Área</mat-label>
-    <mat-select
-      [value]="filterAreaSignal()"
-      (valueChange)="setFilterArea($event)"
-    >
-      <mat-option value="Todas">Todas</mat-option>
-      <mat-option *ngFor="let area of (TicketArea | keyvalue)" [value]="area.value">
-        {{ area.value }}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-</div>
+    <mat-form-field appearance="outline">
+      <mat-label>Prioridad</mat-label>
+      <mat-select [value]="filterPrioritySignal()" (valueChange)="setFilterPriority($event)">
+        <mat-option value="Todas">Todas</mat-option>
+        @for (prioridad of ['Alta', 'Media', 'Baja']; track prioridad) {
+        <mat-option [value]="prioridad">{{ prioridad }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
 
-<ng-container *ngIf="pagedTickets() as tickets; else loading">
-  <ng-container *ngIf="tickets.length; else noTickets">
-    <div class="tickets-table-wrapper">
-      <table
-  mat-table
-  [dataSource]="tickets"
-  class="mat-elevation-z8 tickets-table"
-  aria-label="Tabla de tickets"
->
-  <!-- ID -->
-  <ng-container matColumnDef="id">
-    <th
-      mat-header-cell
-      *matHeaderCellDef
-      mat-sort-header
-      (click)="sortBy('id')"
-    >
-      Folio {{ getSortIndicator('id') }}
-    </th>
-    <td mat-cell *matCellDef="let ticket">{{ ticket.id }}</td>
-  </ng-container>
+    <mat-form-field appearance="outline">
+      <mat-label>Área</mat-label>
+      <mat-select [value]="filterAreaSignal()" (valueChange)="setFilterArea($event)">
+        <mat-option value="Todas">Todas</mat-option>
+        <mat-option *ngFor="let area of (TicketArea | keyvalue)" [value]="area.value">
+          {{ area.value }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </section>
 
-  <!-- Título -->
-  <ng-container matColumnDef="title">
-    <th
-      mat-header-cell
-      *matHeaderCellDef
-      mat-sort-header
-      (click)="sortBy('title')"
-    >
-      Título {{ getSortIndicator('title') }}
-    </th>
-    <td mat-cell *matCellDef="let ticket">{{ ticket.title }}</td>
-  </ng-container>
+  <div class="glass-container">
+    <table mat-table [dataSource]="pagedTickets()" aria-label="Tabla de tickets">
 
-  <!-- Descripción -->
-  <ng-container matColumnDef="description">
-    <th mat-header-cell *matHeaderCellDef>Descripción</th>
-    <td mat-cell *matCellDef="let ticket">{{ ticket.description }}</td>
-  </ng-container>
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header (click)="sortBy('id')">
+          Folio {{ getSortIndicator('id') }}
+        </th>
+        <td mat-cell *matCellDef="let ticket">
+          <span class="badge folio-badge">#{{ ticket.id }}</span>
+        </td>
+      </ng-container>
 
-  <!-- Fecha -->
-  <ng-container matColumnDef="createdAt">
-    <th
-      mat-header-cell
-      *matHeaderCellDef
-      mat-sort-header
-      (click)="sortBy('createdAt')"
-    >
-      Fecha {{ getSortIndicator('createdAt') }}
-    </th>
-    <td mat-cell *matCellDef="let ticket">
-      {{ ticket.createdAt | date }}
-    </td>
-  </ng-container>
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header (click)="sortBy('title')">
+          Título {{ getSortIndicator('title') }}
+        </th>
+        <td mat-cell *matCellDef="let ticket">{{ ticket.title }}</td>
+      </ng-container>
 
-  <!-- Prioridad -->
-  <ng-container matColumnDef="priority">
-    <th
-      mat-header-cell
-      *matHeaderCellDef
-      mat-sort-header
-      (click)="sortBy('priority')"
-    >
-      Prioridad {{ getSortIndicator('priority') }}
-    </th>
-    <td mat-cell *matCellDef="let ticket">{{ ticket.priority }}</td>
-  </ng-container>
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef>Descripción</th>
+        <td mat-cell *matCellDef="let ticket">{{ ticket.description }}</td>
+      </ng-container>
 
-  <!-- Área -->
-  <ng-container matColumnDef="area">
-    <th mat-header-cell *matHeaderCellDef>Área</th>
-    <td mat-cell *matCellDef="let ticket">
-      <mat-form-field appearance="fill" style="width: 100%">
-        <mat-select
-          [value]="ticket.area"
-          (selectionChange)="updateArea(ticket.id, $event.value)"
-        >
-          <mat-option *ngFor="let area of (TicketArea | keyvalue)" [value]="area.value">
-            {{ area.value }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </td>
-  </ng-container>
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header (click)="sortBy('createdAt')">
+          Fecha {{ getSortIndicator('createdAt') }}
+        </th>
+        <td mat-cell *matCellDef="let ticket">{{ ticket.createdAt | date }}</td>
+      </ng-container>
 
-  <!-- Estado -->
-  <ng-container matColumnDef="status">
-    <th mat-header-cell *matHeaderCellDef>Estado</th>
-    <td mat-cell *matCellDef="let ticket">
-      <mat-form-field appearance="fill" style="width: 100%">
-        <mat-select
-          [value]="ticket.status"
-          (selectionChange)="updateStatus(ticket.id, $event.value)"
-        >
-          <mat-option *ngFor="let estado of ['Abierto', 'En Proceso', 'Cerrado']" [value]="estado">
-            {{ estado }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </td>
-  </ng-container>
+      <ng-container matColumnDef="priority">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header (click)="sortBy('priority')">
+          Prioridad {{ getSortIndicator('priority') }}
+        </th>
+        <td mat-cell *matCellDef="let ticket">
+          <span class="badge" [ngClass]="{
+      'badge-prioridad-alta': ticket.priority === 'Alta',
+      'badge-prioridad-media': ticket.priority === 'Media',
+      'badge-prioridad-baja': ticket.priority === 'Baja'
+    }">
+            {{ ticket.priority }}
+          </span>
+        </td>
+      </ng-container>
 
-  <!-- Acciones -->
-  <ng-container matColumnDef="actions">
-    <th mat-header-cell *matHeaderCellDef>Acciones</th>
-    <td mat-cell *matCellDef="let ticket">
-      <button
-        mat-icon-button
-        color="primary"
-        (click)="editTicket(ticket)"
-      >
-        <mat-icon>edit</mat-icon>
-      </button>
-      <button
-        mat-icon-button
-        color="warn"
-        (click)="deleteTicket(ticket.id)"
-      >
-        <mat-icon>delete</mat-icon>
-      </button>
-    </td>
-  </ng-container>
 
-  <!-- Semáforo -->
+      <ng-container matColumnDef="area">
+        <th mat-header-cell *matHeaderCellDef>Área</th>
+        <td mat-cell *matCellDef="let ticket">
+          <mat-form-field appearance="outline">
+            <mat-select [value]="ticket.area" (selectionChange)="updateArea(ticket.id, $event.value)">
+              <mat-option *ngFor="let area of (TicketArea | keyvalue)" [value]="area.value">
+                {{ area.value }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Estado</th>
+        <td mat-cell *matCellDef="let ticket">
+          <mat-form-field appearance="outline">
+            <mat-select [value]="ticket.status" (selectionChange)="updateStatus(ticket.id, $event.value)">
+              <mat-option *ngFor="let estado of ['Abierto', 'En Proceso', 'Cerrado']" [value]="estado">
+                {{ estado }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </td>
+      </ng-container>
+
   <ng-container matColumnDef="semaforo">
     <th mat-header-cell *matHeaderCellDef>Semáforo</th>
     <td mat-cell *matCellDef="let ticket">
@@ -227,32 +161,28 @@
     </td>
   </ng-container>
 
-  <!-- Header row -->
-  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-  <!-- Data rows with conditional class -->
-  <tr
-    mat-row
-    *matRowDef="let row; columns: displayedColumns"
-    [class.closed-ticket-row]="isClosed(row)"
-  ></tr>
-</table>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let ticket">
+          <button mat-icon-button color="primary" (click)="editTicket(ticket)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deleteTicket(ticket.id)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
 
-    </div>
-    <mat-paginator
-      [length]="filteredTickets().length"
-      [pageSize]="itemsPerPage"
-      [pageSizeOptions]="[5, 10, 15, 20]"
-      showFirstLastButtons
-      (page)="onPageChange($event)"
-    >
-    </mat-paginator>
-  </ng-container>
-</ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.closed-ticket-row]="isClosed(row)"></tr>
+    </table>
+  </div>
 
-<ng-template #noTickets>
-  <p>No se encontraron tickets.</p>
-</ng-template>
+  <mat-paginator [length]="filteredTickets().length" [pageSize]="itemsPerPage" [pageSizeOptions]="[5, 10, 15, 20]"
+    showFirstLastButtons (page)="onPageChange($event)">
+  </mat-paginator>
 
-<ng-template #loading>
-  <p>Cargando tickets...</p>
-</ng-template>
+
+
+
+</div>

@@ -25,7 +25,6 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { SuccessDialog } from '../../dialogs/success-dialog/success-dialog';
 import { MatDialog } from '@angular/material/dialog';
-import { Session } from '../../../services/session';
 
 @Component({
   selector: 'app-new-ticket',
@@ -63,7 +62,6 @@ export class NewTicket implements AfterViewInit, OnDestroy {
     private fb: FormBuilder,
     private http: HttpClient,
     private dialog: MatDialog,
-    private sessionService: Session,
     private zone: NgZone,
     @Inject(PLATFORM_ID) platformId: Object
   ) {

@@ -1,22 +1,12 @@
-
-@use '../styles' as global;
 .app-container {
-  @include global.glassmorphism(20px, 0.07, 0.12);
-  padding: 2rem;
-  margin: 1rem auto;
-  max-width: 1200px;
-  min-height: 80vh;
-
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
-.app-container.with-navigation main {
+.content {
   flex-grow: 1;
+  padding: 1rem;
   overflow-y: auto;
-  background-color: #f9f9f9;
-}
-
-.app-container:not(.with-navigation) main {
-  width: 100%;
-  overflow-y: auto;
-  background-color: #f9f9f9;
 }

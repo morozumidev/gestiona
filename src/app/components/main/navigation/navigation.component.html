@@ -4,7 +4,7 @@
   </button>
 
   <nav>
-    @for ( item of navItems; track item.route) {
+    @for (item of navItems; let i = $index; track i) {
       <button mat-button (click)="navigate(item)">
         <mat-icon>{{ item.icon }}</mat-icon>
         <span class="nav-label">{{ item.label }}</span>

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,7 +11,7 @@ import {
   transition,
 } from '@angular/animations';
 import { Router } from '@angular/router';
-import { Session } from '../../../services/session';
+import { CookieService } from 'ngx-cookie-service';
 
 interface NavItem {
   icon: string;
@@ -61,7 +61,7 @@ export class NavigationComponent {
       },
     ],
     admin: [
-      { icon: 'dashboard', label: 'Dashboard', route: '/tickets' },
+      { icon: 'dashboard', label: 'Dashboard', route: '/dashboard' },
       {
         icon: 'model_training',
         label: 'Alumbrado',
@@ -94,11 +94,10 @@ export class NavigationComponent {
 
   navItems: NavItem[] = [];
 
-  @Input() isCollapsed = false;
-  @Output() toggle = new EventEmitter<void>();
 
-  constructor(private router: Router, private sessionService: Session) {
-    const role = this.sessionService.getUser();
+  constructor(private router: Router, private cookieService: CookieService) {
+    const role = this.cookieService.get("user");
+    console.log('User role from cookie:', this.cookieService.getAll());
     this.navItems = role ? this.NAV_ITEMS_BY_ROLE[role] || [] : [];
   }
 
@@ -111,11 +110,15 @@ export class NavigationComponent {
   }
 
   logout() {
-    this.sessionService.clearUser();
+    this.cookieService.delete('user');
     this.router.navigate(['/login']);
   }
+@Input() isCollapsed = false;
+@Output() isCollapsedChange = new EventEmitter<boolean>();
 
-  onToggle() {
-    this.toggle.emit();
-  }
+onToggle() {
+  this.isCollapsed = !this.isCollapsed;
+  this.isCollapsedChange.emit(this.isCollapsed);
+}
+
 }

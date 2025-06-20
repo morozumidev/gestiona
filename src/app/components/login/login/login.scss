@@ -1,199 +1,246 @@
-@use '../../../../styles' as global;
+@use 'sass:map';
+@use '@angular/material' as mat;
+@use '../../../../app_theme-colors' as theme;
+@use '../../../../global_variables' as *;
+.test {
+  color: $color1; // si truena aquí, es que la importación falló
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bgShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
-.login-wrapper {
-  display: flex;
+.animated {
+  animation-duration: 0.8s;
+  animation-fill-mode: both;
+}
+.fadeInUp { animation-name: fadeInUp; }
+.fadeInDown { animation-name: fadeInDown; }
+@keyframes animatedGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.login-container {
+  background: linear-gradient(270deg, #{$color1}, #{$color2}, #{$color3});
+  background-size: 400% 400%;
+  animation: animatedGradient 6s ease-in-out infinite;
   height: 100vh;
-  font-family: var(--mat-sys-body-medium-font);
-  overflow: hidden;
-  flex-direction: row;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-  .login-side {
-    flex: 1;
+
+.login-box {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.25);
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 30px;
+  position: relative;
+
+  img {
+    width: 70px;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.2));
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: white;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+  }
+
+  p {
+    font-size: 0.95rem;
+    color: #e0e0e0;
+    opacity: 0.9;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.field-badge {
+  display: flex;
+  align-items: center;
+  margin: 10px 0 5px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--mat-sys-secondary);
+  gap: 6px;
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.2);
+
+  .badge-icon {
+    font-size: 18px;
+    color: var(--mat-sys-primary);
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    padding: 4px;
+  }
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  .login-field {
+    width: 100%;
+    margin-bottom: 15px;
+
+    .mat-label {
+      color: white !important;
+      text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+    }
+
+    input {
+      color: white !important;
+    }
+  }
+
+  .login-links {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 20px;
 
-  .login-image-side {
-    @include global.glassmorphism(25px, 0.1, 0.2, 20px);
-    color: var(--mat-sys-on-primary);
-    flex-direction: column;
-    position: relative;
-    overflow: hidden;
+    a {
+      color: #e0e0e0;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
 
-    .overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(6px);
-      z-index: 1;
-    }
-
-    .bg-shape {
-      position: absolute;
-      top: 20%;
-      left: -10%;
-      width: 300px;
-      height: 300px;
-      z-index: 0;
-      opacity: 0.3;
-    }
-
-    .logo-container {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-      padding: 30px;
-      max-width: 320px;
-
-      .logo {
-        width: 100px;
-        margin-bottom: 20px;
-        fill: var(--mat-sys-on-primary);
-      }
-
-      .branding-title {
-        font-size: var(--mat-sys-title-medium-size);
-        font-weight: var(--mat-sys-title-medium-weight);
-        margin-bottom: 8px;
-        color: var(--mat-sys-on-primary);
-      }
-
-      .slogan {
-        font-size: var(--mat-sys-body-medium-size);
-        font-weight: var(--mat-sys-body-medium-weight);
-        opacity: 0.85;
-        color: var(--mat-sys-on-primary);
+      &:hover {
+        color: white;
+        text-decoration: underline;
       }
     }
   }
 
-  .login-form-side {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    box-sizing: border-box;
-
-    .login-form {
-      max-width: 400px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 40px;
-      box-sizing: border-box;
-    }
-
-    .login-card {
-      @include global.glassmorphism(25px, 0.1, 0.2, 20px);
-      padding: 30px;
-
-      mat-card-header {
-        justify-content: center;
-        margin-bottom: 16px;
-
-        mat-card-title {
-          font-size: var(--mat-sys-title-medium-size);
-          color: var(--mat-sys-primary);
-        }
-      }
-
-      .login-field {
-        width: 100%;
-        margin-bottom: 20px;
-
-        mat-label {
-          color: var(--mat-sys-primary);
-        }
-
-        .mat-input-element {
-          color: var(--mat-sys-on-surface);
-        }
-      }
-
-      mat-card-actions {
-        justify-content: center;
-        margin-top: 20px;
-
-        button {
-          width: 100%;
-          background-color: var(--mat-sys-primary);
-          color: var(--mat-sys-on-primary);
-
-          &:hover {
-            filter: brightness(0.9);
-          }
-        }
-      }
-    }
-  }
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    height: auto;
-
-    .login-image-side {
-      flex: none;
-      width: 100%;
-      min-height: 200px;
-      padding: 20px 0;
-      order: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-
-      .overlay,
-      .bg-shape {
-        display: none;
-      }
-
-      .logo-container {
-        padding: 0 20px;
-        max-width: 100%;
-      }
-    }
-
-    .login-form-side {
-      flex: none;
-      width: 100%;
-      padding: 20px;
-      order: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      .login-form {
-        max-width: 400px;
-        width: 100%;
-        margin: 0 auto;
-        padding: 20px;
-        box-sizing: border-box;
-      }
-    }
+  .login-button {
+    color: white !important;
+    background: linear-gradient(to right, var(--mat-sys-primary), var(--mat-sys-secondary)) !important;
+    font-weight: bold;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 10px 0;
   }
 }
 
 .login-error {
   color: var(--mat-sys-error);
-  font-size: var(--mat-sys-body-small-size);
-  text-align: center;
+  background: rgba(255, 0, 0, 0.08);
+  padding: 10px;
+  border-radius: 8px;
   margin-bottom: 16px;
+  text-align: center;
+  font-size: 0.9rem;
 }
 
-.login-links {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
+.enhanced-input {
+  width: 100%;
+  margin-bottom: 20px;
 
-  a {
-    font-size: var(--mat-sys-label-medium-size);
-    color: var(--mat-sys-primary);
-    text-decoration: underline;
-    transition: color 0.2s;
+  .mat-form-field-outline {
+    border-radius: 12px;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .mat-form-field-flex {
+    backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding-left: 8px;
+    transition: background 0.3s, box-shadow 0.3s;
 
     &:hover {
-      filter: brightness(0.85);
+      background: rgba(255, 255, 255, 0.08);
     }
+
+    &:focus-within {
+      box-shadow: 0 0 0 2px var(--mat-sys-primary);
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .mat-input-element {
+    color: white !important;
+    font-weight: 500;
+    padding-left: 8px;
+  }
+
+  .mat-form-field-label {
+    color: white !important;
+    font-weight: 500;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .mat-icon {
+    color: white !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .mat-form-field-outline-thick {
+    border-color: white !important;
+  }
+
+  .mat-form-field-appearance-outline .mat-form-field-outline {
+    border-width: 1.5px;
+  }
+}
+// 🔹 Mostrar placeholder siempre visible y blanco translúcido
+.enhanced-input .mat-input-element::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+  opacity: 1 !important;
+}
+
+// 🔴 Estilo cuando el campo tiene error (input, label y borde)
+.enhanced-input.mat-form-field-invalid {
+  .mat-input-element::placeholder {
+    color: #ff6b6b !important;
+  }
+
+  .mat-form-field-label {
+    color: #ff6b6b !important;
+    opacity: 1 !important;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
+  }
+
+  .mat-form-field-outline,
+  .mat-form-field-outline-thick {
+    stroke: #ff6b6b !important;
+    border-color: #ff6b6b !important;
+  }
+
+  .mat-form-field-ripple {
+    background-color: #ff6b6b !important;
   }
 }

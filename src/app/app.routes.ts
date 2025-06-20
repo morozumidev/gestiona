@@ -15,11 +15,11 @@ export const routes: Routes = [
   { path: 'login', component: Login },
   { path: 'tickets', component: Tickets },
   { path: 'navigation', component: NavigationComponent },
-  { path: 'dashboard', canActivate: [authGuard, adminOnlyGuard], component: Dashboard },
+  { path: 'dashboard', component: Dashboard },
   { path: 'new-ticket', component: NewTicket },
   { path: 'dashboard-alumbrado', component: DashboardAlumbrado },
   { path: 'dashboard-cuadrilla', component: DashboardCuadrilla },
   { path: 'new-ticket-alumbrado', component: NewTicketAlumbrado },
   { path: 'luminarias', component: Luminarias },
-  { path: '**', component: Dashboard },
+  { path: '**', component: Login },
 ];

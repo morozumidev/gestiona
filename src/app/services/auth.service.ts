@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, tap } from 'rxjs';
+import { CookieService } from 'ngx-cookie-service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -10,14 +11,15 @@ export class AuthService {
 
   private userSubject = new BehaviorSubject<any>(null);
   user$ = this.userSubject.asObservable();
-
+  constructor(private cookieService: CookieService) { }
+  private cookieKey = 'user';
   login(email: string, password: string) {
-    return this.http.post<any>('http://localhost:4000/api/auth/login', { email, password }).pipe(
+    return this.http.post<any>('http://172.18.1.4:4000/api/auth/login', { email, password }).pipe(
       tap(response => {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
         this.userSubject.next(response.user);
-        this.router.navigate(['/home']);
+        this.cookieService.set(this.cookieKey, response.user.role, 1);
+        console.log(response)
+        this.router.navigate(['/tickets']);
       })
     );
   }

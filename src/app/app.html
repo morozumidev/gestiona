@@ -1,6 +1,10 @@
 <div class="app-container">
-  @if (hydrated && showNavigation) {
-    <app-navigation />
+  @if(showNavigation) {
+      <app-navigation [(isCollapsed)]="isCollapsed"></app-navigation>
+
   }
-  <router-outlet />
+
+  <div class="content">
+    <router-outlet />
+  </div>
 </div>
