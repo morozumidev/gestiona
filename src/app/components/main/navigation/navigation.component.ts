@@ -97,7 +97,6 @@ export class NavigationComponent {
 
   constructor(private router: Router, private cookieService: CookieService) {
     const role = this.cookieService.get("user");
-    console.log('User role from cookie:', this.cookieService.getAll());
     this.navItems = role ? this.NAV_ITEMS_BY_ROLE[role] || [] : [];
   }
 

@@ -3,22 +3,21 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, tap } from 'rxjs';
 import { CookieService } from 'ngx-cookie-service';
+import { CoreService } from './core-service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private http = inject(HttpClient);
-  private router = inject(Router);
+  
 
   private userSubject = new BehaviorSubject<any>(null);
   user$ = this.userSubject.asObservable();
-  constructor(private cookieService: CookieService) { }
+  constructor(private cookieService: CookieService,private http:HttpClient,private router:Router,private coreService:CoreService) { }
   private cookieKey = 'user';
   login(email: string, password: string) {
-    return this.http.post<any>('http://172.18.1.4:4000/api/auth/login', { email, password }).pipe(
+    return this.http.post<any>(this.coreService.URI_API+'auth/login', { email, password }).pipe(
       tap(response => {
         this.userSubject.next(response.user);
         this.cookieService.set(this.cookieKey, response.user.role, 1);
-        console.log(response)
         this.router.navigate(['/tickets']);
       })
     );

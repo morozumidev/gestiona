@@ -5,39 +5,39 @@ import {
   NgZone,
   ElementRef,
   ViewChild,
-  PLATFORM_ID,
   Inject,
 } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
-  ReactiveFormsModule,
   Validators,
+  ReactiveFormsModule
 } from '@angular/forms';
 import { isPlatformBrowser } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { MatDialog } from '@angular/material/dialog';
+import { PLATFORM_ID } from '@angular/core';
+import { TicketsService } from '../../../services/tickets-service';
+import { Ticket } from '../../../models/Ticket';
+import { SuccessDialog } from '../../dialogs/success-dialog/success-dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { SuccessDialog } from '../../dialogs/success-dialog/success-dialog';
-import { MatDialog } from '@angular/material/dialog';
-
+import {MatInputModule} from '@angular/material/input';
 @Component({
   selector: 'app-new-ticket-alumbrado',
-  imports: [    CommonModule,
+  standalone: true,
+  imports: [
     ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,],
+       MatFormFieldModule,
+       MatSelectModule,
+       MatCardModule,
+       MatIconModule,
+       MatInputModule
+  ],
   templateUrl: './new-ticket-alumbrado.html',
-  styleUrl: './new-ticket-alumbrado.scss'
+  styleUrl: './new-ticket-alumbrado.scss',
 })
 export class NewTicketAlumbrado implements AfterViewInit, OnDestroy {
   reportForm: FormGroup;
@@ -58,9 +58,10 @@ export class NewTicketAlumbrado implements AfterViewInit, OnDestroy {
   private isBrowser: boolean;
 
   constructor(
+    private ticketsService: TicketsService,
     private fb: FormBuilder,
-     private http: HttpClient,
-      private dialog: MatDialog,
+    private http: HttpClient,
+    private dialog: MatDialog,
     private zone: NgZone,
     @Inject(PLATFORM_ID) platformId: Object
   ) {
@@ -70,11 +71,17 @@ export class NewTicketAlumbrado implements AfterViewInit, OnDestroy {
       apellidoPaterno: ['', Validators.required],
       apellidoMaterno: ['', Validators.required],
       telefono: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
       direccion: [''],
+      entreCalles: [''],
+      numeroExterior: [''],
+      colonia: [''],
       tema: ['', Validators.required],
       luminaria: [''],
+      cuadrilla: [''],
+      descripcion: ['', Validators.required],
       evidencia: [null],
-       origen:['Facebook']
+      origen: ['Facebook']
     });
   }
 
@@ -83,7 +90,6 @@ export class NewTicketAlumbrado implements AfterViewInit, OnDestroy {
       this.L = await import('leaflet');
 
       delete (this.L.Icon.Default.prototype as any)._getIconUrl;
-
       this.L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'assets/marker-icon-2x.png',
         iconUrl: 'assets/marker-icon.png',
@@ -111,14 +117,10 @@ export class NewTicketAlumbrado implements AfterViewInit, OnDestroy {
       return;
     }
 
-    this.map = this.L.map(this.mapContainer.nativeElement).setView(
-      [19.1738, -96.1342],
-      13
-    );
+    this.map = this.L.map(this.mapContainer.nativeElement).setView([19.1738, -96.1342], 13);
 
     this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 19,
     }).addTo(this.map);
 
@@ -148,7 +150,8 @@ export class NewTicketAlumbrado implements AfterViewInit, OnDestroy {
       this.reportForm.get('luminaria')?.reset();
     }
   }
-    onLuminariaChange(): void {
+
+  onLuminariaChange(): void {
     this.showCuadrillas = true;
     if (!this.showCuadrillas) {
       this.reportForm.get('cuadrilla')?.reset();
@@ -165,31 +168,48 @@ export class NewTicketAlumbrado implements AfterViewInit, OnDestroy {
     }
   }
 
-submitForm(): void {
-  if (this.reportForm.valid) {
-    const formData = new FormData();
-    Object.entries(this.reportForm.value).forEach(([key, value]) => {
-      if (value instanceof Blob) {
-        formData.append(key, value);
-      } else {
-        formData.append(key, value !== null && value !== undefined ? value.toString() : '');
-      }
-    });
+  submitForm(): void {
+    if (this.reportForm.valid) {
+      const formValues = this.reportForm.value;
 
-    // Simula éxito
-    console.log('Formulario válido:', this.reportForm.value);
+      const coordinates = this.marker
+        ? { lat: this.marker.getLatLng().lat, lng: this.marker.getLatLng().lng }
+        : { lat: 0, lng: 0 };
 
-    // Abre modal de éxito
-this.dialog.open(SuccessDialog, {
+      const ticket: Partial<Ticket> = {
+        folio: 'TEMP-' + Date.now(),
+        name: `${formValues.nombre} ${formValues.apellidoPaterno} ${formValues.apellidoMaterno}`,
+        phone: formValues.telefono,
+        email: formValues.email,
+        source: formValues.origen,
+        service: formValues.tema,
+        area: 'alumbrado',
+        problem: formValues.tema,
+        description: formValues.descripcion,
+        status: 'Pendiente',
+        location: {
+          street: formValues.direccion || '',
+          crossStreets: formValues.entreCalles || '',
+          extNumber: formValues.numeroExterior || '',
+          neighborhood: formValues.colonia || '',
+          coordinates,
+        },
+        images: [],
+        tracking: [],
+      };
 
-});
-
-
-    this.reportForm.reset();
-    this.previewUrl = null;
+      this.ticketsService.createTicket(ticket, formValues.evidencia).subscribe({
+        next: () => {
+          this.dialog.open(SuccessDialog);
+          this.reportForm.reset();
+          this.previewUrl = null;
+        },
+        error: (err) => {
+          console.error('Error al crear el ticket', err);
+        }
+      });
+    }
   }
-}
-
 
   ngOnDestroy() {
     if (this.isBrowser && this.map) {

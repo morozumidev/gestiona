@@ -176,7 +176,6 @@ export class NewTicket implements AfterViewInit, OnDestroy {
       });
 
       // Simula éxito
-      console.log('Formulario válido:', this.reportForm.value);
 
       // Abre modal de éxito
       this.dialog.open(SuccessDialog, {});

@@ -6,7 +6,7 @@
       <p>Sistema de Atención Ciudadana</p>
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="login()" class="login-form animated fadeInUp">
+    <form [formGroup]="loginForm" (ngSubmit)="login($event)" class="login-form animated fadeInUp">
       @if (loginError) {
       <div class="login-error">{{ loginError }}</div>
       }

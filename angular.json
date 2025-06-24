@@ -27,7 +27,10 @@
                 "input": "public"
               }
             ],
-            "styles": ["node_modules/leaflet/dist/leaflet.css","src/styles.scss"],
+            "styles": [
+              "node_modules/leaflet/dist/leaflet.css",
+              "src/styles.scss"
+            ],
             "server": "src/main.server.ts",
             "outputMode": "server",
             "ssr": {
@@ -63,6 +66,9 @@
           "options": {
             "host": "0.0.0.0",
             "port": 8787,
+            "ssl": true,
+            "sslKey": "src/certificate/key.pem",
+            "sslCert": "src/certificate/cert.pem",
             "buildTarget": "gestiona:build"
           },
           "configurations": {
@@ -90,7 +96,10 @@
                 "input": "public"
               }
             ],
-            "styles": ["node_modules/leaflet/dist/leaflet.css","src/styles.scss"]
+            "styles": [
+              "node_modules/leaflet/dist/leaflet.css",
+              "src/styles.scss"
+            ]
           }
         }
       }
