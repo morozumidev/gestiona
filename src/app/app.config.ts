@@ -11,9 +11,10 @@ import {
   provideClientHydration,
   withEventReplay,
 } from '@angular/platform-browser';
+import { authInterceptor } from './interceptors/auth-interceptor';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideHttpClient, withInterceptorsFromDi, withFetch } from '@angular/common/http';
-
+import { provideHttpClient, withInterceptorsFromDi, withFetch, withInterceptors } from '@angular/common/http';
+import { JWT_OPTIONS, JwtHelperService } from '@auth0/angular-jwt';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAnimationsAsync(),
@@ -22,7 +23,13 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
     provideClientHydration(withEventReplay()),
-    provideHttpClient(withInterceptorsFromDi(), withFetch()),
-     provideNativeDateAdapter(),
+    provideHttpClient(
+      withInterceptorsFromDi(),
+      withInterceptors([authInterceptor]),
+      withFetch()),
+    provideNativeDateAdapter(),
+    JwtHelperService,
+    { provide: JWT_OPTIONS, useValue: {} },
+
   ],
 };

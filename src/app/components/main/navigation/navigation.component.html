@@ -4,11 +4,11 @@
   </button>
 
   <nav>
-    @for (item of navItems; let i = $index; track i) {
-    <button mat-button (click)="navigate(item)">
-      <mat-icon>{{ item.icon }}</mat-icon>
-      <span class="nav-label">{{ item.label }}</span>
-    </button>
+    @for (item of navItems(); let i = $index; track i) {
+      <button mat-button (click)="navigate(item)">
+        <mat-icon>{{ item.icon }}</mat-icon>
+        <span class="nav-label">{{ item.label }}</span>
+      </button>
     }
 
     <button mat-button (click)="logout()">

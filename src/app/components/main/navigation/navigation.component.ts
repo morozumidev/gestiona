@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Output, computed, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,6 +12,8 @@ import {
 } from '@angular/animations';
 import { Router } from '@angular/router';
 import { CookieService } from 'ngx-cookie-service';
+import { AuthService } from '../../../services/auth.service';
+import { inject } from '@angular/core';
 
 interface NavItem {
   icon: string;
@@ -35,7 +37,11 @@ interface NavItem {
   ],
 })
 export class NavigationComponent {
-  NAV_ITEMS_BY_ROLE: Record<string, NavItem[]> = {
+  private router = inject(Router);
+  private cookieService = inject(CookieService);
+  private authService = inject(AuthService);
+
+  readonly NAV_ITEMS_BY_ROLE: Record<string, NavItem[]> = {
     movil: [
       { icon: 'add', label: 'Generar reporte', route: '/new-ticket' },
       { icon: 'history', label: 'Historial de reportes', route: '/new-ticket' },
@@ -60,20 +66,14 @@ export class NavigationComponent {
           'https://www.google.com/maps/d/embed?mid=1XyTGGmoo8GdUUdUlB24ySUCdRcGMOWw&ehbc=2E312F',
       },
     ],
-    admin: [
+    ADMIN: [
       { icon: 'dashboard', label: 'Dashboard', route: '/tickets' },
-      {
-        icon: 'model_training',
-        label: 'Alumbrado',
-        route: '/dashboard-alumbrado',
-      },
-      { icon: 'engineering', label: 'Matenimiento Urban', route: '/tickets' },
-      { icon: 'recycling', label: 'Limpia Publica', route: '/tickets' },
+      { icon: 'model_training', label: 'Alumbrado', route: '/dashboard-alumbrado' },
+      { icon: 'engineering', label: 'Mantenimiento Urban', route: '/tickets' },
+      { icon: 'recycling', label: 'Limpia Pública', route: '/tickets' },
       { icon: 'table_chart_view', label: 'Reportes', route: '/tickets' },
       { icon: 'currency_exchange', label: 'Cobro Municipal', route: '/tickets' },
       { icon: 'holiday_village', label: 'Catastro', route: '/tickets' },
-     // { icon: 'local_car_wash', label: 'Transito', route: '/tickets' },
-
       { icon: 'price_check', label: 'Predial', route: '/tickets' },
       { icon: 'add', label: 'Generar reporte', route: '/new-ticket' },
       { icon: 'lightbulb', label: 'Luminarias', route: '/luminarias' },
@@ -92,15 +92,19 @@ export class NavigationComponent {
     web: [{ icon: 'add', label: 'Generar reporte', route: '/new-ticket' }],
   };
 
-  navItems: NavItem[] = [];
+  // Reactive inputs
+  @Input() isCollapsed = false;
+  @Output() isCollapsedChange = new EventEmitter<boolean>();
 
+  readonly role = signal<string | null>(this.cookieService.get('user') || null);
+  readonly navItems = computed(() => this.role() ? this.NAV_ITEMS_BY_ROLE[this.role()!] || [] : []);
 
-  constructor(private router: Router, private cookieService: CookieService) {
-    const role = this.cookieService.get("user");
-    this.navItems = role ? this.NAV_ITEMS_BY_ROLE[role] || [] : [];
+  onToggle(): void {
+    this.isCollapsed = !this.isCollapsed;
+    this.isCollapsedChange.emit(this.isCollapsed);
   }
 
-  navigate(item: NavItem) {
+  navigate(item: NavItem): void {
     if (item.externalUrl) {
       window.open(item.externalUrl, '_blank');
     } else if (item.route) {
@@ -108,16 +112,7 @@ export class NavigationComponent {
     }
   }
 
-  logout() {
-    this.cookieService.delete('user');
-    this.router.navigate(['/login']);
+  logout(): void {
+    this.authService.logout();
   }
-@Input() isCollapsed = false;
-@Output() isCollapsedChange = new EventEmitter<boolean>();
-
-onToggle() {
-  this.isCollapsed = !this.isCollapsed;
-  this.isCollapsedChange.emit(this.isCollapsed);
-}
-
 }

@@ -35,6 +35,7 @@ export class Login {
     @Inject(DOCUMENT) private document: Document,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
+    
     this.loginForm = this.fb.group({
       email: ['', [Validators.required]],
       password: ['', Validators.required]

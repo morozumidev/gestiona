@@ -32,9 +32,6 @@
 }
 
 .login-container {
-  background: linear-gradient(270deg, #{$color1}, #{$color2}, #{$color3});
-  background-size: 400% 400%;
-  animation: animatedGradient 6s ease-in-out infinite;
   height: 100vh;
   display: flex;
   justify-content: center;
@@ -75,13 +72,13 @@
   h1 {
     margin: 0;
     font-size: 2rem;
-    color: white;
+    color: rgb(0, 0, 0);
     text-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
   }
 
   p {
     font-size: 0.95rem;
-    color: #e0e0e0;
+    color: #050505;
     opacity: 0.9;
     text-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
   }
