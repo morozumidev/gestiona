@@ -2,7 +2,6 @@
   max-width: 1200px;
   margin: auto;
   padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #222;
 }
 
@@ -11,7 +10,8 @@
   font-weight: 700;
   font-size: 2.2rem;
   margin-bottom: 25px;
-  color: #5f1f1f; /* guinda */
+  color: #5f1f1f;
+  /* guinda */
 }
 
 .filter-input {
@@ -35,7 +35,8 @@ table {
 }
 
 th.mat-header-cell {
-  color: #7b2626; /* guinda oscuro */
+  color: #7b2626;
+  /* guinda oscuro */
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -52,12 +53,14 @@ td.mat-cell {
 }
 
 tr.mat-row:hover td.mat-cell {
-  background-color: #f4e5e5; /* guinda muy claro */
+  background-color: #f4e5e5;
+  /* guinda muy claro */
   cursor: pointer;
 }
 
 tr.selected td.mat-cell {
-  background-color: #e8c9c9 !important; /* guinda claro */
+  background-color: #e8c9c9 !important;
+  /* guinda claro */
 }
 
 .mat-icon-button {
@@ -84,22 +87,28 @@ tr.selected td.mat-cell {
 }
 
 .status-operativa {
-  background-color: #4caf50; /* verde */
+  background-color: #4caf50;
+  /* verde */
 }
 
 .status-mantenimiento {
-  background-color: #ff9800; /* naranja */
+  background-color: #ff9800;
+  /* naranja */
 }
 
 .status-fuera {
-  background-color: #f44336; /* rojo */
+  background-color: #f44336;
+  /* rojo */
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
   }
+
   50% {
     opacity: 0.8;
     box-shadow: 0 0 16px rgba(255, 255, 255, 0.9);
@@ -124,30 +133,36 @@ tr.selected td.mat-cell {
 // semaforo
 .status-chips {
   display: flex;
-  justify-content: center; /* centrar horizontal */
-  align-items: center;     /* centrar vertical */
+  justify-content: center;
+  /* centrar horizontal */
+  align-items: center;
+  /* centrar vertical */
   gap: 1.2rem;
-  padding: 0.8rem 1.5rem;  /* espacio interno para respirar */
-  margin: 1rem 0;          /* separación vertical respecto a otros elementos */
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 0.8rem 1.5rem;
+  /* espacio interno para respirar */
+  margin: 1rem 0;
+  /* separación vertical respecto a otros elementos */
 
   .chip {
     display: flex;
     align-items: center;
     background: #f5f5f5;
     border-radius: 9999px;
-    padding: 0.5rem 1.2rem;  /* un poco más de padding para balance */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    padding: 0.5rem 1.2rem;
+    /* un poco más de padding para balance */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
     cursor: default;
     user-select: none;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     opacity: 1 !important;
-    min-width: 90px;        /* ancha mínima para consistencia visual */
-    justify-content: center; /* centrar texto y contenido dentro de chip */
+    min-width: 90px;
+    /* ancha mínima para consistencia visual */
+    justify-content: center;
+    /* centrar texto y contenido dentro de chip */
 
     &:hover {
       transform: scale(1.07);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
       opacity: 1;
     }
 
@@ -161,7 +176,7 @@ tr.selected td.mat-cell {
       height: 14px;
       border-radius: 50%;
       margin-right: 0.7rem;
-      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
     }
 
     .label {

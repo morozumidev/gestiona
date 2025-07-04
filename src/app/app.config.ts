@@ -5,7 +5,7 @@ import {
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { CookieService } from 'ngx-cookie-service';
-
+import { provideNativeDateAdapter } from '@angular/material/core';
 import { routes } from './app.routes';
 import {
   provideClientHydration,
@@ -23,5 +23,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideClientHydration(withEventReplay()),
     provideHttpClient(withInterceptorsFromDi(), withFetch()),
+     provideNativeDateAdapter(),
   ],
 };

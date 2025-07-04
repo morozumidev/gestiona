@@ -5,20 +5,40 @@
 // Definir color por defecto si no se ha definido antes
 $color: negro !default;
 
-// Obtener paleta del color
+// Obtener la paleta personalizada completa (por ejemplo, 'negro')
 $primary-palette: theme.get-palette($color);
 
-// Extraer tonos
+$secondary-palette: map.get($primary-palette, 'secondary');
+$tertiary-palette: map.get($primary-palette, 'secondary'); // usa secondary como tertiary si no tienes otra
+$neutral-palette: map.get($primary-palette, 'neutral');
+$neutral-variant-palette: map.get($primary-palette, 'neutral-variant');
+$error-palette: map.get($primary-palette, 'error');
+
+// Construir el mapa de colores completo requerido por Angular Material
+$color-config: (
+  primary: $primary-palette,
+  secondary: $secondary-palette,
+  tertiary: $tertiary-palette,
+  neutral: $neutral-palette,
+  neutral-variant: $neutral-variant-palette,
+  error: $error-palette,
+  theme-type: light
+);
+
+// Gradiente de fondo dinámico
 $color1: map.get($primary-palette, 10);
 $color2: map.get($primary-palette, 20);
 $color3: map.get($primary-palette, 25);
+
 $radius: 1.2rem;
+
 @mixin glass-overlay {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.5);
 }
+
 
 //Global classes:
 
@@ -28,7 +48,7 @@ $radius: 1.2rem;
   flex-wrap: wrap;
   gap: 1.5rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.5);
   border-radius: $radius;
   @include glass-overlay;
 }

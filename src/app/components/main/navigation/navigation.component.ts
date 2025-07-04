@@ -61,7 +61,7 @@ export class NavigationComponent {
       },
     ],
     admin: [
-      { icon: 'dashboard', label: 'Dashboard', route: '/dashboard' },
+      { icon: 'dashboard', label: 'Dashboard', route: '/tickets' },
       {
         icon: 'model_training',
         label: 'Alumbrado',

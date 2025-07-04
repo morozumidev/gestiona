@@ -1,21 +1,64 @@
 @use 'sass:map';
 @use '@angular/material' as mat;
-@use '../../../../app_theme-colors.scss' as theme;
 @use '../../../../global_variables' as *;
 
-$primary: theme.get-palette($color);
-$primary10: map.get($primary, 10);
-$primary20: map.get($primary, 20);
-$neutral: map.get($primary, 'neutral');
+.search-bar {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  margin-bottom: 1rem;
 
+  .search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 1.4rem;
+    border-radius: $radius;
+    width: 100%;
+    @include glass-overlay;
+    backdrop-filter: blur(16px);
+    transition: all 0.3s ease;
 
+    &:focus-within {
+      border: 1px solid rgba($color1, 0.6);
+      box-shadow: 0 0 0 3px rgba($color2, 0.4);
+    }
+
+    .search-icon {
+      font-size: 1.6rem;
+      color: $color1;
+      transition: color 0.3s ease;
+
+      .search-wrapper:focus-within & {
+        color: $color1;
+      }
+    }
+
+    .search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--mat-sys-on-surface);
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      transition: color 0.3s ease;
+
+      &::placeholder {
+        color: var(--mat-sys-on-surface);
+        opacity: 0.6;
+        font-weight: 400;
+      }
+    }
+  }
+}
 
 .ticket-admin {
   margin: 2rem auto;
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  font-family: Roboto, sans-serif;
   padding: 1rem;
 }
 
@@ -30,57 +73,56 @@ $neutral: map.get($primary, 'neutral');
     border-radius: $radius;
     padding: 1.5rem;
     text-align: center;
-    color: #222;
     position: relative;
     overflow: hidden;
     transition: transform 0.3s ease;
     @include glass-overlay;
+    color: white;
 
     &:hover {
-      transform: scale(1.04);
+      transform: scale(1.05);
     }
 
     .ticket-icon {
-      font-size: 2.4rem; // o el tamaño deseado
+      font-size: 2.6rem;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
-      height: auto; // asegura que no lo recorte
-      width: auto;
-      overflow: visible; // por si hay overflow hidden en padres
       margin-bottom: 0.5rem;
+      transition: color 0.3s ease;
     }
 
     .ticket-title {
-      font-weight: 600;
-      font-size: 1.1rem;
+      font-weight: 700;
+      font-size: 1.2rem;
+      letter-spacing: 0.3px;
     }
 
     .ticket-count {
-      font-size: 1.6rem;
-      font-weight: bold;
+      font-size: 1.8rem;
+      font-weight: 800;
       margin-top: 0.25rem;
     }
 
     &.open {
-      background-color: #e3f2fd;
+      background-color: #d0e8ff;
 
       .ticket-icon {
-        color: #2196f3;
+        color: #007bff;
       }
 
       .ticket-title,
       .ticket-count {
-        color: #0d47a1;
+        color: #0056b3;
       }
     }
 
     &.in-progress {
-      background-color: #fff3e0;
+      background-color: #ffe0b2;
 
       .ticket-icon {
-        color: #fb8c00;
+        color: #ff9800;
       }
 
       .ticket-title,
@@ -90,10 +132,10 @@ $neutral: map.get($primary, 'neutral');
     }
 
     &.closed {
-      background-color: #e8f5e9;
+      background-color: #c8facc;
 
       .ticket-icon {
-        color: #43a047;
+        color: #2e7d32;
       }
 
       .ticket-title,
@@ -103,10 +145,10 @@ $neutral: map.get($primary, 'neutral');
     }
 
     &.total {
-      background-color: #f3e5f5;
+      background-color: #e1bee7;
 
       .ticket-icon {
-        color: #9c27b0;
+        color: #ab47bc;
       }
 
       .ticket-title,
@@ -118,17 +160,16 @@ $neutral: map.get($primary, 'neutral');
 }
 
 .status-chips {
-
-
   .chip {
     display: flex;
     align-items: center;
     padding: 0.6rem 1.2rem;
     border-radius: 100px;
     font-weight: 600;
-    color: black;
     font-size: 1rem;
     @include glass-overlay;
+    background-color: var(--mat-sys-surface-container-high);
+    color: var(--mat-sys-on-surface);
 
     .color-dot {
       width: 14px;
@@ -138,15 +179,15 @@ $neutral: map.get($primary, 'neutral');
     }
 
     &.verde .color-dot {
-      background: #4caf50;
+      background: #1ca020;
     }
 
     &.ambar .color-dot {
-      background: #ffb300;
+      background: #ffd000;
     }
 
     &.rojo .color-dot {
-      background: #f44336;
+      background: #ff1100;
     }
   }
 }
@@ -168,20 +209,62 @@ $neutral: map.get($primary, 'neutral');
 
 // 🎯 FOLIO (neutro)
 .folio-badge {
-  background: rgba($primary20, .9);
+  background: rgba($color2, .9);
   color: white;
 }
 
-// 🎯 PRIORIDAD
+// 🎯 PRIORIDAD con colores vivos
 .badge-prioridad-alta {
-  background: rgba(220, 38, 38, 0.85); // rojo fuerte
+  background: rgba(255, 0, 0, 0.85); // rojo fuerte
 }
 
 .badge-prioridad-media {
-  background: rgba(251, 191, 36, 0.85); // ambar
+  background: rgba(255, 183, 0, 0.85); // ambar
   color: #222;
 }
 
 .badge-prioridad-baja {
-  background: rgba(0, 162, 255, 0.85); // verde
+  background: rgba(0, 162, 255, 0.85); // azul
+}
+
+table {
+  background: transparent !important;
+  border: none !important;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: 1rem;
+  border-radius: $radius;
+  @include glass-overlay;
+
+  tbody {
+    tr {
+      transition: background-color 0.3s ease;
+
+      &:nth-child(odd) {
+        background-color: red;
+      }
+
+      &:nth-child(even) {
+        background-color: blue;
+      }
+    }
+  }
+
+  th,
+  td {
+    background: transparent !important;
+    border: none !important;
+    color: var(--mat-sys-on-surface);
+    padding: 0.75rem 1rem;
+  }
+
+  th {
+    font-weight: 600;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  mat-form-field {
+    background: transparent;
+    border: none !important;
+  }
 }

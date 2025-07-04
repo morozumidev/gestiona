@@ -1,4 +1,4 @@
-import { Component, Signal, computed, signal } from '@angular/core';
+import { Component, Inject, Signal, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,7 +11,11 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { Ticket } from '../../../models/Ticket';
 import { CookieService } from 'ngx-cookie-service';
 import { TicketsService } from '../../../services/tickets-service';
-
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { EditTicketDialog } from '../../dialogs/edit-ticket-dialog/edit-ticket-dialog';
+import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 @Component({
   selector: 'app-tickets',
   standalone: true,
@@ -26,6 +30,8 @@ import { TicketsService } from '../../../services/tickets-service';
     MatTableModule,
     MatSelectModule,
     MatPaginatorModule,
+    MatTooltipModule,
+    MatDatepickerModule
   ],
   providers: [CookieService],
   templateUrl: './tickets.html',
@@ -35,12 +41,39 @@ export class Tickets {
   tickets: Ticket[] = [];
   ticketsSignal = signal<Ticket[]>([]);
 
-  constructor(private ticketsService: TicketsService) {
+  constructor(private ticketsService: TicketsService, private dialog: MatDialog,
+    private router: Router) {
     this.ticketsService.getAllTickets([]).subscribe((tickets) => {
       this.tickets = tickets;
       this.ticketsSignal.set(tickets);
       this.ticketsService.tickets = tickets;
     });
+  }
+  getProblemIcon(problem: string): string {
+    const icons = {
+      'Fuga de agua': 'water_drop',
+      'Bache': 'construction',
+      'Alumbrado': 'lightbulb',
+      'Basura': 'delete',
+      'default': 'report_problem',
+    };
+    return problem in icons ? icons[problem as keyof typeof icons] : icons['default'];
+  }
+
+  getStatusIcon(status: string): string {
+    return {
+      'Pendiente': 'schedule',
+      'En desarrollo': 'autorenew',
+      'Atendida': 'check_circle',
+    }[status] || 'help';
+  }
+
+  getStatusClass(status: string): string {
+    return {
+      'Pendiente': 'pendiente',
+      'En desarrollo': 'en-desarrollo',
+      'Atendida': 'atendida',
+    }[status] || '';
   }
 
 
@@ -117,7 +150,22 @@ export class Tickets {
     this.itemsPerPage = event.pageSize;
   }
 
-  editTicket(ticket: Ticket) {}
+  editTicket(ticket: Ticket) {
+    const dialogRef = this.dialog.open(EditTicketDialog, {
+      data: ticket,
+      width: '500px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === 'full-edit') {
+        this.router.navigate(['/tickets/edit', ticket._id]);
+      } else if (result) {
+        // Aquí puedes actualizar el ticket directamente si editó y guardó.
+        console.log('Ticket editado:', result);
+      }
+    });
+  }
 
   onCardClick(status: string) {
     this.setFilterStatus(status);

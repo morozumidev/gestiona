@@ -1,71 +1,51 @@
 @use '@angular/material' as mat;
 @use 'sass:map';
-@use './app_theme-colors' as theme;
-@use './global_variables' as *;
+@use './global_variables' as global;
 
-// Obtener la paleta personalizada completa (por ejemplo, 'negro')
-$raw-palette: theme.get-palette($color);
-$primary-palette: $raw-palette;
-
-$secondary-palette: map.get($raw-palette, 'secondary');
-$tertiary-palette: map.get($raw-palette, 'secondary'); // usa secondary como tertiary si no tienes otra
-$neutral-palette: map.get($raw-palette, 'neutral');
-$neutral-variant-palette: map.get($raw-palette, 'neutral-variant');
-$error-palette: map.get($raw-palette, 'error');
-
-// Construir el mapa de colores completo requerido por Angular Material
-$color-config: (
-  primary: $primary-palette,
-  secondary: $secondary-palette,
-  tertiary: $tertiary-palette,
-  neutral: $neutral-palette,
-  neutral-variant: $neutral-variant-palette,
-  error: $error-palette,
-  theme-type: light
-);
-
-// Gradiente de fondo dinámico
-$color1: map.get($primary-palette, 10);
-$color2: map.get($primary-palette, 20);
-$color3: map.get($primary-palette, 25);
-
+// Angular Material core
 @include mat.core();
 
-@keyframes animatedGradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
 html {
-  color-scheme: light;
-  background: linear-gradient(270deg, #{$color2}, #{$color2}, #{$color3});
-  background-size: 400% 400%;
-  animation: animatedGradient 6s ease-in-out infinite;
+  color-scheme: light dark;
 
-  // Aplicar el tema completo
   @include mat.theme((
-    color: $color-config,
+    color: (
+      primary: global.$primary-palette,
+      secondary: global.$secondary-palette,
+      tertiary: global.$tertiary-palette,
+      error: global.$error-palette,
+      neutral: global.$neutral-palette,
+      neutral-variant: global.$neutral-variant-palette,
+      theme-type: light
+    ),
     typography: Roboto,
-    density: 0,
+    density: 0
   ));
 }
-
-// Fondo y texto globales con tokens del sistema
 body {
   margin: 0;
-  padding: 0;
-  height: 100vh;
-  font-family: Roboto, sans-serif;
+  font-family: 'Roboto', sans-serif;
+  position: relative;
+  height: 100%;
+  z-index: 0;
 }
 
-// Canvas decorativo detrás
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("assets/wall.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(7px);
+  z-index: -10;
+}
+
+// Fondo animado
 canvas#wave-canvas {
   position: fixed;
   top: 0;

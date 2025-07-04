@@ -14,6 +14,7 @@ export class AuthService {
   constructor(private cookieService: CookieService,private http:HttpClient,private router:Router,private coreService:CoreService) { }
   private cookieKey = 'user';
   login(email: string, password: string) {
+    console.log('Login attempt with email:', email);
     return this.http.post<any>(this.coreService.URI_API+'auth/login', { email, password }).pipe(
       tap(response => {
         this.userSubject.next(response.user);

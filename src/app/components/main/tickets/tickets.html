@@ -12,10 +12,10 @@
       <div class="ticket-count">{{ countByStatus('En desarrollo') }}</div>
     </div>
 
-    <div class="ticket-card closed" (click)="onCardClick('Atendido')">
+    <div class="ticket-card closed" (click)="onCardClick('Atendida')">
       <mat-icon class="ticket-icon">check_circle</mat-icon>
-      <div class="ticket-title">Atendidos</div>
-      <div class="ticket-count">{{ countByStatus('Atendido') }}</div>
+      <div class="ticket-title">Atendidas</div>
+      <div class="ticket-count">{{ countByStatus('Atendida') }}</div>
     </div>
 
     <div class="ticket-card total" (click)="onCardClick('Todos')">
@@ -25,12 +25,20 @@
     </div>
   </div>
 
-  <section class="controls glass-container">
-    <mat-form-field appearance="outline" class="flex-grow">
-      <mat-label>Buscar tickets</mat-label>
-      <input matInput placeholder="Palabra clave" (input)="setSearch($any($event.target).value)" />
-    </mat-form-field>
-  </section>
+<section class="search-bar glass-container">
+  <div class="search-wrapper">
+    <mat-icon class="search-icon">search</mat-icon>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Buscar tickets..."
+      (input)="setSearch($any($event.target).value)"
+    />
+  </div>
+</section>
+
+
+
 
   <div class="glass-container">
     <table mat-table [dataSource]="pagedTickets()" aria-label="Tabla de tickets">
@@ -40,7 +48,7 @@
           Folio {{ getSortIndicator('folio') }}
         </th>
         <td mat-cell *matCellDef="let ticket">
-          <span class="badge folio-badge">{{ ticket.folio }}</span>
+          <span class="badge folio-badge">#{{ ticket.folio }}</span>
         </td>
       </ng-container>
 
@@ -70,7 +78,7 @@
         <td mat-cell *matCellDef="let ticket">
           <mat-form-field appearance="outline">
             <mat-select [value]="ticket.status" (selectionChange)="updateStatus(ticket._id, $event.value)">
-              <mat-option *ngFor="let estado of ['Pendiente', 'En desarrollo', 'Atendido']" [value]="estado">
+              <mat-option *ngFor="let estado of ['Pendiente', 'En desarrollo', 'Atendida']" [value]="estado">
                 {{ estado }}
               </mat-option>
             </mat-select>

@@ -1,48 +1,41 @@
 @use "sass:map";
 @use "@angular/material" as mat;
-@use "../../../../app_theme-colors" as theme;
 @use "../../../../global_variables" as *;
 
-// 🌈 Obtener la paleta personalizada completa
-$raw-palette: theme.get-palette($color);
-
-// 🔹 Subpaletas desde la estructura moderna
-$primary: $raw-palette;
-$secondary: map.get($raw-palette, 'secondary');
-
-// 🔸 Colores específicos desde la paleta
-$primary-color: map.get($primary, 40);
-$primary-light: map.get($primary, 10);
-$accent-color: map.get($secondary, 40); // usar secondary como accent
-
-// 🎨 Otros colores
-$text-color: rgba(0, 0, 0, 0.85);
-$white-glass: rgba(255, 255, 255, 0.7);
-$glass-border: 1px solid rgba(255, 255, 255, 0.18);
-$border-radius: 18px;
-
-// 🧊 Efecto glass
-@mixin glass {
-  background: $white-glass;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: $glass-border;
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
-}
-
 // 🎞️ Animaciones
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes float {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-  100% { transform: translateY(0); }
+@keyframes fadeSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.fadeIn { animation: fadeIn 0.5s ease-out; }
-.float { animation: float 2s ease-in-out infinite; }
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.fadeIn {
+  animation: fadeSlide 0.4s ease-out both;
+}
+
+.float {
+  animation: float 2s ease-in-out infinite;
+}
 
 // 📱 Navigation lateral
 .navigation {
@@ -52,8 +45,10 @@ $border-radius: 18px;
   flex-direction: column;
   overflow: hidden;
   transition: width 0.3s ease;
-  border-radius: 0 $border-radius $border-radius 0;
-  @include glass;
+  border-radius: 0 $radius $radius 0;
+  @include glass-overlay;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
   z-index: 100;
 
   &.collapsed {
@@ -62,17 +57,25 @@ $border-radius: 18px;
     .nav-label {
       display: none;
     }
+
+    nav button {
+      justify-content: center;
+
+      mat-icon {
+        margin: 0;
+      }
+    }
   }
 
   .toggle-btn {
     align-self: flex-end;
     margin: 1rem;
-    color: $primary-color;
+    color: var(--mat-sys-primary);
     transition: transform 0.3s ease;
 
     &:hover {
       transform: rotate(90deg);
-      color: $accent-color;
+      color: var(--mat-sys-secondary);
     }
   }
 
@@ -86,53 +89,70 @@ $border-radius: 18px;
     button {
       display: flex;
       align-items: center;
+      justify-content: flex-start;
       padding: 0.9rem 1rem;
       border-radius: 999px;
       font-weight: 600;
       letter-spacing: 0.3px;
-      background: rgba(255, 255, 255, 0.4);
-      color: $text-color;
+      background: transparent;
+      color: var(--mat-sys-on-surface);
       transition: all 0.3s ease;
-      animation: fadeIn 0.5s ease forwards;
-
-      &:hover {
-        background: rgba($primary-light, 0.4);
-        transform: translateX(4px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      }
+      animation: fadeSlide 0.4s ease-out both;
 
       mat-icon {
         font-size: 20px;
         margin-right: 0.75rem;
-        color: $primary-color;
+        color: var(--mat-sys-primary);
+        transition: color 0.3s ease, transform 0.3s ease;
       }
 
       .nav-label {
         font-size: 0.95rem;
-        opacity: 0.9;
+        opacity: 0.95;
+        transition: opacity 0.3s ease, font-weight 0.3s ease;
+      }
+
+      &:hover {
+        background: rgba(var(--mat-sys-primary-rgb), 0.12); // si defines RGB
+        transform: translateX(6px);
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+
+        mat-icon {
+          color: var(--mat-sys-primary);
+          transform: scale(1.1);
+        }
+
+        .nav-label {
+          opacity: 1;
+          font-weight: 700;
+        }
       }
     }
 
     button.logout-btn {
       margin-top: auto;
       margin-bottom: 1rem;
-      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      border-top: 1px solid var(--mat-sys-outline-variant);
       padding-top: 1.25rem;
-      color: $accent-color;
+      color: var(--mat-sys-secondary);
 
       &:hover {
-        background: rgba($accent-color, 0.15);
-        color: $accent-color;
+        background: rgba(var(--mat-sys-secondary-rgb), 0.15);
+        color: var(--mat-sys-secondary);
+
+        mat-icon {
+          color: var(--mat-sys-secondary);
+        }
       }
 
       mat-icon {
-        color: $accent-color;
+        color: var(--mat-sys-secondary);
       }
     }
   }
 }
 
-// 📱 Responsive (solo para móvil)
+// 📱 Responsive
 @media (max-width: 768px) {
   .navigation {
     position: fixed;
@@ -140,6 +160,6 @@ $border-radius: 18px;
     left: 0;
     height: 100dvh;
     z-index: 2000;
-    border-radius: 0 $border-radius $border-radius 0;
+    border-radius: 0 $radius $radius 0;
   }
 }

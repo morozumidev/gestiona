@@ -20,6 +20,7 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "outputHashing": "all",
             "assets": [
               "src/assets",
               {
@@ -69,14 +70,16 @@
             "ssl": true,
             "sslKey": "src/certificate/key.pem",
             "sslCert": "src/certificate/cert.pem",
-            "buildTarget": "gestiona:build"
+            "buildTarget": "gestiona:build:development",
+              "hmr": false
           },
           "configurations": {
             "production": {
               "buildTarget": "gestiona:build:production"
             },
             "development": {
-              "buildTarget": "gestiona:build:development"
+              "buildTarget": "gestiona:build:development",
+               "hmr": false
             }
           },
           "defaultConfiguration": "development"

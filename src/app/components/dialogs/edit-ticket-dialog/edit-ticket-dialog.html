@@ -1,0 +1,79 @@
+<div class="ticket-dialog">
+  <button mat-icon-button class="close-button" (click)="cerrar()" matTooltip="Cerrar">
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <div class="ticket-header">
+    <mat-icon>edit_note</mat-icon>
+    <h2>Editar Ticket</h2>
+  </div>
+
+  <form [formGroup]="form" class="ticket-form">
+    <div class="field-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Nombre</mat-label>
+        <mat-icon matPrefix>person</mat-icon>
+        <input matInput formControlName="name" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Teléfono</mat-label>
+        <mat-icon matPrefix>call</mat-icon>
+        <input matInput formControlName="phone" />
+      </mat-form-field>
+    </div>
+
+    <div class="field-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Problema</mat-label>
+        <mat-icon matPrefix>warning</mat-icon>
+        <input matInput formControlName="problem" />
+      </mat-form-field>
+    </div>
+
+    <div class="field-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Descripción</mat-label>
+        <mat-icon matPrefix>description</mat-icon>
+        <textarea matInput formControlName="description" rows="3"></textarea>
+      </mat-form-field>
+    </div>
+
+    <div class="field-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Estado</mat-label>
+        <mat-icon matPrefix>flag</mat-icon>
+        <mat-select formControlName="status">
+          @for (e of estados; let i = $index; track i) {
+            <mat-option [value]="e">{{ e }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="field-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Calle</mat-label>
+        <mat-icon matPrefix>location_on</mat-icon>
+        <input matInput formControlName="street" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Colonia</mat-label>
+        <mat-icon matPrefix>home</mat-icon>
+        <input matInput formControlName="neighborhood" />
+      </mat-form-field>
+    </div>
+  </form>
+
+  <div class="ticket-actions">
+    <button mat-flat-button color="primary" (click)="guardar()" [disabled]="form.invalid">
+      <mat-icon>save</mat-icon>
+      Guardar
+    </button>
+    <button mat-flat-button color="accent" (click)="irAEdicionCompleta()">
+      <mat-icon>edit</mat-icon>
+      Edición completa
+    </button>
+  </div>
+</div>
