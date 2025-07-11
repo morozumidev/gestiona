@@ -159,19 +159,8 @@ export class Tickets {
   }
 
   editTicket(ticket: Ticket) {
-    const dialogRef = this.dialog.open(EditTicketDialog, {
-      data: ticket,
-      width: '500px',
-      disableClose: true,
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result === 'full-edit') {
-        this.router.navigate(['/tickets/edit', ticket._id]);
-      } else if (result) {
-        console.log('Ticket editado:', result);
-      }
-    });
+    this.ticketsService.setTicket(ticket);
+    this.router.navigate(['/ticket']);
   }
 
   onCardClick(status: string) {

@@ -268,3 +268,15 @@ table {
     border: none !important;
   }
 }
+::ng-deep .responsive-dialog-panel .mat-mdc-dialog-surface {
+  width: auto !important;
+  max-width: auto !important;
+  height: auto !important;
+  max-height: auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

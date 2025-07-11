@@ -1,0 +1,104 @@
+.report-form {
+  border-radius: var(--mat-sys-corner-large, 1rem);
+  background-color: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface);
+  backdrop-filter: blur(24px);
+  box-shadow: var(--mat-sys-level3);
+  padding: 2rem;
+  font: var(--mat-sys-body-medium);
+  animation: fadeIn 0.4s ease-in-out;
+  border: 1px solid var(--mat-sys-surface-dim);
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .map-container {
+    border-radius: var(--mat-sys-corner-large);
+    overflow: hidden;
+    border: 2px solid var(--mat-sys-outline);
+    box-shadow: var(--mat-sys-level2);
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .image-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font: var(--mat-sys-label-medium);
+
+    input[type='file'] {
+      border-radius: var(--mat-sys-corner-large);
+      padding: 0.6rem 1rem;
+      background-color: var(--mat-sys-surface-container-low);
+      border: 1px dashed var(--mat-sys-outline);
+      color: var(--mat-sys-on-surface);
+      cursor: pointer;
+      transition: 0.3s ease;
+
+      &:hover {
+        background-color: var(--mat-sys-surface-container);
+      }
+    }
+
+    .preview-img {
+      margin-top: 0.5rem;
+      max-width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: var(--mat-sys-corner-large);
+      box-shadow: var(--mat-sys-level2);
+      animation: fadeIn 0.5s ease-in-out;
+    }
+  }
+
+  .button-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+
+    button {
+      border-radius: var(--mat-sys-corner-large);
+      padding-inline: 2rem;
+      font: var(--mat-sys-label-large);
+      text-transform: uppercase;
+      box-shadow: var(--mat-sys-level1);
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.03);
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// Animaciones suaves tipo Windows
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}

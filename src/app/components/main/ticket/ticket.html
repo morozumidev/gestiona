@@ -1,0 +1,127 @@
+<mat-card class="report-form glass-container">
+  <form [formGroup]="reportForm" (ngSubmit)="submitForm()">
+    <div class="form-grid">
+
+      <!-- Datos personales -->
+      <mat-form-field appearance="outline">
+        <mat-label>Nombre</mat-label>
+        <input matInput formControlName="nombre" required />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Apellido Paterno</mat-label>
+        <input matInput formControlName="apellidoPaterno" required />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Apellido Materno</mat-label>
+        <input matInput formControlName="apellidoMaterno" required />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Teléfono</mat-label>
+        <input matInput formControlName="telefono" required />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Correo electrónico</mat-label>
+        <input matInput type="email" formControlName="email" required />
+      </mat-form-field>
+
+      <!-- Dirección -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Dirección</mat-label>
+        <textarea matInput formControlName="direccion" rows="2"
+          placeholder="Selecciona la ubicación en el mapa o escribe aquí"></textarea>
+        <button mat-icon-button matSuffix type="button" aria-label="Abrir mapa" (click)="toggleMap()">
+          <mat-icon>location_on</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Entre calles</mat-label>
+        <input matInput formControlName="entreCalles" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Número exterior</mat-label>
+        <input matInput formControlName="numeroExterior" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Colonia</mat-label>
+        <input matInput formControlName="colonia" />
+      </mat-form-field>
+
+      @if (showMap) {
+      <div #mapContainer class="map-container" style="height: 300px;"></div>
+      }
+
+      <!-- Origen -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Origen</mat-label>
+        <mat-select formControlName="origen">
+          @for (origen of ['Web','Facebook','WhatsApp','Otro']; track $index) {
+          <mat-option [value]="origen">{{ origen }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Problema -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Problema</mat-label>
+        <mat-select formControlName="tema" (selectionChange)="onTemaChange()">
+          @for (option of temas; track option) {
+          <mat-option [value]="option">{{ option }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (showLuminarias) {
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Luminaria</mat-label>
+        <mat-select formControlName="luminaria" (selectionChange)="onLuminariaChange()">
+          @for (luminaria of luminarias; track luminaria) {
+          <mat-option [value]="luminaria">{{ luminaria }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      }
+
+      @if (showCuadrillas) {
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Cuadrilla</mat-label>
+        <mat-select formControlName="cuadrilla">
+          @for (cuadrilla of cuadrillas; track cuadrilla) {
+          <mat-option [value]="cuadrilla">{{ cuadrilla }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      }
+
+      <!-- Descripción -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Descripción del problema</mat-label>
+        <textarea matInput rows="3" formControlName="descripcion"
+          placeholder="Describe el problema con detalle..."></textarea>
+      </mat-form-field>
+
+      <!-- Imagen -->
+      <div class="full-width image-upload">
+        <label for="fileInput">Evidencia Fotográfica:</label>
+        <input type="file" id="fileInput" (change)="onFileSelected($event)" accept="image/*" />
+        @if (previewUrl) {
+        <img [src]="previewUrl" class="preview-img" />
+        }
+      </div>
+
+      <!-- Botón -->
+      <div class="full-width button-row">
+        <button mat-raised-button color="primary" type="submit" [disabled]="!reportForm.valid">
+          Enviar Reporte
+        </button>
+      </div>
+
+    </div>
+  </form>
+</mat-card>

@@ -8,6 +8,7 @@ import { NewTicket } from './components/forms/new-ticket/new-ticket';
 import { NewTicketAlumbrado } from './components/forms/new-ticket-alumbrado/new-ticket-alumbrado';
 import { Luminarias } from './components/main/luminarias/luminarias';
 import { Tickets } from './components/main/tickets/tickets';
+import { TicketManagement } from './components/main/ticket/ticket';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -31,14 +32,8 @@ export const routes: Routes = [
     data: { roles: ['ALL'] }
   },
   {
-    path: 'new-ticket',
-    component: NewTicket,
-    canActivate: [canActivate],
-    data: { roles: ['ALL'] }
-  },
-  {
-    path: 'new-ticket-alumbrado',
-    component: NewTicketAlumbrado,
+    path: 'ticket',
+    component: TicketManagement,
     canActivate: [canActivate],
     data: { roles: ['ALL'] }
   },
@@ -46,9 +41,9 @@ export const routes: Routes = [
     path: 'luminarias',
     component: Luminarias,
     canActivate: [canActivate],
-    data: { roles: ['ROLE_ALUMBRADO', 'ROLE_ADMIN'] }
+    data: { roles: ['ALL'] }
   },
 
   // Ruta comodín (fallback)
-  { path: '**', redirectTo: 'login' }
+  { path: '**', redirectTo: 'tickets' }
 ];

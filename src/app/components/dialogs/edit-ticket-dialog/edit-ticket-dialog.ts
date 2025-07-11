@@ -1,22 +1,34 @@
 import { Component, Inject, ViewEncapsulation } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { FormBuilder, FormGroup,  ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatIconModule } from '@angular/material/icon';
-import { Ticket } from '../../../models/Ticket';
 import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { Ticket } from '../../../models/Ticket';
 
 @Component({
   selector: 'app-edit-ticket-dialog',
-  imports: [MatFormFieldModule,ReactiveFormsModule,MatSelectModule,MatIconModule,MatInputModule],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatSelectModule,
+    MatButtonModule
+  ],
   templateUrl: './edit-ticket-dialog.html',
   styleUrl: './edit-ticket-dialog.scss',
   encapsulation: ViewEncapsulation.None
 })
-export class EditTicketDialog { form: FormGroup;
-
+export class EditTicketDialog {
+  form: FormGroup;
   estados = ['Pendiente', 'En desarrollo', 'Atendida'];
 
   constructor(
@@ -29,7 +41,7 @@ export class EditTicketDialog { form: FormGroup;
       folio: [data.folio],
       name: [data.name, Validators.required],
       phone: [data.phone, Validators.required],
-      email: [data.email, [Validators.required]],
+      email: [data.email, Validators.required],
       source: [data.source],
       service: [data.service],
       area: [data.area],
@@ -42,17 +54,13 @@ export class EditTicketDialog { form: FormGroup;
         extNumber: [data.location?.extNumber],
         neighborhood: [data.location?.neighborhood],
         coordinates: this.fb.group({
-          lat: [data.location?.coordinates.lat],
-          lng: [data.location?.coordinates.lng]
+          lat: [data.location?.coordinates?.lat],
+          lng: [data.location?.coordinates?.lng]
         })
       }),
       images: [data.images ?? []],
       tracking: [data.tracking ?? []]
     });
-    this.form.markAsPristine();
-this.form.markAsUntouched();
-this.form.updateValueAndValidity();
-
   }
 
   guardar() {

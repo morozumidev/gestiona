@@ -70,16 +70,15 @@
             "ssl": true,
             "sslKey": "src/certificate/key.pem",
             "sslCert": "src/certificate/cert.pem",
-            "buildTarget": "gestiona:build:development",
-              "hmr": false
+            "buildTarget": "gestiona:build:development"
+
           },
           "configurations": {
             "production": {
               "buildTarget": "gestiona:build:production"
             },
             "development": {
-              "buildTarget": "gestiona:build:development",
-               "hmr": false
+              "buildTarget": "gestiona:build:development"
             }
           },
           "defaultConfiguration": "development"

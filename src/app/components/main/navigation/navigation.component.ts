@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, computed, effect, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, computed,  signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
@@ -43,16 +43,16 @@ export class NavigationComponent {
 
   readonly NAV_ITEMS_BY_ROLE: Record<string, NavItem[]> = {
     movil: [
-      { icon: 'add', label: 'Generar reporte', route: '/new-ticket' },
-      { icon: 'history', label: 'Historial de reportes', route: '/new-ticket' },
+      { icon: 'add', label: 'Generar reporte', route: '/ticket' },
+      { icon: 'history', label: 'Historial de reportes', route: '/ticket' },
     ],
     atencion: [
       { icon: 'dashboard', label: 'Dashboard', route: '/tickets' },
-      { icon: 'add', label: 'Generar reporte', route: '/new-ticket' },
+      { icon: 'add', label: 'Generar reporte', route: '/ticket' },
     ],
     alumbrado: [
       { icon: 'dashboard', label: 'Dashboard', route: '/dashboard-alumbrado' },
-      { icon: 'add', label: 'Generar reporte', route: '/new-ticket' },
+      { icon: 'add', label: 'Generar reporte', route: '/ticket' },
       { icon: 'lightbulb', label: 'Luminarias', route: '/luminarias' },
       {
         icon: 'gps_fixed',
@@ -75,7 +75,7 @@ export class NavigationComponent {
       { icon: 'currency_exchange', label: 'Cobro Municipal', route: '/tickets' },
       { icon: 'holiday_village', label: 'Catastro', route: '/tickets' },
       { icon: 'price_check', label: 'Predial', route: '/tickets' },
-      { icon: 'add', label: 'Generar reporte', route: '/new-ticket' },
+      { icon: 'add', label: 'Generar reporte', route: '/ticket' },
       { icon: 'lightbulb', label: 'Luminarias', route: '/luminarias' },
       {
         icon: 'gps_fixed',
@@ -89,7 +89,7 @@ export class NavigationComponent {
           'https://www.google.com/maps/d/embed?mid=1XyTGGmoo8GdUUdUlB24ySUCdRcGMOWw&ehbc=2E312F',
       },
     ],
-    web: [{ icon: 'add', label: 'Generar reporte', route: '/new-ticket' }],
+    web: [{ icon: 'add', label: 'Generar reporte', route: '/ticket' }],
   };
 
   // Reactive inputs

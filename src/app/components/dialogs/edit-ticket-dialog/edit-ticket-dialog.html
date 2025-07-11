@@ -1,15 +1,11 @@
-<div>
-  <button matButton="elevated" (click)="cerrar()">
-    <mat-icon>close</mat-icon>
-  </button>
-
-  <div>
-    <mat-icon>edit_note</mat-icon>
-    <h2>Editar Ticket</h2>
+<div class="dialog-container glass animate__animated animate__fadeIn">
+  <div class="header">
+    <h2><mat-icon>edit_note</mat-icon> Editar Ticket</h2>
+    <button mat-icon-button (click)="cerrar()"><mat-icon>close</mat-icon></button>
   </div>
 
-  <form [formGroup]="form">
-    <div>
+  <form [formGroup]="form" class="formulario">
+    <div class="row">
       <mat-form-field appearance="outline">
         <mat-label>Nombre</mat-label>
         <mat-icon matPrefix>person</mat-icon>
@@ -23,15 +19,41 @@
       </mat-form-field>
     </div>
 
-    <div>
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>Correo</mat-label>
+        <mat-icon matPrefix>email</mat-icon>
+        <input matInput formControlName="email" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Área</mat-label>
+        <mat-icon matPrefix>apartment</mat-icon>
+        <input matInput formControlName="area" />
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>Servicio</mat-label>
+        <mat-icon matPrefix>construction</mat-icon>
+        <input matInput formControlName="service" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Fuente</mat-label>
+        <mat-icon matPrefix>link</mat-icon>
+        <input matInput formControlName="source" />
+      </mat-form-field>
+    </div>
+
+    <div class="row">
       <mat-form-field appearance="outline">
         <mat-label>Problema</mat-label>
         <mat-icon matPrefix>warning</mat-icon>
         <input matInput formControlName="problem" />
       </mat-form-field>
-    </div>
 
-    <div>
       <mat-form-field appearance="outline">
         <mat-label>Descripción</mat-label>
         <mat-icon matPrefix>description</mat-icon>
@@ -39,7 +61,7 @@
       </mat-form-field>
     </div>
 
-    <div>
+    <div class="row">
       <mat-form-field appearance="outline">
         <mat-label>Estado</mat-label>
         <mat-icon matPrefix>flag</mat-icon>
@@ -51,29 +73,57 @@
       </mat-form-field>
     </div>
 
-    <div>
-      <mat-form-field appearance="outline">
-        <mat-label>Calle</mat-label>
-        <mat-icon matPrefix>location_on</mat-icon>
-        <input matInput formControlName="street" />
-      </mat-form-field>
+    <div class="location" formGroupName="location">
+      <div class="row">
+        <mat-form-field appearance="outline">
+          <mat-label>Calle</mat-label>
+          <mat-icon matPrefix>location_on</mat-icon>
+          <input matInput formControlName="street" />
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Colonia</mat-label>
-        <mat-icon matPrefix>home</mat-icon>
-        <input matInput formControlName="neighborhood" />
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Colonia</mat-label>
+          <mat-icon matPrefix>home</mat-icon>
+          <input matInput formControlName="neighborhood" />
+        </mat-form-field>
+      </div>
+
+      <div class="row">
+        <mat-form-field appearance="outline">
+          <mat-label>No. Exterior</mat-label>
+          <mat-icon matPrefix>numbers</mat-icon>
+          <input matInput formControlName="extNumber" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Entre calles</mat-label>
+          <mat-icon matPrefix>map</mat-icon>
+          <input matInput formControlName="crossStreets" />
+        </mat-form-field>
+      </div>
+
+      <div class="row" formGroupName="coordinates">
+        <mat-form-field appearance="outline">
+          <mat-label>Latitud</mat-label>
+          <mat-icon matPrefix>my_location</mat-icon>
+          <input matInput formControlName="lat" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Longitud</mat-label>
+          <mat-icon matPrefix>my_location</mat-icon>
+          <input matInput formControlName="lng" />
+        </mat-form-field>
+      </div>
     </div>
   </form>
 
-  <div>
-    <button matButton="elevated" (click)="guardar()" [disabled]="form.invalid">
-      <mat-icon>save</mat-icon>
-      Guardar
+  <div class="actions">
+    <button mat-raised-button color="primary" (click)="guardar()" [disabled]="form.invalid">
+      <mat-icon>save</mat-icon> Guardar
     </button>
-    <button matButton="elevated" (click)="irAEdicionCompleta()">
-      <mat-icon>edit</mat-icon>
-      Edición completa
+    <button mat-raised-button color="accent" (click)="irAEdicionCompleta()">
+      <mat-icon>edit</mat-icon> Edición completa
     </button>
   </div>
 </div>
