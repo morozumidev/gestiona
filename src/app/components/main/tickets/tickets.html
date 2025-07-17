@@ -24,6 +24,27 @@
       <div class="ticket-count">{{ filteredTickets().length }}</div>
     </div>
   </div>
+<section>
+  <div class="glass-container status-chips">
+    <div class="chip verde">
+      <span class="color-dot"></span>
+      <span class="label">A tiempo</span>
+      <span class="count">{{ countSemaforoColor('verde') }}</span>
+    </div>
+
+    <div class="chip ambar">
+      <span class="color-dot"></span>
+      <span class="label">Requieren atención</span>
+      <span class="count">{{ countSemaforoColor('ambar') }}</span>
+    </div>
+
+    <div class="chip rojo">
+      <span class="color-dot"></span>
+      <span class="label">Vencidos</span>
+      <span class="count">{{ countSemaforoColor('rojo') }}</span>
+    </div>
+  </div>
+</section>
 
 <section class="search-bar glass-container">
   <div class="search-wrapper">
@@ -66,7 +87,7 @@
 
       <ng-container matColumnDef="createdAt">
         <th mat-header-cell *matHeaderCellDef mat-sort-header (click)="sortBy('createdAt')">
-          Fecha {{ getSortIndicator('createdAt') }}
+          Creado el {{ getSortIndicator('createdAt') }}
         </th>
         <td mat-cell *matCellDef="let ticket">{{ ticket.createdAt | date }}</td>
       </ng-container>
@@ -89,7 +110,7 @@
       <ng-container matColumnDef="semaforo">
         <th mat-header-cell *matHeaderCellDef>Semáforo</th>
         <td mat-cell *matCellDef="let ticket">
-          <span class="semaforo-dot" [ngClass]="getSemaforoColor(ticket.createdAt)"></span>
+         <span class="semaforo-dot" [ngClass]="getSemaforoColor(ticket.createdAt)"></span>
         </td>
       </ng-container>
 

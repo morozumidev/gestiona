@@ -1,127 +1,130 @@
-<mat-card class="report-form glass-container">
+<div class="ticket-container report-form">
   <form [formGroup]="reportForm" (ngSubmit)="submitForm()">
-    <div class="form-grid">
+    <!-- CIUDADANO -->
+    <section class="form-section">
+      <h2 class="section-title"><mat-icon>person</mat-icon>Datos del Ciudadano</h2>
+      <div class="form-grid">
+        <mat-form-field appearance="outline"><mat-icon matPrefix>badge</mat-icon><mat-label>Nombre</mat-label><input
+            matInput formControlName="nombre" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-icon matPrefix>person</mat-icon><mat-label>Apellido
+            Paterno</mat-label><input matInput formControlName="apellidoPaterno" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-icon matPrefix>person</mat-icon><mat-label>Apellido
+            Materno</mat-label><input matInput formControlName="apellidoMaterno" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-icon matPrefix>call</mat-icon><mat-label>Teléfono</mat-label><input
+            matInput formControlName="telefono" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-icon matPrefix>email</mat-icon><mat-label>Correo
+            electrónico</mat-label><input matInput type="email" formControlName="email" /></mat-form-field>
+      </div>
+    </section>
 
-      <!-- Datos personales -->
-      <mat-form-field appearance="outline">
-        <mat-label>Nombre</mat-label>
-        <input matInput formControlName="nombre" required />
-      </mat-form-field>
+    <!-- UBICACIÓN -->
+    <section class="form-section">
+      <h2 class="section-title"><mat-icon>location_on</mat-icon>Ubicación del Reporte</h2>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Dirección</mat-label>
+          <textarea matInput formControlName="direccion" rows="2"></textarea>
+          <button mat-icon-button matSuffix type="button" (click)="toggleMap()"><mat-icon>place</mat-icon></button>
+        </mat-form-field>
+        <mat-form-field appearance="outline"><mat-icon matPrefix>sync_alt</mat-icon><mat-label>Entre
+            calles</mat-label><input matInput formControlName="entreCalles" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-icon matPrefix>home</mat-icon><mat-label>Número
+            exterior</mat-label><input matInput formControlName="numeroExterior" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-icon
+            matPrefix>location_city</mat-icon><mat-label>Colonia</mat-label><input matInput
+            formControlName="colonia" /></mat-form-field>
+      </div>
+@if (showMap) {
+  <div #mapContainer id="map" class="map-container"></div>
+}
+    </section>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Apellido Paterno</mat-label>
-        <input matInput formControlName="apellidoPaterno" required />
-      </mat-form-field>
+    <!-- DETALLES -->
+    <section class="form-section">
+      <h2 class="section-title"><mat-icon>assignment</mat-icon>Detalles del Reporte</h2>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>alternate_email</mat-icon>
+          <mat-label>Origen</mat-label>
+          <mat-select formControlName="origen">
+            @for (origen of ['Web','Facebook','WhatsApp','Otro']; let i = $index; track i) {
+            <mat-option [value]="origen">{{ origen }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Apellido Materno</mat-label>
-        <input matInput formControlName="apellidoMaterno" required />
-      </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>report_problem</mat-icon>
+          <mat-label>Problema</mat-label>
+          <mat-select formControlName="tema" (selectionChange)="onTemaChange()">
+            @for (option of temas; let i = $index; track i) {
+            <mat-option [value]="option">{{ option }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Teléfono</mat-label>
-        <input matInput formControlName="telefono" required />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Correo electrónico</mat-label>
-        <input matInput type="email" formControlName="email" required />
-      </mat-form-field>
-
-      <!-- Dirección -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Dirección</mat-label>
-        <textarea matInput formControlName="direccion" rows="2"
-          placeholder="Selecciona la ubicación en el mapa o escribe aquí"></textarea>
-        <button mat-icon-button matSuffix type="button" aria-label="Abrir mapa" (click)="toggleMap()">
-          <mat-icon>location_on</mat-icon>
-        </button>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Entre calles</mat-label>
-        <input matInput formControlName="entreCalles" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Número exterior</mat-label>
-        <input matInput formControlName="numeroExterior" />
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Colonia</mat-label>
-        <input matInput formControlName="colonia" />
-      </mat-form-field>
-
-      @if (showMap) {
-      <div #mapContainer class="map-container" style="height: 300px;"></div>
-      }
-
-      <!-- Origen -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Origen</mat-label>
-        <mat-select formControlName="origen">
-          @for (origen of ['Web','Facebook','WhatsApp','Otro']; track $index) {
-          <mat-option [value]="origen">{{ origen }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      <!-- Problema -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Problema</mat-label>
-        <mat-select formControlName="tema" (selectionChange)="onTemaChange()">
-          @for (option of temas; track option) {
-          <mat-option [value]="option">{{ option }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-
-      @if (showLuminarias) {
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Luminaria</mat-label>
-        <mat-select formControlName="luminaria" (selectionChange)="onLuminariaChange()">
-          @for (luminaria of luminarias; track luminaria) {
-          <mat-option [value]="luminaria">{{ luminaria }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      }
-
-      @if (showCuadrillas) {
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Cuadrilla</mat-label>
-        <mat-select formControlName="cuadrilla">
-          @for (cuadrilla of cuadrillas; track cuadrilla) {
-          <mat-option [value]="cuadrilla">{{ cuadrilla }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-      }
-
-      <!-- Descripción -->
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Descripción del problema</mat-label>
-        <textarea matInput rows="3" formControlName="descripcion"
-          placeholder="Describe el problema con detalle..."></textarea>
-      </mat-form-field>
-
-      <!-- Imagen -->
-      <div class="full-width image-upload">
-        <label for="fileInput">Evidencia Fotográfica:</label>
-        <input type="file" id="fileInput" (change)="onFileSelected($event)" accept="image/*" />
-        @if (previewUrl) {
-        <img [src]="previewUrl" class="preview-img" />
+        @if (showLuminarias) {
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>highlight</mat-icon>
+          <mat-label>Luminaria</mat-label>
+          <mat-select formControlName="luminaria">
+            @for (luminaria of luminarias; let i = $index; track i) {
+            <mat-option [value]="luminaria">{{ luminaria }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
         }
-      </div>
 
-      <!-- Botón -->
-      <div class="full-width button-row">
-        <button mat-raised-button color="primary" type="submit" [disabled]="!reportForm.valid">
-          Enviar Reporte
-        </button>
-      </div>
+        @if (showCuadrillas) {
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>engineering</mat-icon>
+          <mat-label>Cuadrilla</mat-label>
+          <mat-select formControlName="cuadrilla">
+            @for (cuadrilla of cuadrillas; let i = $index; track i) {
+            <mat-option [value]="cuadrilla">{{ cuadrilla }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        }
 
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>groups</mat-icon>
+          <mat-label>Área Asignada</mat-label>
+          <mat-select formControlName="area">
+            @for (area of areas; track area.id) {
+            <mat-option [value]="area.id">{{ area.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="">
+          <mat-icon matPrefix>notes</mat-icon>
+          <mat-label>Descripción del problema</mat-label>
+          <textarea matInput formControlName="descripcion" rows="3"></textarea>
+        </mat-form-field>
+
+<div class="image-upload">
+  <button matButton="elevated" type="button" (click)="fileInput.click()">
+  <mat-icon>upload_file</mat-icon> Subir
+</button>
+
+  <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden />
+
+
+  @if (previewUrl) {
+    <img [src]="previewUrl" class="preview-img" />
+  }
+</div>
+
+
+
+      </div>
+    </section>
+
+    <div class="submit-section">
+      <button mat-raised-button color="primary" type="submit" [disabled]="!reportForm.valid">
+        {{ ticketFound ? 'Actualizar Ticket' : 'Enviar Reporte' }}
+      </button>
     </div>
   </form>
-</mat-card>
+</div>

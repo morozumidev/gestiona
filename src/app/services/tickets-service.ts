@@ -12,11 +12,21 @@ export class TicketsService {
 
   tickets: Ticket[] = [];
   selectedTicket = signal<Ticket | null>(null);
+reverseGeocode(lat: number, lng: number) {
+  console.log("solicitado")
+  return this.http.post<{ address: string }>(
+    this.coreService.URI_API + 'maps/reverse-geocode',
+    { lat, lng }
+  );
+}
+
 
   setTicket(ticket: Ticket) {
     this.selectedTicket.set(ticket);
   }
-
+  clearTicket() {
+    this.selectedTicket.set(null);
+  }
   getTicket() {
     return this.selectedTicket.asReadonly();
   }
@@ -26,13 +36,13 @@ export class TicketsService {
       filters.length > 0 ? { filters } : {}
     );
   }
-  createTicket(ticket: Partial<Ticket>, file?: File) {
+  manageTicket(ticket: Partial<Ticket>, file?: File) {
     const formData = new FormData();
     formData.append('ticket', JSON.stringify(ticket));
     if (file) {
       formData.append('image', file);
     }
-    return this.http.post(this.coreService.URI_API + 'tickets/createTicket', formData);
+    return this.http.post(this.coreService.URI_API + 'tickets/manageTicket', formData);
   }
 
 }

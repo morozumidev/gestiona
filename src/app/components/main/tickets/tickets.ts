@@ -168,6 +168,9 @@ export class Tickets {
   }
 
   isClosed = (ticket: Ticket) => ticket.status === 'Atendida';
+countSemaforoColor(color: 'verde' | 'ambar' | 'rojo'): number {
+  return this.filteredTickets().filter(ticket => this.getSemaforoColor(ticket.createdAt!) === color).length;
+}
 
   getSemaforoColor(createdAt: Date): 'verde' | 'ambar' | 'rojo' {
     const diffHours = (new Date().getTime() - new Date(createdAt).getTime()) / 36e5;

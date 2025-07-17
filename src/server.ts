@@ -6,12 +6,17 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import fs from 'fs';
+import https from 'https';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
-
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
+// Si en el futuro pones detrás de proxy, esto ayuda
+app.set('trust proxy', true);
+
+// Archivos estáticos
 app.use(
   express.static(browserDistFolder, {
     maxAge: '1y',
@@ -20,6 +25,7 @@ app.use(
   }),
 );
 
+// Angular SSR handler
 app.use((req, res, next) => {
   angularApp
     .handle(req)
@@ -29,14 +35,15 @@ app.use((req, res, next) => {
     .catch(next);
 });
 
+// Servidor HTTPS en 8787
 if (isMainModule(import.meta.url)) {
-  const port = Number(process.env['PORT'] || 4000);
-  app.listen(port, '0.0.0.0', (error) => {
-    if (error) {
-      throw error;
-    }
+  const httpsOptions = {
+    key: fs.readFileSync('certificate/key.pem'),
+    cert: fs.readFileSync('certificate/cert.pem'),
+  };
 
-    console.log(`Node Express server listening on http://localhost:${port}`);
+  https.createServer(httpsOptions, app).listen(8787, '0.0.0.0', () => {
+    console.log('Servidor HTTPS activo en https://hcpboca.ddns.net:8787');
   });
 }
 

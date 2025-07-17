@@ -198,7 +198,7 @@ export class NewTicketAlumbrado implements AfterViewInit, OnDestroy {
         tracking: [],
       };
 
-      this.ticketsService.createTicket(ticket, formValues.evidencia).subscribe({
+      this.ticketsService.manageTicket(ticket, formValues.evidencia).subscribe({
         next: () => {
           this.dialog.open(SuccessDialog);
           this.reportForm.reset();

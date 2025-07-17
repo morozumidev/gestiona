@@ -84,7 +84,6 @@
     }
 
     .ticket-icon {
-      font-size: 2.6rem;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -159,36 +158,87 @@
   }
 }
 
+// semaforo
 .status-chips {
+  display: flex;
+  justify-content: center;
+  /* centrar horizontal */
+  align-items: center;
+  /* centrar vertical */
+  gap: 1.2rem;
+  padding: 0.8rem 1.5rem;
+  /* espacio interno para respirar */
+  margin: 1rem 0;
+  /* separación vertical respecto a otros elementos */
+
   .chip {
     display: flex;
     align-items: center;
-    padding: 0.6rem 1.2rem;
-    border-radius: 100px;
-    font-weight: 600;
-    font-size: 1rem;
-    @include glass-overlay;
-    background-color: var(--mat-sys-surface-container-high);
-    color: var(--mat-sys-on-surface);
+    background: #f5f5f5;
+    border-radius: 9999px;
+    padding: 0.5rem 1.2rem;
+    /* un poco más de padding para balance */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    cursor: default;
+    user-select: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    opacity: 1 !important;
+    min-width: 90px;
+    /* ancha mínima para consistencia visual */
+    justify-content: center;
+    /* centrar texto y contenido dentro de chip */
+
+    &:hover {
+      transform: scale(1.07);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+      opacity: 1;
+    }
+
+    &.active {
+      opacity: 1;
+      animation: pulseGlow 2.5s ease-in-out infinite;
+    }
 
     .color-dot {
       width: 14px;
       height: 14px;
       border-radius: 50%;
-      margin-right: 0.6rem;
+      margin-right: 0.7rem;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
     }
 
-    &.verde .color-dot {
-      background: #1ca020;
+    .label {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #444;
+      margin-right: 0.8rem;
+      user-select: none;
+      white-space: nowrap;
     }
 
-    &.ambar .color-dot {
-      background: #ffd000;
+    .count {
+      font-weight: 700;
+      font-size: 1.25rem;
+      font-feature-settings: 'tnum';
+      min-width: 28px;
+      text-align: center;
+      color: #222;
     }
+  }
 
-    &.rojo .color-dot {
-      background: #ff1100;
-    }
+  .verde .color-dot {
+    background-color: #4caf50;
+    box-shadow: 0 0 8px #4caf50aa;
+  }
+
+  .ambar .color-dot {
+    background-color: #ffb300;
+    box-shadow: 0 0 8px #ffb300aa;
+  }
+
+  .rojo .color-dot {
+    background-color: #f44336;
+    box-shadow: 0 0 8px #f44336aa;
   }
 }
 
@@ -279,4 +329,27 @@ table {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+.semaforo-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin: 0 auto;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+
+  &.verde {
+    background-color: #4caf50;
+    box-shadow: 0 0 8px #4caf50aa;
+  }
+
+  &.ambar {
+    background-color: #ffb300;
+    box-shadow: 0 0 8px #ffb300aa;
+  }
+
+  &.rojo {
+    background-color: #f44336;
+    box-shadow: 0 0 8px #f44336aa;
+  }
 }

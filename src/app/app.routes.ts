@@ -9,6 +9,7 @@ import { NewTicketAlumbrado } from './components/forms/new-ticket-alumbrado/new-
 import { Luminarias } from './components/main/luminarias/luminarias';
 import { Tickets } from './components/main/tickets/tickets';
 import { TicketManagement } from './components/main/ticket/ticket';
+import { SuccessDialog } from './components/dialogs/success-dialog/success-dialog';
 
 export const routes: Routes = [
   { path: 'login', component: Login },
@@ -40,6 +41,12 @@ export const routes: Routes = [
   {
     path: 'luminarias',
     component: Luminarias,
+    canActivate: [canActivate],
+    data: { roles: ['ALL'] }
+  },
+   {
+    path: 'success-dialog',
+    component: SuccessDialog,
     canActivate: [canActivate],
     data: { roles: ['ALL'] }
   },

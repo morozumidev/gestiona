@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-success-dialog',
@@ -7,8 +8,11 @@ import { Component } from '@angular/core';
   styleUrl: './success-dialog.scss'
 })
 export class SuccessDialog {
-folio:"500573" | undefined
-constructor() {
-  this.folio = "500573"; // Example folio, replace with actual logic to get the folio
-}
+  folio: string;
+
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { folio: string }) {
+
+    this.folio = data.folio;
+
+  }
 }

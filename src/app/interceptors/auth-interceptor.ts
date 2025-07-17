@@ -13,8 +13,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(cloned).pipe(
     catchError((err) => {
-
-        console.error(`[Interceptor] ⚠️ HTTP Error ${err.status} from:`, req.url);
       return throwError(() => err);
     })
   );
