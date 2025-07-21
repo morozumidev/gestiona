@@ -139,7 +139,7 @@
         <mat-form-field appearance="outline">
           <mat-icon matPrefix>groups</mat-icon>
           <mat-label>Área Asignada</mat-label>
-          <mat-select formControlName="area" [disabled]="!areaEditable()">
+          <mat-select formControlName="area" >
             @for (area of areas(); track area._id) {
               <mat-option [value]="area._id">{{ area.name }}</mat-option>
             }
