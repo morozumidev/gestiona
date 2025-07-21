@@ -5,7 +5,6 @@ import { Login } from './components/login/login/login';
 import { NavigationComponent } from './components/main/navigation/navigation.component';
 import { Dashboard } from './components/main/dashboard/dashboard';
 import { NewTicket } from './components/forms/new-ticket/new-ticket';
-import { NewTicketAlumbrado } from './components/forms/new-ticket-alumbrado/new-ticket-alumbrado';
 import { Luminarias } from './components/main/luminarias/luminarias';
 import { Tickets } from './components/main/tickets/tickets';
 import { TicketManagement } from './components/main/ticket/ticket';

@@ -4,16 +4,31 @@
     <section class="form-section">
       <h2 class="section-title"><mat-icon>person</mat-icon>Datos del Ciudadano</h2>
       <div class="form-grid">
-        <mat-form-field appearance="outline"><mat-icon matPrefix>badge</mat-icon><mat-label>Nombre</mat-label><input
-            matInput formControlName="nombre" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-icon matPrefix>person</mat-icon><mat-label>Apellido
-            Paterno</mat-label><input matInput formControlName="apellidoPaterno" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-icon matPrefix>person</mat-icon><mat-label>Apellido
-            Materno</mat-label><input matInput formControlName="apellidoMaterno" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-icon matPrefix>call</mat-icon><mat-label>Teléfono</mat-label><input
-            matInput formControlName="telefono" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-icon matPrefix>email</mat-icon><mat-label>Correo
-            electrónico</mat-label><input matInput type="email" formControlName="email" /></mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>badge</mat-icon>
+          <mat-label>Nombre(s)</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>person</mat-icon>
+          <mat-label>Primer Apellido</mat-label>
+          <input matInput formControlName="first_lastname" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>person</mat-icon>
+          <mat-label>Segundo Apellido</mat-label>
+          <input matInput formControlName="second_lastname" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>call</mat-icon>
+          <mat-label>Teléfono</mat-label>
+          <input matInput formControlName="phone" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>email</mat-icon>
+          <mat-label>Correo electrónico</mat-label>
+          <input matInput type="email" formControlName="email" />
+        </mat-form-field>
       </div>
     </section>
 
@@ -21,22 +36,74 @@
     <section class="form-section">
       <h2 class="section-title"><mat-icon>location_on</mat-icon>Ubicación del Reporte</h2>
       <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Dirección</mat-label>
-          <textarea matInput formControlName="direccion" rows="2"></textarea>
-          <button mat-icon-button matSuffix type="button" (click)="toggleMap()"><mat-icon>place</mat-icon></button>
-        </mat-form-field>
-        <mat-form-field appearance="outline"><mat-icon matPrefix>sync_alt</mat-icon><mat-label>Entre
-            calles</mat-label><input matInput formControlName="entreCalles" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-icon matPrefix>home</mat-icon><mat-label>Número
-            exterior</mat-label><input matInput formControlName="numeroExterior" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-icon
-            matPrefix>location_city</mat-icon><mat-label>Colonia</mat-label><input matInput
-            formControlName="colonia" /></mat-form-field>
+        <button matButton="elevated" type="button" (click)="toggleMap()">
+          <mat-icon>place</mat-icon> Seleccionar desde el mapa
+        </button>
+        @if (showMap) {
+          <div #mapContainer id="map" class="map-container"></div>
+        }
       </div>
-@if (showMap) {
-  <div #mapContainer id="map" class="map-container"></div>
-}
+      <div class="form-grid" formGroupName="location">
+        <mat-form-field appearance="outline">
+          <mat-label>Calle</mat-label>
+          <input matInput formControlName="street" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Número exterior</mat-label>
+          <input matInput formControlName="extNumber" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Número interior</mat-label>
+          <input matInput formControlName="intNumber" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Entre calles</mat-label>
+          <input matInput formControlName="crossStreets" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Colonia / Barrio</mat-label>
+          <input matInput formControlName="neighborhood" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Alcaldía / Delegación</mat-label>
+          <input matInput formControlName="borough" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Municipio</mat-label>
+          <input matInput formControlName="locality" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Ciudad</mat-label>
+          <input matInput formControlName="city" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Estado</mat-label>
+          <input matInput formControlName="state" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Código postal</mat-label>
+          <input matInput formControlName="postalCode" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>País</mat-label>
+          <input matInput formControlName="country" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Referencias</mat-label>
+          <input matInput formControlName="references" />
+        </mat-form-field>
+
+        <div formGroupName="coordinates" class="form-grid full-width">
+          <mat-form-field appearance="outline">
+            <mat-label>Latitud</mat-label>
+            <input matInput formControlName="lat" type="number" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Longitud</mat-label>
+            <input matInput formControlName="lng" type="number" />
+          </mat-form-field>
+        </div>
+      </div>
     </section>
 
     <!-- DETALLES -->
@@ -46,9 +113,9 @@
         <mat-form-field appearance="outline">
           <mat-icon matPrefix>alternate_email</mat-icon>
           <mat-label>Origen</mat-label>
-          <mat-select formControlName="origen">
-            @for (origen of ['Web','Facebook','WhatsApp','Otro']; let i = $index; track i) {
-            <mat-option [value]="origen">{{ origen }}</mat-option>
+          <mat-select formControlName="source">
+            @for (origen of ['Web','Facebook','WhatsApp','Otro']; track origen) {
+              <mat-option [value]="origen">{{ origen }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
@@ -56,68 +123,57 @@
         <mat-form-field appearance="outline">
           <mat-icon matPrefix>report_problem</mat-icon>
           <mat-label>Problema</mat-label>
-          <mat-select formControlName="tema" (selectionChange)="onTemaChange()">
-            @for (option of temas; let i = $index; track i) {
-            <mat-option [value]="option">{{ option }}</mat-option>
+          <mat-select formControlName="problem" (selectionChange)="onTemaSelected($event.value)">
+            @for (option of temas(); track option._id) {
+              <mat-option [value]="option._id">{{ option.name }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
 
-        @if (showLuminarias) {
         <mat-form-field appearance="outline">
-          <mat-icon matPrefix>highlight</mat-icon>
-          <mat-label>Luminaria</mat-label>
-          <mat-select formControlName="luminaria">
-            @for (luminaria of luminarias; let i = $index; track i) {
-            <mat-option [value]="luminaria">{{ luminaria }}</mat-option>
-            }
-          </mat-select>
+          <mat-icon matPrefix>build</mat-icon>
+          <mat-label>Servicio</mat-label>
+          <input matInput formControlName="service" />
         </mat-form-field>
-        }
-
-        @if (showCuadrillas) {
-        <mat-form-field appearance="outline">
-          <mat-icon matPrefix>engineering</mat-icon>
-          <mat-label>Cuadrilla</mat-label>
-          <mat-select formControlName="cuadrilla">
-            @for (cuadrilla of cuadrillas; let i = $index; track i) {
-            <mat-option [value]="cuadrilla">{{ cuadrilla }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-        }
 
         <mat-form-field appearance="outline">
           <mat-icon matPrefix>groups</mat-icon>
           <mat-label>Área Asignada</mat-label>
-          <mat-select formControlName="area">
-            @for (area of areas; track area.id) {
-            <mat-option [value]="area.id">{{ area.name }}</mat-option>
+          <mat-select formControlName="area" [disabled]="!areaEditable()">
+            @for (area of areas(); track area._id) {
+              <mat-option [value]="area._id">{{ area.name }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="">
+@if (showLuminarias()) {
+  <mat-form-field appearance="outline">
+    <mat-icon matPrefix>lightbulb</mat-icon>
+    <mat-label>Luminaria</mat-label>
+    <mat-select formControlName="luminaria">
+      @for (l of luminarias(); track l._id) {
+        <mat-option [value]="l._id">{{ l.code }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+}
+
+
+        <mat-form-field appearance="outline" class="full-width">
           <mat-icon matPrefix>notes</mat-icon>
           <mat-label>Descripción del problema</mat-label>
-          <textarea matInput formControlName="descripcion" rows="3"></textarea>
+          <textarea matInput formControlName="description" rows="3"></textarea>
         </mat-form-field>
 
-<div class="image-upload">
-  <button matButton="elevated" type="button" (click)="fileInput.click()">
-  <mat-icon>upload_file</mat-icon> Subir
-</button>
-
-  <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden />
-
-
-  @if (previewUrl) {
-    <img [src]="previewUrl" class="preview-img" />
-  }
-</div>
-
-
-
+        <div class="image-upload">
+          <button matButton="elevated" type="button" (click)="fileInput.click()">
+            <mat-icon>upload_file</mat-icon> Subir
+          </button>
+          <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden />
+          @if (previewUrl) {
+            <img [src]="previewUrl" class="preview-img" />
+          }
+        </div>
       </div>
     </section>
 

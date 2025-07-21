@@ -6,6 +6,8 @@ export interface Ticket {
 
   // Datos del reportante
   name: string;
+  first_lastname?: string;    // Primer apellido
+  second_lastname?: string;   // Segundo apellido
   phone: string;
   email: string;
 
@@ -22,19 +24,24 @@ export interface Ticket {
 
   // Ubicación
 location: {
-  street: string;               // Ej. "Av. Díaz Mirón"
-  extNumber: string;           // Ej. "2010"
-  crossStreets?: string;       // Ej. "Entre Tuero Molina y Cañonero Tampico"
-  neighborhood: string;        // Ej. "Moderno"
-  postalCode?: string;         // Ej. "91918"
-  locality?: string;           // Ej. "Veracruz"
-  state?: string;              // Ej. "Veracruz"
-  country?: string;            // Ej. "México"
+  street: string;               // "Av. Díaz Mirón"
+  extNumber: string;           // "2010"
+  intNumber?: string;          // "Depto. 5" o "Interior B"
+  crossStreets?: string;       // "Entre Tuero Molina y Cañonero Tampico"
+  neighborhood: string;        // "Moderno"
+  borough?: string;            // "Veracruz" (en CDMX sería "Benito Juárez")
+  locality?: string;           // "Veracruz" (delegación o municipio)
+  city?: string;               // "Veracruz" o "Boca del Río"
+  state: string;               // "Veracruz"
+  postalCode: string;          // "91918"
+  country: string;             // "México"
+  references?: string;         // "Frente a la gasolinera"
   coordinates: {
     lat: number;
     lng: number;
   };
 }
+
 
 
   // Evidencias
@@ -67,4 +74,6 @@ location: {
   createdBy?: string; // User ID
   createdAt?: Date;
   updatedAt?: Date;
+
+  luminaria?: string; // Luminaria ID, opcional para tickets relacionados con luminarias
 }

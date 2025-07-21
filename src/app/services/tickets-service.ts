@@ -2,6 +2,9 @@ import { Injectable, signal } from '@angular/core';
 import { Ticket } from '../models/Ticket';
 import { HttpClient } from '@angular/common/http';
 import { CoreService } from './core-service';
+import { Luminaria } from '../models/Luminaria';
+import { Tema } from '../models/Tema';
+import { Area } from '../models/Area';
 
 @Injectable({
   providedIn: 'root'
@@ -12,13 +15,13 @@ export class TicketsService {
 
   tickets: Ticket[] = [];
   selectedTicket = signal<Ticket | null>(null);
-reverseGeocode(lat: number, lng: number) {
-  console.log("solicitado")
-  return this.http.post<{ address: string }>(
-    this.coreService.URI_API + 'maps/reverse-geocode',
-    { lat, lng }
-  );
-}
+  reverseGeocode(lat: number, lng: number) {
+    console.log("solicitado")
+    return this.http.post<{ address: string }>(
+      this.coreService.URI_API + 'maps/reverse-geocode',
+      { lat, lng }
+    );
+  }
 
 
   setTicket(ticket: Ticket) {
@@ -44,5 +47,19 @@ reverseGeocode(lat: number, lng: number) {
     }
     return this.http.post(this.coreService.URI_API + 'tickets/manageTicket', formData);
   }
+
+getTemas() {
+  return this.http.post<Tema[]>(this.coreService.URI_API + 'tickets/getTemas', {});
+}
+
+getAreas() {
+  return this.http.post<Area[]>(this.coreService.URI_API + 'tickets/getAreas', {});
+}
+
+getLuminarias() {
+  return this.http.post<Luminaria[]>(this.coreService.URI_API + 'tickets/getLuminarias', {});
+}
+
+
 
 }
