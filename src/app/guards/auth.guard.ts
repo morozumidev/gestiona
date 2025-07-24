@@ -19,12 +19,12 @@ export const canActivate: CanActivateFn = (
   return authService.isLoggedIn().pipe(
     map((isLoggedIn: boolean) => {
       if (!isLoggedIn) {
-        authService.clearSession(); // ahora es público
+        authService.clearSession();
         return router.createUrlTree(['/login']);
       }
 
-      const tokenData: any = authService.getTokenData();
-      const userRole = tokenData?.['role'];
+      const user = authService['userSubject'].getValue(); // ← acceso directo
+      const userRole = user?.role?.name || 'user';
       const allowedRoles = route.data?.['roles'] ?? [];
 
       if (allowedRoles.includes('ALL') || allowedRoles.includes(userRole)) {
@@ -39,6 +39,7 @@ export const canActivate: CanActivateFn = (
     })
   );
 };
+
 
 export const canActivateChild: CanActivateChildFn = (
   route: ActivatedRouteSnapshot,

@@ -64,10 +64,7 @@
           <mat-label>Colonia / Barrio</mat-label>
           <input matInput formControlName="neighborhood" />
         </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Alcaldía / Delegación</mat-label>
-          <input matInput formControlName="borough" />
-        </mat-form-field>
+
         <mat-form-field appearance="outline">
           <mat-label>Municipio</mat-label>
           <input matInput formControlName="locality" />
@@ -114,10 +111,10 @@
           <mat-icon matPrefix>alternate_email</mat-icon>
           <mat-label>Origen</mat-label>
           <mat-select formControlName="source">
-            @for (origen of ['Web','Facebook','WhatsApp','Otro']; track origen) {
-              <mat-option [value]="origen">{{ origen }}</mat-option>
-            }
-          </mat-select>
+  @for (source of sources(); track source._id) {
+    <mat-option [value]="source._id">{{ source.name }}</mat-option>
+  }
+</mat-select>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -128,12 +125,6 @@
               <mat-option [value]="option._id">{{ option.name }}</mat-option>
             }
           </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-icon matPrefix>build</mat-icon>
-          <mat-label>Servicio</mat-label>
-          <input matInput formControlName="service" />
         </mat-form-field>
 
         <mat-form-field appearance="outline">

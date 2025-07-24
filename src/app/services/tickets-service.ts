@@ -11,6 +11,7 @@ import { Area } from '../models/Area';
 })
 export class TicketsService {
 
+
   constructor(private readonly http: HttpClient, private readonly coreService: CoreService) { }
 
   tickets: Ticket[] = [];
@@ -51,7 +52,9 @@ export class TicketsService {
 getTemas() {
   return this.http.post<Tema[]>(this.coreService.URI_API + 'tickets/getTemas', {});
 }
-
+  getSources() {
+    return this.http.post<Area[]>(this.coreService.URI_API + 'tickets/getSources', {});
+  }
 getAreas() {
   return this.http.post<Area[]>(this.coreService.URI_API + 'tickets/getAreas', {});
 }
@@ -60,6 +63,17 @@ getLuminarias() {
   return this.http.post<Luminaria[]>(this.coreService.URI_API + 'tickets/getLuminarias', {});
 }
 
+getProblems() {
+  return this.http.post<{ _id: string; name: string }[]>('/api/catalogs/problems', {});
+}
 
+getStatuses() {
+  return this.http.post<{ _id: string; name: string }[]>('/api/catalogs/statuses', {});
+}
+
+
+getCuadrillas() {
+  return this.http.post<{ _id: string; name: string }[]>('/api/catalogs/cuadrillas', {});
+}
 
 }

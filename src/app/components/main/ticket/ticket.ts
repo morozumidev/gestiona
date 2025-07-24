@@ -40,6 +40,7 @@ import { first } from 'rxjs';
 import { Luminaria } from '../../../models/Luminaria';
 import { Tema } from '../../../models/Tema';
 import { Area } from '../../../models/Area';
+import { Source } from '../../../models/Source';
 
 /// <reference types="google.maps" />
 declare const google: any;
@@ -69,6 +70,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
 
   temas = signal<Tema[]>([]);
   areas = signal<Area[]>([]);
+  sources = signal<Source[]>([])
   luminarias = signal<Luminaria[]>([]);
   showLuminarias = signal(false);
   areaEditable = signal(false);
@@ -83,6 +85,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   @ViewChild('mapContainer', { static: false }) mapContainer!: ElementRef;
 
   ticketHistory: TicketTracking[] = [];
+  origins: any;
 
   constructor(
     private fb: FormBuilder,
@@ -105,10 +108,9 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       email: ['', [Validators.required, Validators.email]],
 
       // Catálogos dinámicos
-      source: ['Facebook'],
-      service: [''],
+      source: [''],
       area: [''],
-      status: ['pendiente'],
+      status: ['68814abc0000000000000001'],
       workflowStage: ['generado'],
 
       // Detalles del problema
@@ -169,7 +171,6 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       luminaria: [''],
     });
 
-
   }
 
   ngOnInit(): void {
@@ -192,11 +193,8 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
             email: ticket.email || '',
 
             // Catálogos
-            source: ticket.source || 'Facebook',
-            service: ticket.service || '',
-            area: ticket.area || '',
-            status: ticket.status || 'pendiente',
-            workflowStage: ticket.workflowStage || 'generado',
+            source: ticket.source || '',
+            status: ticket.status || '68814abc0000000000000001',
 
             // Problema
             problem: ticket.problem || '',
@@ -225,19 +223,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
             // Evidencias
             images: ticket.images || [],
 
-            // Asignaciones
-            areaAssignment: ticket.areaAssignment || {
-              assignedTo: '',
-              accepted: null,
-              rejectionReason: '',
-              respondedAt: null,
-            },
-            crewAssignment: ticket.crewAssignment || {
-              assignedTo: '',
-              accepted: null,
-              rejectionReason: '',
-              respondedAt: null,
-            },
+
 
             // Verificación
             verifiedByReporter: ticket.verifiedByReporter ?? false,
@@ -428,10 +414,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
 
       // Catálogos dinámicos
       source: formValues.source,
-      service: formValues.service,
-      area: formValues.area,
       status: formValues.status,
-      workflowStage: formValues.workflowStage,
 
       // Detalles del problema
       problem: formValues.problem,
@@ -461,8 +444,6 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       images: formValues.images || [],
 
       // Asignaciones
-      areaAssignment: formValues.areaAssignment,
-      crewAssignment: formValues.crewAssignment,
 
       // Verificación
       verifiedByReporter: formValues.verifiedByReporter,
@@ -477,15 +458,14 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       updatedAt: formValues.updatedAt,
       luminaria: formValues.luminaria,
     };
-
     const coordinates = this.marker?.position
       ? {
-        lat: this.marker.position.lat(),
-        lng: this.marker.position.lng()
+        lat: this.marker.position.lat,
+        lng: this.marker.position.lng
       }
       : { lat: 0, lng: 0 };
 
-    const currentUser = this.authService.getTokenData().user;
+    const currentUser = this.authService.currentUser;
 
     const trackingEntry: TicketTracking = {
       event: this.ticketFound ? 'modificacion' : 'creacion',
@@ -529,6 +509,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   loadCatalogos() {
     this.ticketsService.getTemas().subscribe(data => this.temas.set(data));
     this.ticketsService.getAreas().subscribe(data => this.areas.set(data));
+    this.ticketsService.getSources().subscribe(data => {this.sources.set(data);});
   }
 
   onTemaSelected(temaId: string) {

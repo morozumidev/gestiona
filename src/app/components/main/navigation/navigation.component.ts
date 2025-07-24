@@ -66,7 +66,7 @@ export class NavigationComponent {
           'https://www.google.com/maps/d/embed?mid=1XyTGGmoo8GdUUdUlB24ySUCdRcGMOWw&ehbc=2E312F',
       },
     ],
-    ADMIN: [
+    admin: [
       { icon: 'dashboard', label: 'Dashboard', route: '/tickets' },
       { icon: 'model_training', label: 'Alumbrado', route: '/dashboard-alumbrado' },
       { icon: 'engineering', label: 'Mantenimiento Urban', route: '/tickets' },

@@ -43,8 +43,7 @@ export class EditTicketDialog {
       phone: [data.phone, Validators.required],
       email: [data.email, Validators.required],
       source: [data.source],
-      service: [data.service],
-      area: [data.area],
+
       problem: [data.problem, Validators.required],
       description: [data.description, Validators.required],
       status: [data.status, Validators.required],

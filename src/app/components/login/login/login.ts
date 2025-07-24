@@ -140,13 +140,15 @@ export class Login {
     draw();
   }
 
-  login(event:any) {
-    //event.preventDefault();
-    if (this.loginForm.valid) {
-      const { email, password } = this.loginForm.value;
-      this.authService.login(email!, password!).subscribe({
-        error: err => alert(err.error.message || 'Error en el login')
-      });
-    }
+login(event: any) {
+  if (this.loginForm.valid) {
+    const { email, password } = this.loginForm.value;
+    this.authService.login(email!, password!).subscribe({
+      next: (data) => {},
+      error: (err) => {
+      console.error('Error de inicio de sesión:', err);
+      }
+    });
   }
+}
 }

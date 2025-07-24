@@ -1,4 +1,4 @@
-import { TicketTracking } from "./TicketTracking";
+import { TicketTracking } from './TicketTracking';
 
 export interface Ticket {
   _id?: string;
@@ -6,74 +6,78 @@ export interface Ticket {
 
   // Datos del reportante
   name: string;
-  first_lastname?: string;    // Primer apellido
-  second_lastname?: string;   // Segundo apellido
+  first_lastname?: string;
+  second_lastname?: string;
   phone: string;
   email: string;
 
   // Catálogos dinámicos
-  source: string;             // type: 'source'
-  service: string;            // type: 'service'
-  area: string;               // type: 'area'
-  status: string;             // type: 'ticket_status'
-  workflowStage: string;      // type: 'ticket_stage'
+  source: string | null;
+  status: string | null;
 
   // Detalles del problema
   problem: string;
   description: string;
 
   // Ubicación
-location: {
-  street: string;               // "Av. Díaz Mirón"
-  extNumber: string;           // "2010"
-  intNumber?: string;          // "Depto. 5" o "Interior B"
-  crossStreets?: string;       // "Entre Tuero Molina y Cañonero Tampico"
-  neighborhood: string;        // "Moderno"
-  borough?: string;            // "Veracruz" (en CDMX sería "Benito Juárez")
-  locality?: string;           // "Veracruz" (delegación o municipio)
-  city?: string;               // "Veracruz" o "Boca del Río"
-  state: string;               // "Veracruz"
-  postalCode: string;          // "91918"
-  country: string;             // "México"
-  references?: string;         // "Frente a la gasolinera"
-  coordinates: {
-    lat: number;
-    lng: number;
+  location: {
+    street: string;
+    extNumber: string;
+    intNumber?: string;
+    crossStreets?: string;
+    neighborhood: string;
+    borough?: string;
+    locality?: string;
+    city?: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    references?: string;
+    coordinates: {
+      lat: number;
+      lng: number;
+    };
   };
-}
-
-
 
   // Evidencias
   images: string[];
 
-  // Asignación de área
-  areaAssignment?: {
-    assignedTo: string; // Area ID
-    accepted: boolean | null;
+  // Asignaciones a áreas (historial)
+  areaAssignments: {
+    area: string;
+    accepted: boolean;
     rejectionReason: string | null;
     respondedAt: Date | null;
-  };
+    assignedAt: Date;
+    assignedBy: string;
+  }[];
 
-  // Asignación de cuadrilla
-  crewAssignment?: {
-    assignedTo: string; // User ID (cuadrilla)
-    accepted: boolean | null;
+  currentArea: string | null;
+
+  // Asignaciones a cuadrillas (historial)
+  crewAssignments: {
+    cuadrilla: string;
+    accepted: boolean;
     rejectionReason: string | null;
     respondedAt: Date | null;
-  };
+    assignedAt: Date;
+    assignedBy: string;
+  }[];
+
+  currentCuadrilla: string | null;
 
   // Verificación
-  verifiedByReporter?: boolean;
-  verifiedBy?: string; // User ID
+  verifiedByReporter: boolean;
+  verifiedBy?: string;
 
   // Seguimiento
   tracking: TicketTracking[];
 
   // Auditoría
-  createdBy?: string; // User ID
+  createdBy?: string;
   createdAt?: Date;
   updatedAt?: Date;
 
-  luminaria?: string; // Luminaria ID, opcional para tickets relacionados con luminarias
+  // Otros
+  luminaria?: string;
 }
