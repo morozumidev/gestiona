@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, computed,  signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatIconModule } from '@angular/material/icon';
@@ -88,6 +88,11 @@ export class NavigationComponent {
         externalUrl:
           'https://www.google.com/maps/d/embed?mid=1XyTGGmoo8GdUUdUlB24ySUCdRcGMOWw&ehbc=2E312F',
       },
+    ],
+    user: [
+      { icon: 'dashboard', label: 'Mis reportes', route: '/tickets' },
+      { icon: 'add', label: 'Generar reporte', route: '/ticket' },
+      
     ],
     web: [{ icon: 'add', label: 'Generar reporte', route: '/ticket' }],
   };

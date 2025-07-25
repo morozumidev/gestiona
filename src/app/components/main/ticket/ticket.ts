@@ -132,8 +132,8 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
         country: [''],
         references: [''],
         coordinates: this.fb.group({
-          lat: [null, Validators.required],
-          lng: [null, Validators.required],
+          lat: [null, ],
+          lng: [null, ],
         }),
       }),
 
@@ -164,13 +164,12 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       tracking: [[]], // Si quieres que esto sea un FormArray, puedo estructurarlo también
 
       // Auditoría
-      createdBy: [''],
+      createdBy: [this.authService.currentUser?._id || ''],
       createdAt: [null],
       updatedAt: [null],
 
       luminaria: [''],
     });
-
   }
 
   ngOnInit(): void {

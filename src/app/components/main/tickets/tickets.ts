@@ -19,6 +19,9 @@ import { CookieService } from 'ngx-cookie-service';
 import { Ticket } from '../../../models/Ticket';
 import { TicketsService } from '../../../services/tickets-service';
 import { EditTicketDialog } from '../../dialogs/edit-ticket-dialog/edit-ticket-dialog';
+import { TicketStatus } from '../../../models/TicketStatus';
+import { Tema } from '../../../models/Tema';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-tickets',
@@ -44,8 +47,8 @@ import { EditTicketDialog } from '../../dialogs/edit-ticket-dialog/edit-ticket-d
 })
 export class Tickets {
   private readonly ticketsService = inject(TicketsService);
-  private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService); // Assuming this is the correct service for auth
 
   readonly ticketsSignal = signal<Ticket[]>([]);
   readonly filterStatus = signal('Todos');
@@ -54,7 +57,8 @@ export class Tickets {
   readonly sortColumn = signal<keyof Ticket | ''>('');
   readonly sortDirection = signal<'asc' | 'desc'>('asc');
   itemsPerPage = 15;
-
+  ticketStatuses = signal<TicketStatus[]>([]);
+  ticketProblems = signal<Tema[]>([]);
   readonly displayedColumns = [
     'folio',
     'problem',
@@ -67,11 +71,24 @@ export class Tickets {
 
   constructor() {
     this.loadTickets();
+    this.loadCatalogs();
+  }
+  private loadCatalogs() {
+    this.ticketsService.getTicketStatuses().subscribe(data => this.ticketStatuses.set(data));
+    this.ticketsService.getTemas().subscribe(data => { this.ticketProblems.set(data); });
   }
 
+  getStatusName(statusId: string): string {
+    const status = this.ticketStatuses().find(s => s._id === statusId);
+    return status ? status.name : 'Sin estado';
+  }
+  getProblemName(problemId: string): string {
+    const problem = this.ticketProblems().find(s => s._id === problemId);
+    return problem ? problem.name : 'Sin problema';
+  }
   private loadTickets() {
-    this.ticketsService.getAllTickets([]).subscribe({
-      next: (tickets) => this.ticketsSignal.set(tickets),
+    this.ticketsService.getAllTickets([{ field: 'createdBy', value: this.authService.currentUser._id }]).subscribe({
+      next: (tickets) => { this.ticketsSignal.set(tickets); },
       error: (err) => {
         if (err.status === 401) {
           this.ticketsSignal.set([]);
@@ -145,13 +162,24 @@ export class Tickets {
   }
 
   deleteTicket(id: string) {
-    const filtered = this.ticketsSignal().filter(t => t._id !== id);
-    this.ticketsSignal.set(filtered);
+    if (!window.confirm('¿Estás seguro de eliminar este ticket?')) return;
 
-    if (this.currentPage() > this.totalPages()) {
-      this.currentPage.set(this.totalPages());
-    }
+    this.ticketsService.deleteTicket(id).subscribe({
+      next: () => {
+        const filtered = this.ticketsSignal().filter(t => t._id !== id);
+        this.ticketsSignal.set(filtered);
+
+        if (this.currentPage() > this.totalPages()) {
+          this.currentPage.set(this.totalPages());
+        }
+      },
+      error: (err) => {
+        console.error(`Error al eliminar ticket ${id}:`, err);
+      }
+    });
   }
+
+
 
   onPageChange({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) {
     this.currentPage.set(pageIndex + 1);
@@ -168,9 +196,9 @@ export class Tickets {
   }
 
   isClosed = (ticket: Ticket) => ticket.status === 'Atendida';
-countSemaforoColor(color: 'verde' | 'ambar' | 'rojo'): number {
-  return this.filteredTickets().filter(ticket => this.getSemaforoColor(ticket.createdAt!) === color).length;
-}
+  countSemaforoColor(color: 'verde' | 'ambar' | 'rojo'): number {
+    return this.filteredTickets().filter(ticket => this.getSemaforoColor(ticket.createdAt!) === color).length;
+  }
 
   getSemaforoColor(createdAt: Date): 'verde' | 'ambar' | 'rojo' {
     const diffHours = (new Date().getTime() - new Date(createdAt).getTime()) / 36e5;

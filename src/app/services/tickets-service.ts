@@ -5,6 +5,7 @@ import { CoreService } from './core-service';
 import { Luminaria } from '../models/Luminaria';
 import { Tema } from '../models/Tema';
 import { Area } from '../models/Area';
+import { TicketStatus } from '../models/TicketStatus';
 
 @Injectable({
   providedIn: 'root'
@@ -49,31 +50,35 @@ export class TicketsService {
     return this.http.post(this.coreService.URI_API + 'tickets/manageTicket', formData);
   }
 
-getTemas() {
-  return this.http.post<Tema[]>(this.coreService.URI_API + 'tickets/getTemas', {});
-}
+  getTemas() {
+    return this.http.post<Tema[]>(this.coreService.URI_API + 'tickets/getTemas', {});
+  }
+  deleteTicket(id: string) {
+    return this.http.delete<{ message: string }>(`${this.coreService.URI_API}tickets/deleteTicket/${id}`);
+  }
   getSources() {
     return this.http.post<Area[]>(this.coreService.URI_API + 'tickets/getSources', {});
   }
-getAreas() {
-  return this.http.post<Area[]>(this.coreService.URI_API + 'tickets/getAreas', {});
-}
+  getAreas() {
+    return this.http.post<Area[]>(this.coreService.URI_API + 'tickets/getAreas', {});
+  }
 
-getLuminarias() {
-  return this.http.post<Luminaria[]>(this.coreService.URI_API + 'tickets/getLuminarias', {});
-}
-
-getProblems() {
-  return this.http.post<{ _id: string; name: string }[]>('/api/catalogs/problems', {});
-}
-
-getStatuses() {
-  return this.http.post<{ _id: string; name: string }[]>('/api/catalogs/statuses', {});
-}
+  getLuminarias() {
+    return this.http.post<Luminaria[]>(this.coreService.URI_API + 'tickets/getLuminarias', {});
+  }
 
 
-getCuadrillas() {
-  return this.http.post<{ _id: string; name: string }[]>('/api/catalogs/cuadrillas', {});
-}
+  getStatuses() {
+    return this.http.post<{ _id: string; name: string }[]>('/api/catalogs/statuses', {});
+  }
+
+  getTicketStatuses() {
+    return this.http.post<TicketStatus[]>(this.coreService.URI_API + 'tickets/getTicketStatuses', {});
+  }
+
+
+  getCuadrillas() {
+    return this.http.post<{ _id: string; name: string }[]>('/api/catalogs/cuadrillas', {});
+  }
 
 }

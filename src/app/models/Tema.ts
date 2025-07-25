@@ -9,6 +9,5 @@ export interface Tema {
   areaId?: string | Area;           // Puede ser solo ID o un objeto poblado
   requiresLuminaria: boolean;
   priority: TemaPriority;
-  createdAt?: Date;
-  updatedAt?: Date;
+
 }

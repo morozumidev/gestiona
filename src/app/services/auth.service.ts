@@ -7,7 +7,7 @@ import { CookieService } from 'ngx-cookie-service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly roleKey = 'user';
+  private readonly roleKey = 'role';
   private userSubject = new BehaviorSubject<any>(null);
   readonly user$ = this.userSubject.asObservable();
 
@@ -30,7 +30,6 @@ export class AuthService {
       ),
       tap(user => {
         const role = user.role?.name || 'user';
-        console.log(user)
         this.cookieService.set(this.roleKey, role, 1, '/');
         this.userSubject.next(user);
         const redirectRoute = this.getDefaultRoute(role);
@@ -81,7 +80,7 @@ export class AuthService {
       case 'admin':
         return 'tickets';
       default:
-        return 'login';
+        return 'tickets';
     }
   }
   get currentUser(): any {
