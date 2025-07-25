@@ -40,7 +40,7 @@
           <mat-icon>place</mat-icon> Seleccionar desde el mapa
         </button>
         @if (showMap) {
-          <div #mapContainer id="map" class="map-container"></div>
+        <div #mapContainer id="map" class="map-container"></div>
         }
       </div>
       <div class="form-grid" formGroupName="location">
@@ -111,10 +111,10 @@
           <mat-icon matPrefix>alternate_email</mat-icon>
           <mat-label>Origen</mat-label>
           <mat-select formControlName="source">
-  @for (source of sources(); track source._id) {
-    <mat-option [value]="source._id">{{ source.name }}</mat-option>
-  }
-</mat-select>
+            @for (source of sources(); track source._id) {
+            <mat-option [value]="source._id">{{ source.name }}</mat-option>
+            }
+          </mat-select>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -122,7 +122,7 @@
           <mat-label>Problema</mat-label>
           <mat-select formControlName="problem" (selectionChange)="onTemaSelected($event.value)">
             @for (option of temas(); track option._id) {
-              <mat-option [value]="option._id">{{ option.name }}</mat-option>
+            <mat-option [value]="option._id">{{ option.name }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
@@ -130,24 +130,24 @@
         <mat-form-field appearance="outline">
           <mat-icon matPrefix>groups</mat-icon>
           <mat-label>Área Asignada</mat-label>
-          <mat-select formControlName="area" >
+          <mat-select formControlName="currentArea">
             @for (area of areas(); track area._id) {
-              <mat-option [value]="area._id">{{ area.name }}</mat-option>
+            <mat-option [value]="area._id">{{ area.name }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
 
-@if (showLuminarias()) {
-  <mat-form-field appearance="outline">
-    <mat-icon matPrefix>lightbulb</mat-icon>
-    <mat-label>Luminaria</mat-label>
-    <mat-select formControlName="luminaria">
-      @for (l of luminarias(); track l._id) {
-        <mat-option [value]="l._id">{{ l.code }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-}
+        @if (showLuminarias()) {
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>lightbulb</mat-icon>
+          <mat-label>Luminaria</mat-label>
+          <mat-select formControlName="luminaria">
+            @for (l of luminarias(); track l._id) {
+            <mat-option [value]="l._id">{{ l.code }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        }
 
 
         <mat-form-field appearance="outline" class="full-width">
@@ -162,7 +162,7 @@
           </button>
           <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden />
           @if (previewUrl) {
-            <img [src]="previewUrl" class="preview-img" />
+          <img [src]="previewUrl" class="preview-img" />
           }
         </div>
       </div>

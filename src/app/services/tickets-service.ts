@@ -6,6 +6,8 @@ import { Luminaria } from '../models/Luminaria';
 import { Tema } from '../models/Tema';
 import { Area } from '../models/Area';
 import { TicketStatus } from '../models/TicketStatus';
+import { Cuadrilla } from '../models/Cuadrilla';
+import { Observable } from 'rxjs/internal/Observable';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +20,6 @@ export class TicketsService {
   tickets: Ticket[] = [];
   selectedTicket = signal<Ticket | null>(null);
   reverseGeocode(lat: number, lng: number) {
-    console.log("solicitado")
     return this.http.post<{ address: string }>(
       this.coreService.URI_API + 'maps/reverse-geocode',
       { lat, lng }
@@ -77,8 +78,16 @@ export class TicketsService {
   }
 
 
-  getCuadrillas() {
-    return this.http.post<{ _id: string; name: string }[]>('/api/catalogs/cuadrillas', {});
+  getCuadrillas(areaId?: string ) {
+  return this.http.post<Cuadrilla[]>(`${this.coreService.URI_API}catalogs/cuadrillas`, {areaId});
+}
+
+  assignArea(ticketId: string, areaId: string): Observable<any> {
+    return this.http.post(`${this.coreService.URI_API}tickets/assignArea`, { ticketId, areaId });
+  }
+
+  assignCuadrilla(ticketId: string, cuadrillaId: string): Observable<any> {
+    return this.http.post(`${this.coreService.URI_API}tickets/assignCuadrilla`, { ticketId, cuadrillaId });
   }
 
 }

@@ -1,0 +1,33 @@
+<h2 mat-dialog-title>Asignación de ticket</h2>
+<mat-dialog-content [formGroup]="form">
+  <div *ngIf="canAssignArea()">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Área asignada</mat-label>
+      <mat-select formControlName="area">
+        <mat-option *ngFor="let a of areas" [value]="a._id">
+          {{ a.name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div *ngIf="canAssignCuadrilla()">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Cuadrilla asignada</mat-label>
+      <mat-select formControlName="cuadrilla">
+        @for( c of cuadrillas(); let i = $index; track i) {
+        <mat-option [value]="c._id">
+          {{ c.name }}
+        </mat-option>
+    }
+      </mat-select>
+    </mat-form-field>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button mat-flat-button color="primary" (click)="submit()" [disabled]="form.invalid">
+    Asignar
+  </button>
+</mat-dialog-actions>

@@ -16,7 +16,7 @@ export class AuthService {
     private readonly router: Router,
     private readonly cookieService: CookieService,
     private readonly http: HttpClient
-  ) {}
+  ) { }
 
   /** Inicia sesión y redirige según el rol */
   login(email: string, password: string): Observable<any> {
@@ -48,25 +48,27 @@ export class AuthService {
   }
 
   /** Valida con backend si sigue logueado */
-  isLoggedIn(): Observable<boolean> {
+  isLoggedIn(): Observable<{ authenticated: boolean; user: any | null }> {
     return this.http.get<{ authenticated: boolean; user?: any }>(
       `${this.coreService.URI_API}auth/check`,
       { withCredentials: true }
     ).pipe(
-      tap(res => {
+      map(res => {
         if (res.authenticated && res.user) {
           this.userSubject.next(res.user);
+          return { authenticated: true, user: res.user };
         } else {
           this.clearSession();
+          return { authenticated: false, user: null };
         }
       }),
-      map(res => res.authenticated),
       catchError(() => {
         this.clearSession();
-        return of(false);
+        return of({ authenticated: false, user: null });
       })
     );
   }
+
 
   /** Limpia sesión del cliente */
   public clearSession(): void {
@@ -84,6 +86,6 @@ export class AuthService {
     }
   }
   get currentUser(): any {
-  return this.userSubject.getValue();
-}
+    return this.userSubject.getValue();
+  }
 }

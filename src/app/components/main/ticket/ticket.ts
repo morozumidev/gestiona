@@ -109,7 +109,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
 
       // Catálogos dinámicos
       source: [''],
-      area: [''],
+      currentArea: [''],
       status: ['68814abc0000000000000001'],
       workflowStage: ['generado'],
 
@@ -132,8 +132,8 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
         country: [''],
         references: [''],
         coordinates: this.fb.group({
-          lat: [null, ],
-          lng: [null, ],
+          lat: [null,],
+          lng: [null,],
         }),
       }),
 
@@ -221,8 +221,8 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
 
             // Evidencias
             images: ticket.images || [],
-
-
+            currentArea: ticket.currentArea || '',
+            areaAssignments: ticket.areaAssignments || [],
 
             // Verificación
             verifiedByReporter: ticket.verifiedByReporter ?? false,
@@ -399,7 +399,26 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   submitForm(): void {
     if (!this.reportForm.valid) return;
 
-    const formValues = this.reportForm.value;
+    const formValues = this.reportForm.getRawValue();
+    const currentUser = this.authService.currentUser;
+
+    const areaId = formValues.currentArea;
+    const previousAssignments = formValues.areaAssignments || [];
+
+    const lastAssignment = previousAssignments.at(-1);
+    const alreadyAssigned = lastAssignment?.area === areaId;
+
+    const newAssignment = {
+      area: areaId,
+      assignedBy: currentUser?._id || null,
+      assignedAt: new Date(),
+      accepted: false
+    };
+
+    const areaAssignments = alreadyAssigned
+      ? previousAssignments
+      : [...previousAssignments, newAssignment];
+
     const ticket: Partial<Ticket> = {
       _id: formValues._id,
       folio: formValues.folio,
@@ -442,7 +461,9 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       // Evidencias
       images: formValues.images || [],
 
-      // Asignaciones
+      // Asignación de área
+      currentArea: areaId,
+      areaAssignments,
 
       // Verificación
       verifiedByReporter: formValues.verifiedByReporter,
@@ -457,29 +478,6 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       updatedAt: formValues.updatedAt,
       luminaria: formValues.luminaria,
     };
-    const coordinates = this.marker?.position
-      ? {
-        lat: this.marker.position.lat,
-        lng: this.marker.position.lng
-      }
-      : { lat: 0, lng: 0 };
-
-    const currentUser = this.authService.currentUser;
-
-    const trackingEntry: TicketTracking = {
-      event: this.ticketFound ? 'modificacion' : 'creacion',
-      description: this.ticketFound
-        ? 'Ticket actualizado desde el formulario.'
-        : 'Ticket creado desde el formulario.',
-      files: [],
-      date: new Date(),
-      user: {
-        _id: currentUser?._id || 'anon',
-        name: currentUser?.name || 'Anónimo',
-        role: currentUser?.role || 'ciudadano'
-      }
-    };
-
 
     const evidencia = formValues.evidencia;
 
@@ -498,6 +496,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
     );
   }
 
+
   ngOnDestroy() {
     if (this.isBrowser && this.map) {
       this.map = null;
@@ -508,14 +507,14 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   loadCatalogos() {
     this.ticketsService.getTemas().subscribe(data => this.temas.set(data));
     this.ticketsService.getAreas().subscribe(data => this.areas.set(data));
-    this.ticketsService.getSources().subscribe(data => {this.sources.set(data);});
+    this.ticketsService.getSources().subscribe(data => { this.sources.set(data); });
   }
 
   onTemaSelected(temaId: string) {
     const tema = this.temas().find(t => t._id === temaId);
     if (!tema) return;
 
-    const areaControl = this.reportForm.get('area');
+    const areaControl = this.reportForm.get('currentArea');
     const luminariaControl = this.reportForm.get('luminaria');
 
     // Cargar luminarias solo si es necesario

@@ -1,0 +1,58 @@
+@use 'sass:map';
+@use '@angular/material' as mat;
+@use '../../../../global_variables' as *;
+
+.dialog-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  gap: 1.5rem;
+  border-radius: $radius;
+  @include glass-overlay;
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-width: 600px;
+  width: 100%;
+}
+
+mat-form-field {
+  width: 100%;
+  background: transparent;
+
+  .mat-mdc-select {
+    background: transparent !important;
+  }
+}
+
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+mat-dialog-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: $color1;
+  margin-bottom: 0.25rem;
+}
+
+mat-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+
+  button {
+    min-width: 100px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+  }
+}
+
+.mat-mdc-option {
+  backdrop-filter: blur(6px);
+}
+

@@ -22,6 +22,9 @@ import { EditTicketDialog } from '../../dialogs/edit-ticket-dialog/edit-ticket-d
 import { TicketStatus } from '../../../models/TicketStatus';
 import { Tema } from '../../../models/Tema';
 import { AuthService } from '../../../services/auth.service';
+import { Area } from '../../../models/Area';
+import { TicketAssignmentDialog } from '../../dialogs/ticket-assignment-dialog/ticket-assignment-dialog';
+import { Dialog } from '@angular/cdk/dialog';
 
 @Component({
   selector: 'app-tickets',
@@ -48,7 +51,8 @@ import { AuthService } from '../../../services/auth.service';
 export class Tickets {
   private readonly ticketsService = inject(TicketsService);
   private readonly router = inject(Router);
-  private readonly authService = inject(AuthService); // Assuming this is the correct service for auth
+  private readonly dialog = inject(MatDialog);
+  protected readonly authService = inject(AuthService); // Assuming this is the correct service for auth
 
   readonly ticketsSignal = signal<Ticket[]>([]);
   readonly filterStatus = signal('Todos');
@@ -59,6 +63,7 @@ export class Tickets {
   itemsPerPage = 15;
   ticketStatuses = signal<TicketStatus[]>([]);
   ticketProblems = signal<Tema[]>([]);
+  areas = signal<Area[]>([]);
   readonly displayedColumns = [
     'folio',
     'problem',
@@ -70,12 +75,18 @@ export class Tickets {
   ];
 
   constructor() {
+
     this.loadTickets();
     this.loadCatalogs();
+    console.log(this.authService.currentUser.role.name === 'funcionario');
   }
   private loadCatalogs() {
     this.ticketsService.getTicketStatuses().subscribe(data => this.ticketStatuses.set(data));
     this.ticketsService.getTemas().subscribe(data => { this.ticketProblems.set(data); });
+    this.ticketsService.getAreas().subscribe(data => { this.areas.set(data); });
+  }
+  getAreaName(id: string): string {
+    return this.areas().find(a => a._id === id)?.name ?? 'Desconocida';
   }
 
   getStatusName(statusId: string): string {
@@ -86,6 +97,21 @@ export class Tickets {
     const problem = this.ticketProblems().find(s => s._id === problemId);
     return problem ? problem.name : 'Sin problema';
   }
+
+
+  openAssignmentDialog(ticket: Ticket) {
+    this.dialog.open(TicketAssignmentDialog, {
+      data: {
+        ticket,
+        areas: this.areas(),
+      },
+      width: '600px'
+    }).afterClosed().subscribe(refresh => {
+      if (refresh) this.loadTickets();
+    });
+  }
+
+
   private loadTickets() {
     this.ticketsService.getAllTickets([{ field: 'createdBy', value: this.authService.currentUser._id }]).subscribe({
       next: (tickets) => { this.ticketsSignal.set(tickets); },

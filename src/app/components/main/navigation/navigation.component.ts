@@ -92,7 +92,7 @@ export class NavigationComponent {
     user: [
       { icon: 'dashboard', label: 'Mis reportes', route: '/tickets' },
       { icon: 'add', label: 'Generar reporte', route: '/ticket' },
-      
+
     ],
     web: [{ icon: 'add', label: 'Generar reporte', route: '/ticket' }],
   };
@@ -101,7 +101,7 @@ export class NavigationComponent {
   @Input() isCollapsed = false;
   @Output() isCollapsedChange = new EventEmitter<boolean>();
 
-  readonly role = signal<string | null>(this.cookieService.get('role') || null);
+  readonly role = signal<string | null>(this.authService.currentUser.role.name || null);
   readonly navItems = computed(() => this.role() ? this.NAV_ITEMS_BY_ROLE[this.role()!] || [] : []);
 
   onToggle(): void {

@@ -16,28 +16,27 @@ export const canActivate: CanActivateFn = (
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  return authService.isLoggedIn().pipe(
-    map((isLoggedIn: boolean) => {
-      if (!isLoggedIn) {
-        authService.clearSession();
-        return router.createUrlTree(['/login']);
-      }
+return authService.isLoggedIn().pipe(
+  map(({ authenticated, user }) => {
+    if (!authenticated) {
+      return router.createUrlTree(['/login']);
+    }
 
-      const user = authService['userSubject'].getValue(); // ← acceso directo
-      const userRole = user?.role?.name || 'user';
-      const allowedRoles = route.data?.['roles'] ?? [];
+    const userRole = user?.role?.name || 'user';
+    const allowedRoles = route.data?.['roles'] ?? [];
 
-      if (allowedRoles.includes('ALL') || allowedRoles.includes(userRole)) {
-        return true;
-      }
+    if (allowedRoles.includes('ALL') || allowedRoles.includes(userRole)) {
+      return true;
+    }
 
-      return router.createUrlTree([authService.getDefaultRoute(userRole)]);
-    }),
-    catchError(() => {
-      authService.clearSession();
-      return of(router.createUrlTree(['/login']));
-    })
-  );
+    return router.createUrlTree([authService.getDefaultRoute(userRole)]);
+  }),
+  catchError(() => {
+    authService.clearSession();
+    return of(router.createUrlTree(['/login']));
+  })
+);
+
 };
 
 
