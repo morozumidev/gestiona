@@ -10,14 +10,20 @@
   border-radius: 1.75rem;
 
   padding: 2.5rem 2rem;
-  max-width: 420px;
-  width: 100%;
+  width: 15vw;        // 30% del ancho de la pantalla
+  height: 30vh;      // 30% de la altura de la pantalla
+  max-width: 600px;   // No crece más de esto
+  min-width: 300px;   // No se hace demasiado chico
+  height: auto;       
+  max-height: 80vh;   // Hasta 80% de la altura de la pantalla
+  overflow: hidden;   
   text-align: center;
   color: var(--md-sys-color-on-surface, #222);
   animation: scaleIn 0.4s ease;
   position: relative;
   transition: all 0.3s ease-in-out;
 }
+
 
 .icon-wrapper {
   width: 100px;

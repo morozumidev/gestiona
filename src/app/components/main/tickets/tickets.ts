@@ -62,7 +62,7 @@ export class Tickets {
   readonly displayedColumns = [
     'folio',
     'problem',
-    'description',
+    'area',
     'createdAt',
     'status',
     'actions',

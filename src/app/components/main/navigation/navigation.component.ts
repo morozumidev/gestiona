@@ -101,7 +101,7 @@ export class NavigationComponent {
   @Input() isCollapsed = false;
   @Output() isCollapsedChange = new EventEmitter<boolean>();
 
-  readonly role = signal<string | null>(this.cookieService.get('user') || null);
+  readonly role = signal<string | null>(this.cookieService.get('role') || null);
   readonly navItems = computed(() => this.role() ? this.NAV_ITEMS_BY_ROLE[this.role()!] || [] : []);
 
   onToggle(): void {
