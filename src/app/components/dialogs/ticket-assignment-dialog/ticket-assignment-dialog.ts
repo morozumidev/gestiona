@@ -44,7 +44,7 @@ ngOnInit() {
 
   const cuadrillaControl = new FormBuilder().control(
     { value: this.data.ticket.currentCuadrilla || null, disabled: !this.canAssignCuadrilla() },
-    this.canAssignCuadrilla() ? Validators.required : []
+
   );
 
   this.form = new FormBuilder().group({

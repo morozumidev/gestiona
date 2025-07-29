@@ -1,4 +1,5 @@
 export interface TicketStatus {
   _id?: string;
-  name: string;     // Ej: 'Alumbrado Público'
+  name: string;
+  cssClass:string;
 }

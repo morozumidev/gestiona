@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
@@ -18,14 +18,15 @@ import { CookieService } from 'ngx-cookie-service';
 
 import { Ticket } from '../../../models/Ticket';
 import { TicketsService } from '../../../services/tickets-service';
-import { EditTicketDialog } from '../../dialogs/edit-ticket-dialog/edit-ticket-dialog';
 import { TicketStatus } from '../../../models/TicketStatus';
 import { Tema } from '../../../models/Tema';
 import { AuthService } from '../../../services/auth.service';
 import { Area } from '../../../models/Area';
 import { TicketAssignmentDialog } from '../../dialogs/ticket-assignment-dialog/ticket-assignment-dialog';
-import { Dialog } from '@angular/cdk/dialog';
-
+import { MatMenuModule } from '@angular/material/menu';
+import { RejectionDetailsDialog } from '../../dialogs/rejection-details-dialog/rejection-details-dialog';
+import { Subject } from 'rxjs/internal/Subject';
+import { debounceTime } from 'rxjs/internal/operators/debounceTime';
 @Component({
   selector: 'app-tickets',
   standalone: true,
@@ -44,7 +45,8 @@ import { Dialog } from '@angular/cdk/dialog';
     MatPaginatorModule,
     MatTooltipModule,
     MatDatepickerModule,
-    MatDialogModule
+    MatDialogModule,
+    MatMenuModule
   ],
   providers: [CookieService],
 })
@@ -53,20 +55,17 @@ export class Tickets {
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   protected readonly authService = inject(AuthService); // Assuming this is the correct service for auth
-
   readonly ticketsSignal = signal<Ticket[]>([]);
   readonly filterStatus = signal('Todos');
   readonly searchTerm = signal('');
-  readonly currentPage = signal(1);
   readonly sortColumn = signal<keyof Ticket | ''>('');
   readonly sortDirection = signal<'asc' | 'desc'>('asc');
 
-  private totalTickets = signal(0);
-private page = signal(1);
-private pageSize = signal(20);
-
-  itemsPerPage = 15;
-  ticketStatuses = signal<TicketStatus[]>([]);
+  protected totalTickets = signal(0);
+  protected page = signal(1);
+  protected pageSize = signal(20);
+  private searchSubject = new Subject<string>();
+  protected ticketStatuses = signal<TicketStatus[]>([]);
   ticketProblems = signal<Tema[]>([]);
   areas = signal<Area[]>([]);
   readonly displayedColumns = [
@@ -80,10 +79,13 @@ private pageSize = signal(20);
   ];
 
   constructor() {
-
+    this.searchSubject.pipe(debounceTime(400)).subscribe(value => {
+      this.searchTerm.set(value);
+      this.page.set(1);
+      this.loadTickets();
+    });
     this.loadTickets();
     this.loadCatalogs();
-    console.log(this.authService.currentUser.role.name === 'funcionario');
   }
   private loadCatalogs() {
     this.ticketsService.getTicketStatuses().subscribe(data => this.ticketStatuses.set(data));
@@ -92,6 +94,23 @@ private pageSize = signal(20);
   }
   getAreaName(id: string): string {
     return this.areas().find(a => a._id === id)?.name ?? 'Desconocida';
+  }
+
+  acceptTicket(ticketId: string) {
+    this.ticketsService.respondToTicketAssignment(ticketId, this.authService.currentUser._id, true).subscribe({
+      next: () => this.loadTickets(),
+      error: (err) => console.error('Error al aceptar ticket:', err)
+    });
+  }
+
+  rejectTicket(ticketId: string) {
+    const reason = prompt('Motivo de rechazo:');
+    if (!reason) return;
+
+    this.ticketsService.respondToTicketAssignment(ticketId, this.authService.currentUser._id, false, reason).subscribe({
+      next: () => this.loadTickets(),
+      error: (err) => console.error('Error al rechazar ticket:', err)
+    });
   }
 
   getStatusName(statusId: string): string {
@@ -116,34 +135,50 @@ private pageSize = signal(20);
     });
   }
 
-
-private loadTickets() {
-  const filters = [{ field: 'createdBy', value: this.authService.currentUser._id }];
-  this.ticketsService.getAllTickets(filters, this.page(), this.pageSize()).subscribe({
-    next: (response) => {
-      this.ticketsSignal.set(response.data);
-      this.totalTickets.set(response.total);
-    },
-    error: (err) => {
-      if (err.status === 401) {
-        this.ticketsSignal.set([]);
-        this.totalTickets.set(0);
-        console.warn('⛔ Sesión expirada o sin autorización. Tickets limpiados.');
-      } else {
-        console.error('Error inesperado al cargar tickets:', err);
-      }
+  wasRejected(ticket: Ticket): boolean {
+    return ticket.areaAssignments.some(
+      a => a.assignedBy === this.authService.currentUser._id && a.rejectionReason
+    );
+  }
+  private loadTickets() {
+    const filters = [];
+    if (this.filterStatus() !== 'Todos') {
+      filters.push({ field: 'status', value: this.filterStatus() });
     }
-  });
-}
+
+    filters.push({ field: 'createdBy', value: this.authService.currentUser._id });
+
+    this.ticketsService.getAllTickets(
+      filters,
+      this.page(),
+      this.pageSize(),
+      this.searchTerm(),
+      this.sortColumn() ? { [this.sortColumn()]: this.sortDirection() === 'asc' ? 1 : -1 } : { createdAt: -1 }
+    ).subscribe({
+      next: (response) => {
+        this.ticketsSignal.set(response.data);
+        this.totalTickets.set(response.total);
+      },
+      error: (err) => {
+        if (err.status === 401) {
+          this.ticketsSignal.set([]);
+          this.totalTickets.set(0);
+          console.warn('⛔ Sesión expirada o sin autorización. Tickets limpiados.');
+        } else {
+          console.error('Error inesperado al cargar tickets:', err);
+        }
+      }
+    });
+  }
 
   setSearch(value: string) {
-    this.searchTerm.set(value);
-    this.currentPage.set(1);
+    this.searchSubject.next(value);
   }
 
   setFilterStatus(value: string) {
     this.filterStatus.set(value);
-    this.currentPage.set(1);
+    this.page.set(1);
+    this.loadTickets();
   }
 
   sortBy(column: keyof Ticket) {
@@ -169,19 +204,14 @@ private loadTickets() {
 
   getStatusIcon(status: string): string {
     return {
-      'Pendiente': 'schedule',
-      'En desarrollo': 'autorenew',
-      'Atendida': 'check_circle',
-    }[status] ?? 'help';
+      'pending': 'schedule',         // reloj
+      'in-process': 'autorenew',     // girando
+      'solved': 'check_circle',      // paloma
+      'canceled': 'cancel'           // cruz
+    }[status] ?? 'help';             // ícono por defecto
   }
 
-  getStatusClass(status: string): string {
-    return {
-      'Pendiente': 'pendiente',
-      'En desarrollo': 'en-desarrollo',
-      'Atendida': 'atendida',
-    }[status] ?? '';
-  }
+
 
   updateStatus(id: string, newStatus: Ticket['status']) {
     const updated = this.ticketsSignal().map(t =>
@@ -205,8 +235,8 @@ private loadTickets() {
         const filtered = this.ticketsSignal().filter(t => t._id !== id);
         this.ticketsSignal.set(filtered);
 
-        if (this.currentPage() > this.totalPages()) {
-          this.currentPage.set(this.totalPages());
+        if (this.page() > Math.ceil(this.totalTickets() / this.pageSize())) {
+          this.page.set(Math.ceil(this.totalTickets() / this.pageSize()));
         }
       },
       error: (err) => {
@@ -218,9 +248,12 @@ private loadTickets() {
 
 
   onPageChange({ pageIndex, pageSize }: { pageIndex: number; pageSize: number }) {
-    this.currentPage.set(pageIndex + 1);
-    this.itemsPerPage = pageSize;
+    this.page.set(pageIndex + 1);   // ✅ mantén esto
+    this.pageSize.set(pageSize);
+    this.loadTickets();
   }
+
+
 
   editTicket(ticket: Ticket) {
     this.ticketsService.setTicket(ticket);
@@ -233,7 +266,7 @@ private loadTickets() {
 
   isClosed = (ticket: Ticket) => ticket.status === 'Atendida';
   countSemaforoColor(color: 'verde' | 'ambar' | 'rojo'): number {
-    return this.filteredTickets().filter(ticket => this.getSemaforoColor(ticket.createdAt!) === color).length;
+    return this.ticketsSignal().filter(ticket => this.getSemaforoColor(ticket.createdAt!) === color).length;
   }
 
   getSemaforoColor(createdAt: Date): 'verde' | 'ambar' | 'rojo' {
@@ -242,9 +275,86 @@ private loadTickets() {
     if (diffHours <= 96) return 'ambar';
     return 'rojo';
   }
+  getLatestAssignment(ticket: Ticket) {
+    return ticket.areaAssignments
+      .filter(a => a.area === ticket.currentArea)
+      .at(-1); // obtiene la última asignación
+  }
 
-  countByStatus = (status: string) =>
-    this.filteredTickets().filter(t => t.status === status).length;
+  getAreaStatusIcon(ticket: Ticket): string {
+    const assignment = this.getLatestAssignment(ticket);
+
+    if (!assignment) return 'help';
+    if (assignment.accepted) return 'check_circle';
+    if (assignment.rejectionReason) return 'cancel';
+    return 'hourglass_empty';
+  }
+
+  getAreaStatusIconColor(ticket: Ticket): string {
+    const assignment = this.getLatestAssignment(ticket);
+
+    if (!assignment) return 'warn';
+    if (assignment.accepted) return 'text-primary';
+    if (assignment.rejectionReason) return 'text-warn';
+    return 'text-accent';
+  }
+
+  getAreaStatusTooltip(ticket: Ticket): string {
+    const assignment = this.getLatestAssignment(ticket);
+
+    if (!assignment) return 'Sin información de asignación';
+    if (assignment.accepted) return 'Área aceptó el ticket';
+    if (assignment.rejectionReason) return 'Área rechazó el ticket';
+    return 'Área aún no ha respondido';
+  }
+  hasAreaRejection(ticket: Ticket): boolean {
+    return ticket.areaAssignments.some(a => !!a.rejectionReason);
+  }
+
+  getLatestRejection(ticket: Ticket) {
+    const rejections = ticket.areaAssignments
+      .filter(a => !!a.rejectionReason)
+      .sort((a, b) => new Date(b.respondedAt!).getTime() - new Date(a.respondedAt!).getTime());
+
+    return rejections.at(0); // última
+  }
+
+  openRejectionDialog(ticket: Ticket): void {
+    const latestRejection = this.getLatestRejection(ticket);
+    if (!latestRejection) return;
+
+    this.ticketsService.getUserById(latestRejection.rejectedBy!).subscribe({
+      next: (user) => {
+        const fullName = user
+          ? `${user.name} ${user.first_lastname} ${user.second_lastname}`
+          : 'Usuario no encontrado';
+        this.dialog.open(RejectionDetailsDialog, {
+          data: {
+            areaName: this.getAreaName(latestRejection.area),
+            userName: fullName,
+            reason: latestRejection.rejectionReason,
+            date: latestRejection.respondedAt,
+          },
+          width: '400px'
+        });
+      },
+      error: (err) => {
+        console.error('Error al obtener usuario', err);
+        this.dialog.open(RejectionDetailsDialog, {
+          data: {
+            areaName: this.getAreaName(latestRejection.area),
+            userName: 'Error de carga',
+            reason: latestRejection.rejectionReason,
+            date: latestRejection.respondedAt,
+          },
+          width: '400px'
+        });
+      }
+    });
+  }
+
+
+  countByStatus = (status: string) => this.ticketsSignal().filter(t => t.status === status).length;
 
   private sortTickets = (tickets: Ticket[]): Ticket[] => {
     const column = this.sortColumn();
@@ -265,30 +375,8 @@ private loadTickets() {
     });
   };
 
-  readonly filteredTickets = computed(() => {
-    let result = this.ticketsSignal();
 
-    if (this.searchTerm().trim()) {
-      const term = this.searchTerm().toLowerCase();
-      result = result.filter(t =>
-        t.problem.toLowerCase().includes(term) ||
-        t.description.toLowerCase().includes(term)
-      );
-    }
 
-    if (this.filterStatus() !== 'Todos') {
-      result = result.filter(t => t.status === this.filterStatus());
-    }
 
-    return this.sortTickets(result);
-  });
 
-  readonly totalPages = computed(() =>
-    Math.ceil(this.filteredTickets().length / this.itemsPerPage) || 1
-  );
-
-  readonly pagedTickets = computed(() => {
-    const start = (this.currentPage() - 1) * this.itemsPerPage;
-    return this.filteredTickets().slice(start, start + this.itemsPerPage);
-  });
 }

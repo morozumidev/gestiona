@@ -8,6 +8,7 @@ import { Area } from '../models/Area';
 import { TicketStatus } from '../models/TicketStatus';
 import { Cuadrilla } from '../models/Cuadrilla';
 import { Observable } from 'rxjs/internal/Observable';
+import { User } from '../models/User';
 
 @Injectable({
   providedIn: 'root'
@@ -37,27 +38,12 @@ export class TicketsService {
     return this.selectedTicket.asReadonly();
   }
 
-  getAllTickets(
-  filters: { field: string; value: any }[] = [],
-  page = 1,
-  pageSize = 20,
-  search = '',
-  sort: any = { createdAt: -1 }
-) {
-  return this.http.post<{
-    data: Ticket[];
-    total: number;
-    page: number;
-    pageSize: number;
-  }>(`${this.coreService.URI_API}tickets/getAllTickets`, {
-    filters,
-    page,
-    pageSize,
-    search,
-    sort
-  });
-}
-  
+  getAllTickets(filters: { field: string; value: any }[] = [], page = 1, pageSize = 20, search = '', sort: any = { createdAt: -1 }) {
+    return this.http.post<{ data: Ticket[]; total: number; page: number; pageSize: number; }>(`${this.coreService.URI_API}tickets/getAllTickets`, {
+      filters, page, pageSize, search, sort
+    });
+  }
+
 
   manageTicket(ticket: Partial<Ticket>, file?: File) {
     const formData = new FormData();
@@ -94,10 +80,13 @@ export class TicketsService {
     return this.http.post<TicketStatus[]>(this.coreService.URI_API + 'tickets/getTicketStatuses', {});
   }
 
+  getUserById(_id: string): Observable<User> {
+    return this.http.post<User>(this.coreService.URI_API + 'users/getUserById', { _id });
+  }
 
-  getCuadrillas(areaId?: string ) {
-  return this.http.post<Cuadrilla[]>(`${this.coreService.URI_API}catalogs/cuadrillas`, {areaId});
-}
+  getCuadrillas(areaId?: string) {
+    return this.http.post<Cuadrilla[]>(`${this.coreService.URI_API}catalogs/cuadrillas`, { areaId });
+  }
 
   assignArea(ticketId: string, areaId: string): Observable<any> {
     return this.http.post(`${this.coreService.URI_API}tickets/assignArea`, { ticketId, areaId });
@@ -105,6 +94,15 @@ export class TicketsService {
 
   assignCuadrilla(ticketId: string, cuadrillaId: string): Observable<any> {
     return this.http.post(`${this.coreService.URI_API}tickets/assignCuadrilla`, { ticketId, cuadrillaId });
+  }
+
+  respondToTicketAssignment(ticketId: string, rejectedBy: string, accepted: boolean, rejectionReason: string = '') {
+    return this.http.post(`${this.coreService.URI_API}tickets/acceptOrRejectTicket`, {
+      ticketId,
+      accepted,
+      rejectionReason,
+      rejectedBy
+    });
   }
 
 }

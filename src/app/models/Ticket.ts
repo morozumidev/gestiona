@@ -50,6 +50,7 @@ export interface Ticket {
     respondedAt: Date | null;
     assignedAt: Date;
     assignedBy: string;
+    rejectedBy?: string | null;
   }[];
 
   currentArea: string | null;

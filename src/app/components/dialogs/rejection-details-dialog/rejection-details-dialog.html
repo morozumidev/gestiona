@@ -1,0 +1,10 @@
+    <h2 mat-dialog-title>Detalles del Rechazo</h2>
+    <mat-dialog-content>
+      <p><strong>Área:</strong> {{ data.areaName }}</p>
+      <p><strong>Rechazado por:</strong> {{ data.userName}}</p>
+      <p><strong>Motivo:</strong> {{ data.reason }}</p>
+      <p><strong>Fecha:</strong> {{ data.date | date:'short' }}</p>
+    </mat-dialog-content>
+    <mat-dialog-actions align="end">
+      <button matButton="elevated" mat-dialog-close>Cerrar</button>
+    </mat-dialog-actions>

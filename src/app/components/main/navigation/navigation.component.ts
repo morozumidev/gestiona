@@ -94,6 +94,11 @@ export class NavigationComponent {
       { icon: 'add', label: 'Generar reporte', route: '/ticket' },
 
     ],
+     funcionario: [
+      { icon: 'dashboard', label: 'Mis reportes', route: '/tickets' },
+      { icon: 'add', label: 'Generar reporte', route: '/ticket' },
+
+    ],
     web: [{ icon: 'add', label: 'Generar reporte', route: '/ticket' }],
   };
 
