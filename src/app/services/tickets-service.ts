@@ -36,12 +36,29 @@ export class TicketsService {
   getTicket() {
     return this.selectedTicket.asReadonly();
   }
-  getAllTickets(filters: { field: string; value: any }[]) {
-    return this.http.post<Ticket[]>(
-      this.coreService.URI_API + 'tickets/getAllTickets',
-      filters.length > 0 ? { filters } : {}
-    );
-  }
+
+  getAllTickets(
+  filters: { field: string; value: any }[] = [],
+  page = 1,
+  pageSize = 20,
+  search = '',
+  sort: any = { createdAt: -1 }
+) {
+  return this.http.post<{
+    data: Ticket[];
+    total: number;
+    page: number;
+    pageSize: number;
+  }>(`${this.coreService.URI_API}tickets/getAllTickets`, {
+    filters,
+    page,
+    pageSize,
+    search,
+    sort
+  });
+}
+  
+
   manageTicket(ticket: Partial<Ticket>, file?: File) {
     const formData = new FormData();
     formData.append('ticket', JSON.stringify(ticket));

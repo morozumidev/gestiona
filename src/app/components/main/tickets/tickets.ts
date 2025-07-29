@@ -60,6 +60,11 @@ export class Tickets {
   readonly currentPage = signal(1);
   readonly sortColumn = signal<keyof Ticket | ''>('');
   readonly sortDirection = signal<'asc' | 'desc'>('asc');
+
+  private totalTickets = signal(0);
+private page = signal(1);
+private pageSize = signal(20);
+
   itemsPerPage = 15;
   ticketStatuses = signal<TicketStatus[]>([]);
   ticketProblems = signal<Tema[]>([]);
@@ -112,19 +117,24 @@ export class Tickets {
   }
 
 
-  private loadTickets() {
-    this.ticketsService.getAllTickets([{ field: 'createdBy', value: this.authService.currentUser._id }]).subscribe({
-      next: (tickets) => { this.ticketsSignal.set(tickets); },
-      error: (err) => {
-        if (err.status === 401) {
-          this.ticketsSignal.set([]);
-          console.warn('⛔ Sesión expirada o sin autorización. Tickets limpiados.');
-        } else {
-          console.error('Error inesperado al cargar tickets:', err);
-        }
+private loadTickets() {
+  const filters = [{ field: 'createdBy', value: this.authService.currentUser._id }];
+  this.ticketsService.getAllTickets(filters, this.page(), this.pageSize()).subscribe({
+    next: (response) => {
+      this.ticketsSignal.set(response.data);
+      this.totalTickets.set(response.total);
+    },
+    error: (err) => {
+      if (err.status === 401) {
+        this.ticketsSignal.set([]);
+        this.totalTickets.set(0);
+        console.warn('⛔ Sesión expirada o sin autorización. Tickets limpiados.');
+      } else {
+        console.error('Error inesperado al cargar tickets:', err);
       }
-    });
-  }
+    }
+  });
+}
 
   setSearch(value: string) {
     this.searchTerm.set(value);
