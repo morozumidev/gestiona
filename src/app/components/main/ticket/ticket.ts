@@ -109,7 +109,6 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
 
       // Catálogos dinámicos
       source: [''],
-      currentArea: [''],
       status: ['68814abc0000000000000001'],
       workflowStage: ['generado'],
 
@@ -141,12 +140,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       images: [[]],
 
       // Asignación de área
-      areaAssignment: this.fb.group({
-        assignedTo: [''],
-        accepted: [null],
-        rejectionReason: [''],
-        respondedAt: [null],
-      }),
+      areaAssignments: this.fb.array([]),
 
       // Asignación de cuadrilla
       crewAssignment: this.fb.group({
@@ -221,7 +215,6 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
 
             // Evidencias
             images: ticket.images || [],
-            currentArea: ticket.currentArea || '',
             areaAssignments: ticket.areaAssignments || [],
 
             // Verificación
@@ -402,7 +395,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
     const formValues = this.reportForm.getRawValue();
     const currentUser = this.authService.currentUser;
 
-    const areaId = formValues.currentArea;
+const areaId = formValues.areaAssignments?.at(-1)?.area ?? null;
     const previousAssignments = formValues.areaAssignments || [];
 
     const lastAssignment = previousAssignments.at(-1);
@@ -462,7 +455,6 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       images: formValues.images || [],
 
       // Asignación de área
-      currentArea: areaId,
       areaAssignments,
 
       // Verificación
@@ -486,6 +478,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
         this.dialog.open(SuccessDialog, {
           data: { folio: res.ticket?.folio || 'Sin folio' }
         });
+        console.log(ticket)
         this.reportForm.reset();
         this.ticketsService.clearTicket?.();
         this.previewUrl = null;
@@ -511,10 +504,12 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   }
 
   onTemaSelected(temaId: string) {
+    
     const tema = this.temas().find(t => t._id === temaId);
     if (!tema) return;
 
-    const areaControl = this.reportForm.get('currentArea');
+    const currentAssignments = this.reportForm.get('areaAssignments')?.value || [];
+const areaAssignments = this.reportForm.get('areaAssignments');
     const luminariaControl = this.reportForm.get('luminaria');
 
     // Cargar luminarias solo si es necesario
@@ -531,13 +526,34 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
 
     // Área predefinida o editable
     if (tema.areaId) {
-      areaControl?.setValue(typeof tema.areaId === 'string' ? tema.areaId : tema.areaId._id);
-      areaControl?.disable();
-    } else {
-      areaControl?.enable();
-      areaControl?.reset();
-    }
+  const assignedBy = this.authService.currentUser?._id || null;
+  const newAssignment = this.fb.group({
+    area: typeof tema.areaId === 'string' ? tema.areaId : tema.areaId._id,
+    assignedBy,
+    assignedAt: new Date(),
+    accepted: null,
+    respondedAt: null,
+  });
+  (areaAssignments as any).push(newAssignment);
+  this.areaEditable.set(false);
+} else {
+  this.areaEditable.set(true);
+}
+
   }
+onManualAreaSelected(areaId: string) {
+  const assignedBy = this.authService.currentUser?._id || null;
+  const newAssignment = this.fb.group({
+    area: areaId,
+    assignedBy,
+    assignedAt: new Date(),
+    accepted: null,
+    rejectionReason: '',
+    respondedAt: null,
+  });
+
+  (this.reportForm.get('areaAssignments') as any).push(newAssignment);
+}
 
 
 

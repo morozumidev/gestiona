@@ -21,7 +21,7 @@
 
     &:focus-within {
       border: 1px solid rgba($color1, 0.6);
-      box-shadow: 0 0 0 3px rgba($color2, 0.4);
+      box-shadow: 0 0 0 3px rgba($color2, 0.9);
     }
 
     .search-icon {
@@ -282,7 +282,7 @@
   letter-spacing: 0.5px;
   text-transform: uppercase;
   transition: all 0.3s ease;
-  background-color: rgba($color2, .9);
+  background-color: rgba($color2, .7);
 }
 .area-status-icon {
   margin-left: 0.5rem;
@@ -303,7 +303,7 @@
 
 // 🎯 FOLIO (neutro)
 .folio-badge {
-  background: rgba($color2, .5);
+  background: rgba($color2, .9);
   color: white;
 }
 

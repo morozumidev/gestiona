@@ -53,7 +53,6 @@ export interface Ticket {
     rejectedBy?: string | null;
   }[];
 
-  currentArea: string | null;
 
   // Asignaciones a cuadrillas (historial)
   crewAssignments: {
@@ -65,7 +64,6 @@ export interface Ticket {
     assignedBy: string;
   }[];
 
-  currentCuadrilla: string | null;
 
   // Verificación
   verifiedByReporter: boolean;

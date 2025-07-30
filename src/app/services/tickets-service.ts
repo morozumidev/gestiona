@@ -38,11 +38,29 @@ export class TicketsService {
     return this.selectedTicket.asReadonly();
   }
 
-  getAllTickets(filters: { field: string; value: any }[] = [], page = 1, pageSize = 20, search = '', sort: any = { createdAt: -1 }) {
-    return this.http.post<{ data: Ticket[]; total: number; page: number; pageSize: number; }>(`${this.coreService.URI_API}tickets/getAllTickets`, {
-      filters, page, pageSize, search, sort
-    });
-  }
+getAllTickets(
+  filters: { field: string; value: any }[] = [],
+  page = 1,
+  pageSize = 20,
+  search = '',
+  sort: any = { createdAt: -1 }
+) {
+  return this.http.post<{
+    data: Ticket[];
+    total: number;
+    page: number;
+    pageSize: number;
+    statusCounts: Record<string, number>; // ✅ nuevo campo
+    semaforoCounts: Record<string, number>; // ✅ nuevo campo
+  }>(`${this.coreService.URI_API}tickets/getAllTickets`, {
+    filters,
+    page,
+    pageSize,
+    search,
+    sort
+  });
+}
+
 
 
   manageTicket(ticket: Partial<Ticket>, file?: File) {

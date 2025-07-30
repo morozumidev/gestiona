@@ -60,7 +60,8 @@ export class Tickets {
   readonly searchTerm = signal('');
   readonly sortColumn = signal<keyof Ticket | ''>('');
   readonly sortDirection = signal<'asc' | 'desc'>('asc');
-
+  readonly ticketStatusCounts = signal<Record<string, number>>({});
+  readonly ticketSemaforoCounts = signal<Record<string, number>>({});
   protected totalTickets = signal(0);
   protected page = signal(1);
   protected pageSize = signal(20);
@@ -157,7 +158,10 @@ export class Tickets {
     ).subscribe({
       next: (response) => {
         this.ticketsSignal.set(response.data);
+        console.log(response.data)
         this.totalTickets.set(response.total);
+        this.ticketStatusCounts.set(response.statusCounts);
+        this.ticketSemaforoCounts.set(response.semaforoCounts);
       },
       error: (err) => {
         if (err.status === 401) {
@@ -220,12 +224,7 @@ export class Tickets {
     this.ticketsSignal.set(updated);
   }
 
-  updateArea(id: string, newArea: string) {
-    const updated = this.ticketsSignal().map(t =>
-      t._id === id ? { ...t, area: newArea } : t
-    );
-    this.ticketsSignal.set(updated);
-  }
+
 
   deleteTicket(id: string) {
     if (!window.confirm('¿Estás seguro de eliminar este ticket?')) return;
@@ -265,9 +264,8 @@ export class Tickets {
   }
 
   isClosed = (ticket: Ticket) => ticket.status === 'Atendida';
-  countSemaforoColor(color: 'verde' | 'ambar' | 'rojo'): number {
-    return this.ticketsSignal().filter(ticket => this.getSemaforoColor(ticket.createdAt!) === color).length;
-  }
+  countSemaforoColor = (color: 'verde' | 'ambar' | 'rojo') =>
+    this.ticketSemaforoCounts()[color] ?? 0;
 
   getSemaforoColor(createdAt: Date): 'verde' | 'ambar' | 'rojo' {
     const diffHours = (new Date().getTime() - new Date(createdAt).getTime()) / 36e5;
@@ -276,9 +274,7 @@ export class Tickets {
     return 'rojo';
   }
   getLatestAssignment(ticket: Ticket) {
-    return ticket.areaAssignments
-      .filter(a => a.area === ticket.currentArea)
-      .at(-1); // obtiene la última asignación
+    return ticket.areaAssignments.at(-1);
   }
 
   getAreaStatusIcon(ticket: Ticket): string {
@@ -353,8 +349,9 @@ export class Tickets {
     });
   }
 
+  countByStatus = (statusId: string) =>
+    this.ticketStatusCounts()[statusId] ?? 0;
 
-  countByStatus = (status: string) => this.ticketsSignal().filter(t => t.status === status).length;
 
   private sortTickets = (tickets: Ticket[]): Ticket[] => {
     const column = this.sortColumn();
