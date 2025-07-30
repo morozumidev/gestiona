@@ -1,6 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
@@ -27,6 +27,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { RejectionDetailsDialog } from '../../dialogs/rejection-details-dialog/rejection-details-dialog';
 import { Subject } from 'rxjs/internal/Subject';
 import { debounceTime } from 'rxjs/internal/operators/debounceTime';
+import { Console } from 'console';
 @Component({
   selector: 'app-tickets',
   standalone: true,
@@ -51,6 +52,7 @@ import { debounceTime } from 'rxjs/internal/operators/debounceTime';
   providers: [CookieService],
 })
 export class Tickets {
+
   private readonly ticketsService = inject(TicketsService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
@@ -58,15 +60,18 @@ export class Tickets {
   readonly ticketsSignal = signal<Ticket[]>([]);
   readonly filterStatus = signal('Todos');
   readonly searchTerm = signal('');
+  private readonly fb = inject(FormBuilder);
   readonly sortColumn = signal<keyof Ticket | ''>('');
   readonly sortDirection = signal<'asc' | 'desc'>('asc');
   readonly ticketStatusCounts = signal<Record<string, number>>({});
   readonly ticketSemaforoCounts = signal<Record<string, number>>({});
+  readonly selectedArea = signal<string | null>(null);
   protected totalTickets = signal(0);
   protected page = signal(1);
   protected pageSize = signal(20);
   private searchSubject = new Subject<string>();
   protected ticketStatuses = signal<TicketStatus[]>([]);
+  readonly filterSemaforo = signal<'verde' | 'ambar' | 'rojo' | 'todos'>('todos');
   ticketProblems = signal<Tema[]>([]);
   areas = signal<Area[]>([]);
   readonly displayedColumns = [
@@ -78,7 +83,37 @@ export class Tickets {
     'actions',
     'semaforo',
   ];
+  readonly isAdmin = this.authService.currentUser.role?.name === 'admin';
+  readonly isUser = this.authService.currentUser.role?.name === 'user';
+  readonly isAtencion = this.authService.currentUser.role?.name === 'atencion';
+  readonly isAdminOrAtencion = this.isAdmin || this.isAtencion || this.isUser;
+  readonly currentUserArea = this.authService.currentUser.area;
+readonly visibleProblems = computed(() => {
+  const all = this.ticketProblems();
+  const selectedArea = this.selectedArea();
 
+  if (this.isAdminOrAtencion) {
+    if (!selectedArea) return all;
+    return all.filter(p => {
+      const areaId = typeof p.areaId === 'object' ? p.areaId._id || p.areaId : p.areaId;
+      return areaId === selectedArea;
+    });
+  }
+
+  return all.filter(p => {
+    const areaId = typeof p.areaId === 'object' ? p.areaId._id || p.areaId : p.areaId;
+    return areaId === this.currentUserArea;
+  });
+});
+
+
+  readonly columnFilters = this.fb.group({
+    startDate: [null],
+    endDate: [null],
+    problem: [''],
+    area: [''],
+    status: ['']
+  });
   constructor() {
     this.searchSubject.pipe(debounceTime(400)).subscribe(value => {
       this.searchTerm.set(value);
@@ -87,12 +122,30 @@ export class Tickets {
     });
     this.loadTickets();
     this.loadCatalogs();
+    this.columnFilters.controls['area'].valueChanges.subscribe(value => {
+  this.selectedArea.set(value);
+});
+
   }
   private loadCatalogs() {
     this.ticketsService.getTicketStatuses().subscribe(data => this.ticketStatuses.set(data));
     this.ticketsService.getTemas().subscribe(data => { this.ticketProblems.set(data); });
     this.ticketsService.getAreas().subscribe(data => { this.areas.set(data); });
   }
+
+onColumnFilterChange() {
+  const selectedProblem = this.columnFilters.controls['problem'].value;
+  const visible = this.visibleProblems();
+  const stillValid = visible.some(p => p._id === selectedProblem);
+
+  if (!stillValid) {
+    this.columnFilters.controls['problem'].setValue('');
+  }
+
+  this.page.set(1);
+  this.loadTickets();
+}
+
   getAreaName(id: string): string {
     return this.areas().find(a => a._id === id)?.name ?? 'Desconocida';
   }
@@ -143,11 +196,44 @@ export class Tickets {
   }
   private loadTickets() {
     const filters = [];
+
     if (this.filterStatus() !== 'Todos') {
       filters.push({ field: 'status', value: this.filterStatus() });
     }
 
+    if (this.filterSemaforo() !== 'todos') {
+      filters.push({ field: 'semaforo', value: this.filterSemaforo() });
+    }
+
     filters.push({ field: 'createdBy', value: this.authService.currentUser._id });
+
+    // 👇 Agrega filtros de columna:
+    const colFilters = this.columnFilters.value as any;
+    const { startDate, endDate, ...restFilters } = colFilters;
+
+    for (const key in restFilters) {
+      const value = restFilters[key];
+      if (!value || value === '') continue;
+
+      if (key === 'area') {
+        if (this.isAdminOrAtencion) {
+          filters.push({ field: 'areaAssignments.area', value });
+        }
+      } else if (key === 'problem') {
+        filters.push({ field: 'problem', value });
+      } else {
+        filters.push({ field: key, value });
+      }
+    }
+
+    if (startDate || endDate) {
+      const createdAtFilter: any = {};
+      if (startDate) createdAtFilter.$gte = new Date(startDate);
+      if (endDate) createdAtFilter.$lte = new Date(endDate);
+      filters.push({ field: 'createdAt', value: createdAtFilter });
+    }
+
+
 
     this.ticketsService.getAllTickets(
       filters,
@@ -158,22 +244,16 @@ export class Tickets {
     ).subscribe({
       next: (response) => {
         this.ticketsSignal.set(response.data);
-        console.log(response.data)
         this.totalTickets.set(response.total);
         this.ticketStatusCounts.set(response.statusCounts);
         this.ticketSemaforoCounts.set(response.semaforoCounts);
       },
       error: (err) => {
-        if (err.status === 401) {
-          this.ticketsSignal.set([]);
-          this.totalTickets.set(0);
-          console.warn('⛔ Sesión expirada o sin autorización. Tickets limpiados.');
-        } else {
-          console.error('Error inesperado al cargar tickets:', err);
-        }
+        console.error('Error inesperado al cargar tickets:', err);
       }
     });
   }
+
 
   setSearch(value: string) {
     this.searchSubject.next(value);
@@ -193,7 +273,16 @@ export class Tickets {
       this.sortDirection.set('asc');
     }
   }
-
+  setFilterSemaforo(color: 'verde' | 'ambar' | 'rojo') {
+    this.filterSemaforo.set(color);
+    this.page.set(1);
+    this.loadTickets();
+  }
+  clearSemaforoFilter() {
+    this.filterSemaforo.set('todos');
+    this.page.set(1);
+    this.loadTickets();
+  }
   getSortIndicator = (column: keyof Ticket) =>
     this.sortColumn() === column ? (this.sortDirection() === 'asc' ? '▲' : '▼') : '';
 
@@ -269,10 +358,12 @@ export class Tickets {
 
   getSemaforoColor(createdAt: Date): 'verde' | 'ambar' | 'rojo' {
     const diffHours = (new Date().getTime() - new Date(createdAt).getTime()) / 36e5;
-    if (diffHours <= 48) return 'verde';
-    if (diffHours <= 96) return 'ambar';
-    return 'rojo';
+    if (diffHours <= 120) return 'verde'; // 1-5 días
+    if (diffHours <= 240) return 'ambar'; // 5-10 días
+    return 'rojo';                         // 10+ días
   }
+
+
   getLatestAssignment(ticket: Ticket) {
     return ticket.areaAssignments.at(-1);
   }

@@ -126,17 +126,18 @@
             }
           </mat-select>
         </mat-form-field>
-@if(areaEditable()){
-<mat-form-field appearance="outline" >
-  <mat-icon matPrefix>groups</mat-icon>
-  <mat-label>Seleccionar Área</mat-label>
-  <mat-select (selectionChange)="onManualAreaSelected($event.value)">
-    @for (area of areas(); track area._id) {
-      <mat-option [value]="area._id">{{ area.name }}</mat-option>
-    }
-  </mat-select>
-</mat-form-field>
-}
+        @if (areaEditable() || reportForm.get('problem')?.value) {
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>groups</mat-icon>
+          <mat-label>Seleccionar Área</mat-label>
+          <mat-select [value]="selectedAreaId" (selectionChange)="onManualAreaSelected($event.value)">
+            @for (area of areas(); track area._id) {
+            <mat-option [value]="area._id">{{ area.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        }
 
 
         @if (showLuminarias()) {

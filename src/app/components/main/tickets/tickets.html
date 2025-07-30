@@ -1,7 +1,7 @@
 <div class="ticket-admin">
   <div class="ticket-summary glass-container">
     @for (status of ticketStatuses(); track status._id) {
-    <div class="ticket-card {{ status.cssClass }}" (click)="onCardClick(status.name)">
+    <div class="ticket-card {{ status.cssClass }}" (click)="onCardClick(status._id!)">
       <mat-icon class="ticket-icon">
         {{ getStatusIcon(status.cssClass) }}
       </mat-icon>
@@ -19,27 +19,79 @@
     </div>
   </div>
 
-  <section>
-    <div class="glass-container status-chips">
-      <div class="chip verde">
-        <span class="color-dot"></span>
-        <span class="label">A tiempo</span>
-        <span class="count">{{ countSemaforoColor('verde') }}</span>
-      </div>
-
-      <div class="chip ambar">
-        <span class="color-dot"></span>
-        <span class="label">Requieren atención</span>
-        <span class="count">{{ countSemaforoColor('ambar') }}</span>
-      </div>
-
-      <div class="chip rojo">
-        <span class="color-dot"></span>
-        <span class="label">Vencidos</span>
-        <span class="count">{{ countSemaforoColor('rojo') }}</span>
-      </div>
+  <div class="glass-container status-chips">
+    <div class="chip verde" (click)="setFilterSemaforo('verde')">
+      <span class="color-dot"></span>
+      <span class="label">A tiempo</span>
+      <span class="count">{{ countSemaforoColor('verde') }}</span>
     </div>
-  </section>
+
+    <div class="chip ambar" (click)="setFilterSemaforo('ambar')">
+      <span class="color-dot"></span>
+      <span class="label">Requieren atención</span>
+      <span class="count">{{ countSemaforoColor('ambar') }}</span>
+    </div>
+
+    <div class="chip rojo" (click)="setFilterSemaforo('rojo')">
+      <span class="color-dot"></span>
+      <span class="label">Vencidos</span>
+      <span class="count">{{ countSemaforoColor('rojo') }}</span>
+    </div>
+    <div class="chip dark" (click)="clearSemaforoFilter()">
+      <span class="color-dot"></span>
+      <span class="label">Todos</span>
+      <span class="count">{{ totalTickets() }}</span>
+    </div>
+  </div>
+
+  <div class="filter-row glass-container">
+    @if (isAdminOrAtencion) {
+    <mat-form-field appearance="outline">
+      <mat-label>Área</mat-label>
+      <mat-select [formControl]="columnFilters.controls['area']" (selectionChange)="onColumnFilterChange()">
+        <mat-option value="">Todas</mat-option>
+        @for (a of areas(); track a._id) {
+        <mat-option [value]="a._id">{{ a.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Problema</mat-label>
+      <mat-select [formControl]="columnFilters.controls['problem']" (selectionChange)="onColumnFilterChange()">
+        <mat-option value="">Todos</mat-option>
+@for (p of visibleProblems(); track p._id) {
+  <mat-option [value]="p._id">{{ p.name }}</mat-option>
+}
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Rango de fechas</mat-label>
+      <mat-date-range-input [formGroup]="columnFilters" [rangePicker]="picker">
+        <input matStartDate formControlName="startDate" placeholder="Desde" (dateChange)="onColumnFilterChange()" />
+        <input matEndDate formControlName="endDate" placeholder="Hasta" (dateChange)="onColumnFilterChange()" />
+      </mat-date-range-input>
+      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-date-range-picker #picker></mat-date-range-picker>
+    </mat-form-field>
+
+
+
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select [formControl]="columnFilters.controls['status']" (selectionChange)="onColumnFilterChange()">
+        <mat-option value="">Todos</mat-option>
+        @for (s of ticketStatuses(); track s._id) {
+        <mat-option [value]="s._id">{{ s.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+
+  </div>
+
 
   <section class="search-bar glass-container">
     <div class="search-wrapper">

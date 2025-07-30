@@ -18,7 +18,8 @@ import {
   FormBuilder,
   FormGroup,
   Validators,
-  ReactiveFormsModule
+  ReactiveFormsModule,
+  FormArray
 } from '@angular/forms';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -67,6 +68,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   private readonly zone = inject(NgZone);
   reportForm: FormGroup;
   @ViewChild('fileInput', { static: false }) fileInput!: ElementRef<HTMLInputElement>;
+  isAdminOrAtencion = ['admin', 'atencion'].includes(this.authService.currentUser?.role?.name);
 
   temas = signal<Tema[]>([]);
   areas = signal<Area[]>([]);
@@ -96,27 +98,19 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
-    this.reportForm = this.fb.group({
+   this.reportForm = this.fb.group({
       _id: [''],
       folio: [''],
-
-      // Datos del reportante
       name: ['', Validators.required],
       first_lastname: [''],
       second_lastname: [''],
       phone: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-
-      // Catálogos dinámicos
       source: [''],
       status: ['68814abc0000000000000001'],
       workflowStage: ['generado'],
-
-      // Detalles del problema
       problem: ['', Validators.required],
       description: ['', Validators.required],
-
-      // Ubicación
       location: this.fb.group({
         street: [''],
         extNumber: [''],
@@ -131,39 +125,39 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
         country: [''],
         references: [''],
         coordinates: this.fb.group({
-          lat: [null,],
-          lng: [null,],
+          lat: [null],
+          lng: [null],
         }),
       }),
-
-      // Evidencias
       images: [[]],
-
-      // Asignación de área
       areaAssignments: this.fb.array([]),
-
-      // Asignación de cuadrilla
-      crewAssignment: this.fb.group({
-        assignedTo: [''],
-        accepted: [null],
-        rejectionReason: [''],
-        respondedAt: [null],
-      }),
-
-      // Verificación
+      crewAssignments: this.fb.array([]), // ✅ ahora es FormArray
+      tracking: this.fb.array([]),         // ✅ ahora es FormArray
       verifiedByReporter: [false],
       verifiedBy: [''],
-
-      // Seguimiento
-      tracking: [[]], // Si quieres que esto sea un FormArray, puedo estructurarlo también
-
-      // Auditoría
       createdBy: [this.authService.currentUser?._id || ''],
       createdAt: [null],
       updatedAt: [null],
-
       luminaria: [''],
     });
+  }
+ private buildFormArrayFromObjects(items: any[]): FormArray {
+    return this.fb.array(
+      items.map(item => {
+        const group: { [key: string]: any } = {};
+        for (const key of Object.keys(item)) {
+          const val = item[key];
+          group[key] = [
+            typeof val === 'object' && val?.$date
+              ? new Date(val.$date)
+              : typeof val === 'object' && val?.$oid
+              ? val.$oid
+              : val
+          ];
+        }
+        return this.fb.group(group);
+      })
+    );
   }
 
   ngOnInit(): void {
@@ -174,26 +168,19 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
         if (ticket) {
           this.ticketFound = true;
 
+          // 👉 patch para todo lo que NO es FormArray
           this.reportForm.patchValue({
             _id: ticket._id || '',
             folio: ticket.folio || '',
-
-            // Datos del reportante
             name: ticket.name || '',
             first_lastname: ticket.first_lastname || '',
             second_lastname: ticket.second_lastname || '',
             phone: ticket.phone || '',
             email: ticket.email || '',
-
-            // Catálogos
             source: ticket.source || '',
             status: ticket.status || '68814abc0000000000000001',
-
-            // Problema
             problem: ticket.problem || '',
             description: ticket.description || '',
-
-            // Ubicación
             location: {
               street: ticket.location?.street || '',
               extNumber: ticket.location?.extNumber || '',
@@ -212,37 +199,37 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
                 lng: ticket.location?.coordinates?.lng || null,
               },
             },
-
-            // Evidencias
             images: ticket.images || [],
-            areaAssignments: ticket.areaAssignments || [],
-
-            // Verificación
             verifiedByReporter: ticket.verifiedByReporter ?? false,
             verifiedBy: ticket.verifiedBy || '',
-
-            // Seguimiento
-            tracking: ticket.tracking || [],
-
-            // Auditoría
             createdBy: ticket.createdBy || '',
             createdAt: ticket.createdAt || null,
             updatedAt: ticket.updatedAt || null,
             luminaria: ticket.luminaria || '',
           });
 
-          // Imagen de vista previa
+          // ✅ Inicializa los FormArray con objetos como FormGroup
+          this.reportForm.setControl('areaAssignments', this.buildFormArrayFromObjects(ticket.areaAssignments || []));
+          this.reportForm.setControl('crewAssignments', this.buildFormArrayFromObjects(ticket.crewAssignments || []));
+          this.reportForm.setControl('tracking', this.buildFormArrayFromObjects(ticket.tracking || []));
+
+          // Vista previa
           if (ticket.images?.length > 0) {
             this.previewUrl = ticket.images[0];
           }
 
           this.ticketHistory = ticket.tracking || [];
+          const temaId = ticket.problem;
+          if (temaId) this.onTemaSelected(temaId);
         }
       });
     });
   }
 
-
+get selectedAreaId(): string | null {
+  const assignments = this.reportForm.get('areaAssignments')?.value;
+  return assignments?.length ? assignments.at(-1)?.area ?? null : null;
+}
   ngAfterViewInit(): void {
     if (this.isBrowser && this.showMap) {
       this.loadGoogleMapsScript(() => this.initMap());
@@ -347,7 +334,6 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
             intNumber,
             crossStreets,
             neighborhood,
-            borough,
             locality,
             city,
             state,
@@ -391,26 +377,48 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
 
   submitForm(): void {
     if (!this.reportForm.valid) return;
-
     const formValues = this.reportForm.getRawValue();
+    const previousAssignments: any = this.ticketsService.getTicket()()?.areaAssignments;
+
     const currentUser = this.authService.currentUser;
 
-const areaId = formValues.areaAssignments?.at(-1)?.area ?? null;
-    const previousAssignments = formValues.areaAssignments || [];
+    const areaId = formValues.areaAssignments?.at(-1)?.area ?? null;
 
-    const lastAssignment = previousAssignments.at(-1);
-    const alreadyAssigned = lastAssignment?.area === areaId;
+
+    const isSameAssignment = (a: any, b: any) => {
+      return (
+        a?.area?.toString?.() === b?.area?.toString?.() &&
+        a?.assignedBy?.toString?.() === b?.assignedBy?.toString?.() &&
+        a?.accepted === b?.accepted &&
+        !a?.rejectionReason && !b?.rejectionReason
+      );
+    };
 
     const newAssignment = {
       area: areaId,
       assignedBy: currentUser?._id || null,
-      assignedAt: new Date(),
       accepted: false
     };
 
-    const areaAssignments = alreadyAssigned
-      ? previousAssignments
-      : [...previousAssignments, newAssignment];
+    const lastAssignment = previousAssignments.at(-1);
+    const alreadyAssigned = isSameAssignment(lastAssignment, newAssignment);
+
+    let areaAssignments = previousAssignments;
+
+    if (!alreadyAssigned) {
+      areaAssignments = [
+        ...previousAssignments,
+        {
+          area: areaId,
+          assignedBy: currentUser?._id || null,
+          assignedAt: new Date(),
+          accepted: false
+        }
+      ];
+    }
+
+
+
 
     const ticket: Partial<Ticket> = {
       _id: formValues._id,
@@ -478,7 +486,6 @@ const areaId = formValues.areaAssignments?.at(-1)?.area ?? null;
         this.dialog.open(SuccessDialog, {
           data: { folio: res.ticket?.folio || 'Sin folio' }
         });
-        console.log(ticket)
         this.reportForm.reset();
         this.ticketsService.clearTicket?.();
         this.previewUrl = null;
@@ -504,12 +511,11 @@ const areaId = formValues.areaAssignments?.at(-1)?.area ?? null;
   }
 
   onTemaSelected(temaId: string) {
-    
+
     const tema = this.temas().find(t => t._id === temaId);
     if (!tema) return;
 
-    const currentAssignments = this.reportForm.get('areaAssignments')?.value || [];
-const areaAssignments = this.reportForm.get('areaAssignments');
+    const areaAssignments = this.reportForm.get('areaAssignments');
     const luminariaControl = this.reportForm.get('luminaria');
 
     // Cargar luminarias solo si es necesario
@@ -525,35 +531,49 @@ const areaAssignments = this.reportForm.get('areaAssignments');
     }
 
     // Área predefinida o editable
-    if (tema.areaId) {
-  const assignedBy = this.authService.currentUser?._id || null;
-  const newAssignment = this.fb.group({
-    area: typeof tema.areaId === 'string' ? tema.areaId : tema.areaId._id,
-    assignedBy,
-    assignedAt: new Date(),
-    accepted: null,
-    respondedAt: null,
-  });
-  (areaAssignments as any).push(newAssignment);
-  this.areaEditable.set(false);
-} else {
-  this.areaEditable.set(true);
-}
+    if (tema.areaId && !this.isAdminOrAtencion) {
+      const assignedBy = this.authService.currentUser?._id || null;
+      const currentAssignments = areaAssignments?.value || [];
+      const lastAssignment = currentAssignments.at(-1);
+
+      const temaAreaId = typeof tema.areaId === 'string' ? tema.areaId : tema.areaId._id;
+      const lastAreaId = lastAssignment?.area?.toString?.();
+      const temaAreaIdStr = temaAreaId?.toString?.();
+
+      const sameArea = lastAreaId === temaAreaIdStr;
+
+      if (!sameArea) {
+        const newAssignment = this.fb.group({
+          area: temaAreaId,
+          assignedBy,
+          assignedAt: new Date(),
+          accepted: null,
+          respondedAt: null,
+        });
+        (areaAssignments as any).push(newAssignment);
+      }
+
+      this.areaEditable.set(false); // No editable para usuarios normales
+    } else {
+      this.areaEditable.set(true); // Editable para admin/atencion o temas sin área
+    }
+
+
 
   }
-onManualAreaSelected(areaId: string) {
-  const assignedBy = this.authService.currentUser?._id || null;
-  const newAssignment = this.fb.group({
-    area: areaId,
-    assignedBy,
-    assignedAt: new Date(),
-    accepted: null,
-    rejectionReason: '',
-    respondedAt: null,
-  });
+  onManualAreaSelected(areaId: string) {
+    const assignedBy = this.authService.currentUser?._id || null;
+    const newAssignment = this.fb.group({
+      area: areaId,
+      assignedBy,
+      assignedAt: new Date(),
+      accepted: null,
+      rejectionReason: '',
+      respondedAt: null,
+    });
 
-  (this.reportForm.get('areaAssignments') as any).push(newAssignment);
-}
+    (this.reportForm.get('areaAssignments') as any).push(newAssignment);
+  }
 
 
 
