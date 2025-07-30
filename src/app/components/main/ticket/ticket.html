@@ -1,6 +1,7 @@
 <div class="ticket-container report-form">
   <form [formGroup]="reportForm" (ngSubmit)="submitForm()">
     <!-- CIUDADANO -->
+     @if (currentUser?.role?.name !== 'user') {
     <section class="form-section">
       <h2 class="section-title"><mat-icon>person</mat-icon>Datos del Ciudadano</h2>
       <div class="form-grid">
@@ -31,16 +32,22 @@
         </mat-form-field>
       </div>
     </section>
-
+  }
     <!-- UBICACIÓN -->
     <section class="form-section">
-      <h2 class="section-title"><mat-icon>location_on</mat-icon>Ubicación del Reporte</h2>
-      <div class="form-grid">
+      <div class="section-header">
+        <h2 class="section-title"><mat-icon>location_on</mat-icon>Ubicación del Reporte</h2>
         <button matButton="elevated" type="button" (click)="toggleMap()">
-          <mat-icon>place</mat-icon> Seleccionar desde el mapa
+          <mat-icon>{{ showMap ? 'close' : 'add_location' }}</mat-icon>
+          {{ showMap ? 'Cerrar Mapa' : 'Ubicación' }}
         </button>
+      </div>
+      <div class=" full-width">
+
         @if (showMap) {
-        <div #mapContainer id="map" class="map-container"></div>
+        <div class="map-wrapper">
+          <div #mapContainer id="map" class="map-container"></div>
+        </div>
         }
       </div>
       <div class="form-grid" formGroupName="location">

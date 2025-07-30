@@ -68,7 +68,8 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   private readonly zone = inject(NgZone);
   reportForm: FormGroup;
   @ViewChild('fileInput', { static: false }) fileInput!: ElementRef<HTMLInputElement>;
-  isAdminOrAtencion = ['admin', 'atencion'].includes(this.authService.currentUser?.role?.name);
+  protected currentUser = this.authService.currentUser;
+  isAdminOrAtencion = ['admin', 'atencion'].includes(this.currentUser.role?.name);
 
   temas = signal<Tema[]>([]);
   areas = signal<Area[]>([]);
@@ -98,7 +99,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
-   this.reportForm = this.fb.group({
+    this.reportForm = this.fb.group({
       _id: [''],
       folio: [''],
       name: ['', Validators.required],
@@ -135,13 +136,13 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       tracking: this.fb.array([]),         // ✅ ahora es FormArray
       verifiedByReporter: [false],
       verifiedBy: [''],
-      createdBy: [this.authService.currentUser?._id || ''],
+      createdBy: [this.currentUser?._id || ''],
       createdAt: [null],
       updatedAt: [null],
       luminaria: [''],
     });
   }
- private buildFormArrayFromObjects(items: any[]): FormArray {
+  private buildFormArrayFromObjects(items: any[]): FormArray {
     return this.fb.array(
       items.map(item => {
         const group: { [key: string]: any } = {};
@@ -151,8 +152,8 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
             typeof val === 'object' && val?.$date
               ? new Date(val.$date)
               : typeof val === 'object' && val?.$oid
-              ? val.$oid
-              : val
+                ? val.$oid
+                : val
           ];
         }
         return this.fb.group(group);
@@ -224,12 +225,23 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
         }
       });
     });
+    if (this.currentUser?.role?.name === 'user' && !this.ticketFound) {
+      const user = this.authService.currentUser;
+      this.reportForm.patchValue({
+        name: user.name,
+        first_lastname: user.first_lastname || '',
+        second_lastname: user.second_lastname || '',
+        phone: user.phone || '',
+        email: user.email || ''
+      });
+    }
+
   }
 
-get selectedAreaId(): string | null {
-  const assignments = this.reportForm.get('areaAssignments')?.value;
-  return assignments?.length ? assignments.at(-1)?.area ?? null : null;
-}
+  get selectedAreaId(): string | null {
+    const assignments = this.reportForm.get('areaAssignments')?.value;
+    return assignments?.length ? assignments.at(-1)?.area ?? null : null;
+  }
   ngAfterViewInit(): void {
     if (this.isBrowser && this.showMap) {
       this.loadGoogleMapsScript(() => this.initMap());
@@ -265,9 +277,15 @@ get selectedAreaId(): string | null {
   }
 
   initMap(): void {
-    const defaultLatLng = { lat: 19.1738, lng: -96.1342 };
+    const coords = this.reportForm.get('location.coordinates')?.value;
+    const hasCoords = coords?.lat != null && coords?.lng != null;
+
+    const latLng = hasCoords
+      ? { lat: coords.lat, lng: coords.lng }
+      : { lat: 19.1738, lng: -96.1342 }; // Veracruz default
+
     const mapOptions = {
-      center: defaultLatLng,
+      center: latLng,
       zoom: 15,
       disableDefaultUI: true,
       zoomControl: true,
@@ -280,7 +298,7 @@ get selectedAreaId(): string | null {
 
     this.marker = new AdvancedMarkerElement({
       map: this.map,
-      position: defaultLatLng,
+      position: latLng,
       gmpDraggable: true,
     });
 
@@ -295,9 +313,8 @@ get selectedAreaId(): string | null {
         this.reverseGeocode(pos.lat(), pos.lng());
       }
     });
-
-
   }
+
 
 
 
@@ -313,41 +330,32 @@ get selectedAreaId(): string | null {
         const getComponent = (types: string[]) =>
           components.find((comp: any) => types.every(type => comp.types.includes(type)))?.long_name || '';
 
-        const street = getComponent(['route']);
-        const extNumber = getComponent(['street_number']);
-        const intNumber = ''; // No se obtiene con Geocoder
-        const crossStreets = getComponent(['intersection']);
-        const neighborhood = getComponent(['sublocality', 'sublocality_level_1']) || getComponent(['neighborhood']);
-        const borough = ''; // Opcional, según ubicación
-        const locality = getComponent(['locality']);
-        const city = locality; // Puedes modificar si es distinto
-        const state = getComponent(['administrative_area_level_1']);
-        const postalCode = getComponent(['postal_code']);
-        const country = getComponent(['country']);
-        const references = getComponent(['point_of_interest']); // Opcional
+        const patch = {
+          street: getComponent(['route']),
+          extNumber: getComponent(['street_number']),
+          intNumber: '',
+          crossStreets: getComponent(['intersection']),
+          neighborhood: getComponent(['sublocality', 'sublocality_level_1']) || getComponent(['neighborhood']),
+          borough: '',
+          locality: getComponent(['locality']),
+          city: getComponent(['locality']),
+          state: getComponent(['administrative_area_level_1']),
+          postalCode: getComponent(['postal_code']),
+          country: getComponent(['country']),
+          references: getComponent(['point_of_interest']),
+          coordinates: { lat, lng },
+        };
 
-        // ✅ Actualiza todos los campos dentro de location
         this.zone.run(() => {
-          this.reportForm.get('location')?.patchValue({
-            street,
-            extNumber,
-            intNumber,
-            crossStreets,
-            neighborhood,
-            locality,
-            city,
-            state,
-            postalCode,
-            country,
-            references,
-            coordinates: { lat, lng }
-          });
+          this.reportForm.get('location')?.patchValue(patch);
+          this.showMap = false; // 👈 Ocultar el mapa automáticamente
         });
       } else {
         console.error('Geocoding failed:', status);
       }
     });
   }
+
 
 
 
@@ -378,9 +386,9 @@ get selectedAreaId(): string | null {
   submitForm(): void {
     if (!this.reportForm.valid) return;
     const formValues = this.reportForm.getRawValue();
-    const previousAssignments: any = this.ticketsService.getTicket()()?.areaAssignments;
+    const previousAssignments: any = this.ticketsService.getTicket()()?.areaAssignments ||[];
 
-    const currentUser = this.authService.currentUser;
+    const currentUser = this.currentUser;
 
     const areaId = formValues.areaAssignments?.at(-1)?.area ?? null;
 
@@ -399,10 +407,9 @@ get selectedAreaId(): string | null {
       assignedBy: currentUser?._id || null,
       accepted: false
     };
-
     const lastAssignment = previousAssignments.at(-1);
-    const alreadyAssigned = isSameAssignment(lastAssignment, newAssignment);
-
+    
+    const alreadyAssigned = lastAssignment ? isSameAssignment(lastAssignment, newAssignment) : false;
     let areaAssignments = previousAssignments;
 
     if (!alreadyAssigned) {
@@ -530,9 +537,9 @@ get selectedAreaId(): string | null {
       luminariaControl?.reset();
     }
 
-    // Área predefinida o editable
-    if (tema.areaId && !this.isAdminOrAtencion) {
-      const assignedBy = this.authService.currentUser?._id || null;
+    if (tema.areaId) {
+      const assignedBy = this.currentUser?._id || null;
+      const areaAssignments = this.reportForm.get('areaAssignments');
       const currentAssignments = areaAssignments?.value || [];
       const lastAssignment = currentAssignments.at(-1);
 
@@ -552,17 +559,17 @@ get selectedAreaId(): string | null {
         });
         (areaAssignments as any).push(newAssignment);
       }
-
-      this.areaEditable.set(false); // No editable para usuarios normales
-    } else {
-      this.areaEditable.set(true); // Editable para admin/atencion o temas sin área
     }
+
+    // Admin y atención pueden editarla manualmente
+    this.areaEditable.set(this.isAdminOrAtencion || !tema.areaId);
+
 
 
 
   }
   onManualAreaSelected(areaId: string) {
-    const assignedBy = this.authService.currentUser?._id || null;
+    const assignedBy = this.currentUser?._id || null;
     const newAssignment = this.fb.group({
       area: areaId,
       assignedBy,

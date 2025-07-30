@@ -71,10 +71,15 @@ export class AuthService {
 
 
   /** Limpia sesión del cliente */
-  public clearSession(): void {
-    this.userSubject.next(null);
-    this.cookieService.delete(this.roleKey, '/');
-  }
+public clearSession(): void {
+  this.userSubject.next(null);
+
+  this.cookieService.delete(this.roleKey, '/');
+  this.cookieService.delete('gc_token', '/');
+
+
+}
+
 
   /** Ruta por defecto según rol */
   public getDefaultRoute(role: string): string {

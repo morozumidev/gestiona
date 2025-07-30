@@ -87,7 +87,7 @@ export class Tickets {
   readonly isUser = this.authService.currentUser.role?.name === 'user';
   readonly isAtencion = this.authService.currentUser.role?.name === 'atencion';
   readonly isAdminOrAtencion = this.isAdmin || this.isAtencion || this.isUser;
-  readonly currentUserArea = this.authService.currentUser.area;
+  readonly currentUserArea = computed(() => this.authService.currentUser?.area || null);
 readonly visibleProblems = computed(() => {
   const all = this.ticketProblems();
   const selectedArea = this.selectedArea();
@@ -102,11 +102,14 @@ readonly visibleProblems = computed(() => {
 
   return all.filter(p => {
     const areaId = typeof p.areaId === 'object' ? p.areaId._id || p.areaId : p.areaId;
-    return areaId === this.currentUserArea;
+    return areaId === this.currentUserArea();
   });
 });
 
-
+canRespondAssignment(a: any): boolean {
+  const currentArea = this.currentUserArea();
+  return a.area === currentArea && !a.accepted && !a.rejectionReason;
+}
   readonly columnFilters = this.fb.group({
     startDate: [null],
     endDate: [null],
@@ -127,6 +130,15 @@ readonly visibleProblems = computed(() => {
 });
 
   }
+
+  get isAdminOrAtencionOrFuncionario(): boolean {
+  const role = this.authService.currentUser?.role?.name;
+  return ['admin', 'atencion', 'funcionario'].includes(role);
+}
+get userArea (): string {
+  return this.authService.currentUser.area;
+}
+
   private loadCatalogs() {
     this.ticketsService.getTicketStatuses().subscribe(data => this.ticketStatuses.set(data));
     this.ticketsService.getTemas().subscribe(data => { this.ticketProblems.set(data); });
