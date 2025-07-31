@@ -291,6 +291,47 @@
   background-color: rgba($color2, .7);
 }
 
+.status-badge {
+  @extend .badge;
+  text-transform: none;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+  display: inline-block;
+  min-width: 80px;
+  text-align: center;
+  font-weight: 600;
+
+  &.pending {
+    background-color: #d0e8ff;
+    color: #0056b3;
+  }
+
+  &.in-process {
+    background-color: #fff3cd;
+    color: #e65100;
+  }
+
+  &.solved {
+    background-color: #c8facc;
+    color: #1b5e20;
+  }
+
+  &.canceled {
+    background-color: #f8d7da;
+    color: #b71c1c;
+  }
+
+  &.open {
+    background-color: #e0e0e0;
+    color: #424242;
+  }
+
+  &.default {
+    background-color: #e0e0e0;
+    color: #333;
+  }
+}
+
 .area-status-icon {
   margin-left: 0.5rem;
   vertical-align: middle;
@@ -326,6 +367,19 @@
 
 .badge-prioridad-baja {
   background: rgba(0, 162, 255, 0.85); // azul
+}
+
+.badge-problema {
+  @extend .badge;
+  background: rgba(255, 255, 255, 0.85); // naranja vibrante
+  color: #000000;
+}
+
+.badge-fecha {
+  @extend .badge;
+  background: rgb(255, 255, 255);
+  font-weight: 500;
+  color: #000000;
 }
 
 table {

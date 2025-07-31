@@ -114,13 +114,11 @@ getAllTickets(
     return this.http.post(`${this.coreService.URI_API}tickets/assignCuadrilla`, { ticketId, cuadrillaId });
   }
 
-  respondToTicketAssignment(ticketId: string, rejectedBy: string, accepted: boolean, rejectionReason: string = '') {
-    return this.http.post(`${this.coreService.URI_API}tickets/acceptOrRejectTicket`, {
-      ticketId,
-      accepted,
-      rejectionReason,
-      rejectedBy
-    });
-  }
-
+respondToAssignment(ticketId: string, accepted: boolean, rejectionReason = '') {
+  return this.http.post(`${this.coreService.URI_API}tickets/acceptOrRejectTicket`, {
+    ticketId,
+    accepted,
+    rejectionReason
+  });
+}
 }
