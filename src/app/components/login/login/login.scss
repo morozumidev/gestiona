@@ -2,33 +2,74 @@
 @use '@angular/material' as mat;
 @use '../../../../app_theme-colors' as theme;
 @use '../../../../global_variables' as *;
+
 .test {
   color: $color1; // si truena aquí, es que la importación falló
 }
+
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(40px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-40px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 @keyframes bgShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .animated {
   animation-duration: 0.8s;
   animation-fill-mode: both;
 }
-.fadeInUp { animation-name: fadeInUp; }
-.fadeInDown { animation-name: fadeInDown; }
+
+.fadeInUp {
+  animation-name: fadeInUp;
+}
+
+.fadeInDown {
+  animation-name: fadeInDown;
+}
+
 @keyframes animatedGradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .login-container {
@@ -58,9 +99,32 @@
   }
 }
 
+.logo-colored {
+  width: clamp(80px, 18vw, 160px);
+  height: clamp(80px, 18vw, 160px);
+  background-color: var(--mat-sys-primary);
+  display: block;
+  margin: 0 auto 20px auto;
+
+  mask-image: url('/assets/logo.png');
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+
+  -webkit-mask-image: url('/assets/logo.png');
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+
+
 .login-logo {
-  text-align: center;
-  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-bottom: 20px;
 
   img {
     width: 12vw;
@@ -212,6 +276,7 @@
     border-width: 1.5px;
   }
 }
+
 // 🔹 Mostrar placeholder siempre visible y blanco translúcido
 .enhanced-input .mat-input-element::placeholder {
   color: rgba(255, 255, 255, 0.6) !important;
