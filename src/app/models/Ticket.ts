@@ -26,7 +26,6 @@ export interface Ticket {
     intNumber?: string;
     crossStreets?: string;
     neighborhood: string;
-    borough?: string;
     locality?: string;
     city?: string;
     state: string;
@@ -62,6 +61,7 @@ export interface Ticket {
     respondedAt: Date | null;
     assignedAt: Date;
     assignedBy: string;
+    valid:boolean;
   }[];
 
 

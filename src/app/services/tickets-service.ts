@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, Signal, signal } from '@angular/core';
 import { Ticket } from '../models/Ticket';
 import { HttpClient } from '@angular/common/http';
 import { CoreService } from './core-service';
@@ -16,10 +16,11 @@ import { User } from '../models/User';
 export class TicketsService {
 
 
+
   constructor(private readonly http: HttpClient, private readonly coreService: CoreService) { }
 
   tickets: Ticket[] = [];
-  selectedTicket = signal<Ticket | null>(null);
+  ticketSignal = signal<Ticket | null>(null);
   reverseGeocode(lat: number, lng: number) {
     return this.http.post<{ address: string }>(
       this.coreService.URI_API + 'maps/reverse-geocode',
@@ -28,38 +29,65 @@ export class TicketsService {
   }
 
 
-  setTicket(ticket: Ticket) {
-    this.selectedTicket.set(ticket);
-  }
-  clearTicket() {
-    this.selectedTicket.set(null);
-  }
-  getTicket() {
-    return this.selectedTicket.asReadonly();
+  setTicket(ticket: Ticket): void {
+    this.ticketSignal.set(ticket);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('ticket:current', JSON.stringify(ticket));
+    }
   }
 
-getAllTickets(
-  filters: { field: string; value: any }[] = [],
-  page = 1,
-  pageSize = 20,
-  search = '',
-  sort: any = { createdAt: -1 }
-) {
-  return this.http.post<{
-    data: Ticket[];
-    total: number;
-    page: number;
-    pageSize: number;
-    statusCounts: Record<string, number>; // ✅ nuevo campo
-    semaforoCounts: Record<string, number>; // ✅ nuevo campo
-  }>(`${this.coreService.URI_API}tickets/getAllTickets`, {
-    filters,
-    page,
-    pageSize,
-    search,
-    sort
-  });
-}
+  getTicket(): Signal<Ticket | null> {
+    return this.ticketSignal.asReadonly();
+  }
+
+  restoreTicketFromSession(): void {
+    if (typeof window !== 'undefined') {
+      const raw = sessionStorage.getItem('ticket:current');
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          this.ticketSignal.set(parsed);
+        } catch {
+          sessionStorage.removeItem('ticket:current');
+        }
+      }
+    }
+  }
+
+  clearTicket(): void {
+    this.ticketSignal.set(null);
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('ticket:current');
+    }
+  }
+
+
+  getTicketById(id: string): Observable<Ticket> {
+    return this.http.post<Ticket>(this.coreService.URI_API + 'tickets/getTicketById', { id });
+  }
+
+  getAllTickets(
+    filters: { field: string; value: any }[] = [],
+    page = 1,
+    pageSize = 20,
+    search = '',
+    sort: any = { createdAt: -1 }
+  ) {
+    return this.http.post<{
+      data: Ticket[];
+      total: number;
+      page: number;
+      pageSize: number;
+      statusCounts: Record<string, number>; // ✅ nuevo campo
+      semaforoCounts: Record<string, number>; // ✅ nuevo campo
+    }>(`${this.coreService.URI_API}tickets/getAllTickets`, {
+      filters,
+      page,
+      pageSize,
+      search,
+      sort
+    });
+  }
 
 
 
@@ -114,11 +142,11 @@ getAllTickets(
     return this.http.post(`${this.coreService.URI_API}tickets/assignCuadrilla`, { ticketId, cuadrillaId });
   }
 
-respondToAssignment(ticketId: string, accepted: boolean, rejectionReason = '') {
-  return this.http.post(`${this.coreService.URI_API}tickets/acceptOrRejectTicket`, {
-    ticketId,
-    accepted,
-    rejectionReason
-  });
-}
+  respondToAssignment(ticketId: string, accepted: boolean, rejectionReason = '') {
+    return this.http.post(`${this.coreService.URI_API}tickets/acceptOrRejectTicket`, {
+      ticketId,
+      accepted,
+      rejectionReason
+    });
+  }
 }

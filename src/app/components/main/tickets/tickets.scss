@@ -509,3 +509,20 @@ table {
     border-radius: 8px;
   }
 }
+
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--primary-color, #1976d2);
+  }
+
+  &::after {
+    content: attr(data-sort-indicator);
+    margin-left: 4px;
+    font-size: 0.8rem;
+    color: #888;
+  }
+}

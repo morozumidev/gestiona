@@ -39,7 +39,12 @@ export class TicketAssignmentDialog implements OnInit {
     this.areas = this.data.areas;
 
     const lastAssignedArea = this.data.ticket.areaAssignments.at(-1)?.area ?? null;
-    const lastAssignedCuadrilla = this.data.ticket.crewAssignments?.at(-1)?.cuadrilla ?? null;
+    const lastValidAssignment = [...(this.data.ticket.crewAssignments ?? [])]
+  .reverse()
+  .find(assignment => assignment.valid !== false); // admite undefined como válido
+
+const lastAssignedCuadrilla = lastValidAssignment?.cuadrilla ?? null;
+
 
     const areaControl = new FormBuilder().control(
       { value: lastAssignedArea, disabled: !this.canAssignArea() },
@@ -66,6 +71,7 @@ export class TicketAssignmentDialog implements OnInit {
     if (this.canAssignArea()) {
       this.form.get('area')?.valueChanges.subscribe((areaId: string) => {
         this.loadCuadrillas(areaId);
+        this.form.get('cuadrilla')?.setValue(null);
       });
     }
   }

@@ -1,3 +1,4 @@
+// Angular Core
 import {
   Component,
   AfterViewInit,
@@ -13,35 +14,41 @@ import {
   Injector,
   signal,
 } from '@angular/core';
-import { ChangeDetectorRef } from '@angular/core';
+import { isPlatformBrowser, DatePipe } from '@angular/common';
+import { PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
+
+// Angular Forms
 import {
   FormBuilder,
   FormGroup,
   Validators,
   ReactiveFormsModule,
-  FormArray
+  FormArray,
 } from '@angular/forms';
-import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+
+// Angular Material
 import { MatDialog } from '@angular/material/dialog';
-import { PLATFORM_ID } from '@angular/core';
-import { Ticket } from '../../../models/Ticket';
-import { SuccessDialog } from '../../dialogs/success-dialog/success-dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TicketsService } from '../../../services/tickets-service';
-import { AuthService } from '../../../services/auth.service';
+
+// Models
+import { Ticket } from '../../../models/Ticket';
 import { TicketTracking } from '../../../models/TicketTracking';
-import { first } from 'rxjs';
 import { Luminaria } from '../../../models/Luminaria';
 import { Tema } from '../../../models/Tema';
 import { Area } from '../../../models/Area';
 import { Source } from '../../../models/Source';
+
+// Services
+import { TicketsService } from '../../../services/tickets-service';
+import { AuthService } from '../../../services/auth.service';
+
+// Dialogs
+import { SuccessDialog } from '../../dialogs/success-dialog/success-dialog';
 
 /// <reference types="google.maps" />
 declare const google: any;
@@ -59,44 +66,48 @@ declare const google: any;
     MatIconModule,
     MatInputModule,
     MatButtonModule,
-    MatProgressSpinnerModule,
+    DatePipe
   ],
 })
+
 export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   private readonly authService = inject(AuthService);
   private readonly ticketsService = inject(TicketsService);
   private readonly zone = inject(NgZone);
-  reportForm: FormGroup;
+
   @ViewChild('fileInput', { static: false }) fileInput!: ElementRef<HTMLInputElement>;
-  protected currentUser = this.authService.currentUser;
-  isAdminOrAtencion = ['admin', 'atencion'].includes(this.currentUser.role?.name);
-
-  temas = signal<Tema[]>([]);
-  areas = signal<Area[]>([]);
-  sources = signal<Source[]>([])
-  luminarias = signal<Luminaria[]>([]);
-  showLuminarias = signal(false);
-  areaEditable = signal(false);
-
-  previewUrl: string | ArrayBuffer | null = null;
-  showMap = false;
-  map!: any;
-  marker!: any;
-  private isBrowser: boolean;
-  protected ticketFound = false;
-
   @ViewChild('mapContainer', { static: false }) mapContainer!: ElementRef;
 
-  ticketHistory: TicketTracking[] = [];
-  origins: any;
+  protected temas = signal<Tema[]>([]);
+  protected areas = signal<Area[]>([]);
+  protected sources = signal<Source[]>([])
+  protected luminarias = signal<Luminaria[]>([]);
+  protected showLuminarias = signal(false);
+  protected areaEditable = signal(false);
+  protected createdByUser = signal<{ name: string; first_lastname?: string; second_lastname?: string; email?: string; phone?: string } | null>(null);
+
+  protected reportForm: FormGroup;
+  protected commentForm: FormGroup;
+
+  protected currentUser = this.authService.currentUser;
+  protected previewUrl: string | ArrayBuffer | null = null;
+  protected showMap = false;
+  protected ticketFound = false;
+
+  private isAdminOrAtencion = ['admin', 'atencion'].includes(this.currentUser.role?.name);
+  private map!: any;
+  private marker!: any;
+  private isBrowser: boolean;
+  private ticketHistory: TicketTracking[] = [];
+  private origins: any;
+
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
     private injector: Injector,
-    @Inject(PLATFORM_ID) platformId: Object
+    @Inject(PLATFORM_ID) protected platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     this.reportForm = this.fb.group({
@@ -109,7 +120,6 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       email: ['', [Validators.required, Validators.email]],
       source: [''],
       status: ['68814abc0000000000000001'],
-      workflowStage: ['generado'],
       problem: ['', Validators.required],
       description: ['', Validators.required],
       location: this.fb.group({
@@ -118,7 +128,6 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
         intNumber: [''],
         crossStreets: [''],
         neighborhood: [''],
-        borough: [''],
         locality: [''],
         city: [''],
         state: [''],
@@ -141,7 +150,56 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       updatedAt: [null],
       luminaria: [''],
     });
+     this.commentForm = this.fb.group({
+  description: ['', Validators.required],
+});
   }
+
+  ngOnInit(): void {
+    this.loadCatalogos();
+
+    // 🔁 Restaurar desde sessionStorage si se recargó
+    if (this.isBrowser && !this.ticketsService.getTicket()()) {
+      this.ticketsService.restoreTicketFromSession();
+    }
+
+    runInInjectionContext(this.injector, () => {
+      effect(() => {
+        const ticket = this.ticketsService.getTicket()();
+        if (ticket) {
+          this.ticketFound = true;
+          this.patchFormWithTicket(ticket);
+        }
+      });
+    });
+
+    // 👤 Autocompletar si es ciudadano y no hay ticket cargado
+    if (this.currentUser?.role?.name === 'user' && !this.ticketFound) {
+      const user = this.authService.currentUser;
+      this.reportForm.patchValue({
+        name: user.name,
+        first_lastname: user.first_lastname || '',
+        second_lastname: user.second_lastname || '',
+        phone: user.phone || '',
+        email: user.email || ''
+      });
+    }
+  }
+
+  ngAfterViewInit(): void {
+    if (this.isBrowser && this.showMap) {
+      this.loadGoogleMapsScript(() => this.initMap());
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.isBrowser && this.map) {
+      this.map = null;
+      this.marker = null;
+    }
+    this.ticketsService.clearTicket?.();
+  }
+
   private buildFormArrayFromObjects(items: any[]): FormArray {
     return this.fb.array(
       items.map(item => {
@@ -161,107 +219,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
     );
   }
 
-  ngOnInit(): void {
-    this.loadCatalogos();
-    runInInjectionContext(this.injector, () => {
-      effect(() => {
-        const ticket = this.ticketsService.getTicket()();
-        if (ticket) {
-          this.ticketFound = true;
-
-          // 👉 patch para todo lo que NO es FormArray
-          this.reportForm.patchValue({
-            _id: ticket._id || '',
-            folio: ticket.folio || '',
-            name: ticket.name || '',
-            first_lastname: ticket.first_lastname || '',
-            second_lastname: ticket.second_lastname || '',
-            phone: ticket.phone || '',
-            email: ticket.email || '',
-            source: ticket.source || '',
-            status: ticket.status || '68814abc0000000000000001',
-            problem: ticket.problem || '',
-            description: ticket.description || '',
-            location: {
-              street: ticket.location?.street || '',
-              extNumber: ticket.location?.extNumber || '',
-              intNumber: ticket.location?.intNumber || '',
-              crossStreets: ticket.location?.crossStreets || '',
-              neighborhood: ticket.location?.neighborhood || '',
-              borough: ticket.location?.borough || '',
-              locality: ticket.location?.locality || '',
-              city: ticket.location?.city || '',
-              state: ticket.location?.state || '',
-              postalCode: ticket.location?.postalCode || '',
-              country: ticket.location?.country || '',
-              references: ticket.location?.references || '',
-              coordinates: {
-                lat: ticket.location?.coordinates?.lat || null,
-                lng: ticket.location?.coordinates?.lng || null,
-              },
-            },
-            images: ticket.images || [],
-            verifiedByReporter: ticket.verifiedByReporter ?? false,
-            verifiedBy: ticket.verifiedBy || '',
-            createdBy: ticket.createdBy || '',
-            createdAt: ticket.createdAt || null,
-            updatedAt: ticket.updatedAt || null,
-            luminaria: ticket.luminaria || '',
-          });
-
-          // ✅ Inicializa los FormArray con objetos como FormGroup
-          this.reportForm.setControl('areaAssignments', this.buildFormArrayFromObjects(ticket.areaAssignments || []));
-          this.reportForm.setControl('crewAssignments', this.buildFormArrayFromObjects(ticket.crewAssignments || []));
-          this.reportForm.setControl('tracking', this.buildFormArrayFromObjects(ticket.tracking || []));
-
-          // Vista previa
-          if (ticket.images?.length > 0) {
-            this.previewUrl = ticket.images[0];
-          }
-
-          this.ticketHistory = ticket.tracking || [];
-          const temaId = ticket.problem;
-          if (temaId) this.onTemaSelected(temaId);
-        }
-      });
-    });
-    if (this.currentUser?.role?.name === 'user' && !this.ticketFound) {
-      const user = this.authService.currentUser;
-      this.reportForm.patchValue({
-        name: user.name,
-        first_lastname: user.first_lastname || '',
-        second_lastname: user.second_lastname || '',
-        phone: user.phone || '',
-        email: user.email || ''
-      });
-    }
-
-  }
-
-  get selectedAreaId(): string | null {
-    const assignments = this.reportForm.get('areaAssignments')?.value;
-    return assignments?.length ? assignments.at(-1)?.area ?? null : null;
-  }
-  ngAfterViewInit(): void {
-    if (this.isBrowser && this.showMap) {
-      this.loadGoogleMapsScript(() => this.initMap());
-    }
-  }
-
-  toggleMap(): void {
-    this.showMap = !this.showMap;
-    if (this.showMap && this.isBrowser) {
-      setTimeout(() => {
-        if (!(window as any).google) {
-          this.loadGoogleMapsScript(() => this.initMap());
-        } else {
-          this.initMap();
-        }
-      });
-    }
-  }
-
-  loadGoogleMapsScript(callback: () => void): void {
+  private loadGoogleMapsScript(callback: () => void): void {
     if (document.getElementById('google-maps-script')) return;
 
     const script = document.createElement('script');
@@ -276,7 +234,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
     document.body.appendChild(script);
   }
 
-  initMap(): void {
+  private initMap(): void {
     const coords = this.reportForm.get('location.coordinates')?.value;
     const hasCoords = coords?.lat != null && coords?.lng != null;
 
@@ -315,10 +273,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
     });
   }
 
-
-
-
-  reverseGeocode(lat: number, lng: number): void {
+  private reverseGeocode(lat: number, lng: number): void {
     const geocoder = new google.maps.Geocoder();
     const latlng = { lat, lng };
 
@@ -336,7 +291,6 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
           intNumber: '',
           crossStreets: getComponent(['intersection']),
           neighborhood: getComponent(['sublocality', 'sublocality_level_1']) || getComponent(['neighborhood']),
-          borough: '',
           locality: getComponent(['locality']),
           city: getComponent(['locality']),
           state: getComponent(['administrative_area_level_1']),
@@ -355,14 +309,118 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       }
     });
   }
+protected submitComment(): void {
+  if (!this.commentForm.valid) return;
 
+  const newComment = {
+    event: 'Comentario',
+    description: this.commentForm.value.description,
+    user: {
+      _id: this.currentUser._id,
+      name: `${this.currentUser.name} ${this.currentUser.first_lastname || ''}`,
+      role: this.currentUser.role?.name || 'desconocido'
+    },
+    date: new Date()
+  };
 
+  const trackingArray = this.reportForm.get('tracking') as FormArray;
+  trackingArray.push(this.fb.group(newComment));
+  this.commentForm.reset();
+}
+  private loadCatalogos() {
+    this.ticketsService.getTemas().subscribe(data => this.temas.set(data));
+    this.ticketsService.getAreas().subscribe(data => this.areas.set(data));
+    this.ticketsService.getSources().subscribe(data => { this.sources.set(data); });
+  }
 
+  protected onTemaSelected(temaId: string) {
+    const tema = this.temas().find(t => t._id === temaId);
+    if (!tema) return;
 
+    const areaAssignments = this.reportForm.get('areaAssignments') as FormArray;
+    const luminariaControl = this.reportForm.get('luminaria');
 
+    // Lógica de luminarias (sin cambios)
+    if (tema.requiresLuminaria) {
+      this.ticketsService.getLuminarias().subscribe(data => this.luminarias.set(data));
+      this.showLuminarias.set(true);
+      luminariaControl?.enable();
+    } else {
+      this.luminarias.set([]);
+      this.showLuminarias.set(false);
+      luminariaControl?.disable();
+      luminariaControl?.reset();
+    }
 
+    // Agregar nueva asignación de área
+    if (tema.areaId) {
+      const assignedBy = this.currentUser?._id || null;
+      const currentAssignments = areaAssignments.value || [];
+      const lastAssignment = currentAssignments.at(-1);
 
-  onFileSelected(event: Event): void {
+      const temaAreaId = typeof tema.areaId === 'string' ? tema.areaId : tema.areaId._id;
+      const lastAreaId = lastAssignment?.area?.toString?.();
+      const temaAreaIdStr = temaAreaId?.toString?.();
+
+      const sameArea = lastAreaId === temaAreaIdStr;
+
+      if (!sameArea) {
+        const newAssignment = this.fb.group({
+          area: temaAreaId,
+          assignedBy,
+          assignedAt: new Date(),
+          accepted: null,
+          respondedAt: null,
+        });
+        areaAssignments.push(newAssignment);
+
+        const crewAssignments = this.reportForm.get('crewAssignments') as FormArray;
+        const lastCrew = crewAssignments.at(crewAssignments.length - 1);
+        lastCrew.patchValue({ valid: false });
+
+      }
+    }
+
+    this.areaEditable.set(this.isAdminOrAtencion || !tema.areaId);
+  }
+
+  protected onManualAreaSelected(areaId: string) {
+    const assignedBy = this.currentUser?._id || null;
+    const newAssignment = this.fb.group({
+      area: areaId,
+      assignedBy,
+      assignedAt: new Date(),
+      accepted: null,
+      rejectionReason: '',
+      respondedAt: null,
+    });
+
+    (this.reportForm.get('areaAssignments') as FormArray).push(newAssignment);
+
+    const crewAssignments = this.reportForm.get('crewAssignments') as FormArray;
+    const lastCrew = crewAssignments.at(crewAssignments.length - 1);
+    lastCrew.patchValue({ valid: false });
+  }
+
+  protected get selectedAreaId(): string | null {
+    const assignments = this.reportForm.get('areaAssignments')?.value;
+    return assignments?.length ? assignments.at(-1)?.area ?? null : null;
+  }
+
+  protected toggleMap(): void {
+    this.showMap = !this.showMap;
+    if (this.showMap && this.isBrowser) {
+      setTimeout(() => {
+        if (!(window as any).google) {
+          this.loadGoogleMapsScript(() => this.initMap());
+        } else {
+          this.initMap();
+        }
+      });
+    }
+  }
+
+  protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
 
     if (input.files && input.files.length > 0) {
@@ -383,15 +441,14 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
     }
   }
 
-  submitForm(): void {
+  protected submitForm(): void {
     if (!this.reportForm.valid) return;
     const formValues = this.reportForm.getRawValue();
-    const previousAssignments: any = this.ticketsService.getTicket()()?.areaAssignments ||[];
+    const previousAssignments: any = this.ticketsService.getTicket()()?.areaAssignments || [];
 
     const currentUser = this.currentUser;
 
     const areaId = formValues.areaAssignments?.at(-1)?.area ?? null;
-
 
     const isSameAssignment = (a: any, b: any) => {
       return (
@@ -408,7 +465,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       accepted: false
     };
     const lastAssignment = previousAssignments.at(-1);
-    
+
     const alreadyAssigned = lastAssignment ? isSameAssignment(lastAssignment, newAssignment) : false;
     let areaAssignments = previousAssignments;
 
@@ -424,67 +481,7 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       ];
     }
 
-
-
-
-    const ticket: Partial<Ticket> = {
-      _id: formValues._id,
-      folio: formValues.folio,
-
-      // Datos del reportante
-      name: formValues.name,
-      first_lastname: formValues.first_lastname,
-      second_lastname: formValues.second_lastname,
-      phone: formValues.phone,
-      email: formValues.email,
-
-      // Catálogos dinámicos
-      source: formValues.source,
-      status: formValues.status,
-
-      // Detalles del problema
-      problem: formValues.problem,
-      description: formValues.description,
-
-      // Ubicación
-      location: {
-        street: formValues.location.street,
-        extNumber: formValues.location.extNumber,
-        intNumber: formValues.location.intNumber,
-        crossStreets: formValues.location.crossStreets,
-        neighborhood: formValues.location.neighborhood,
-        borough: formValues.location.borough,
-        locality: formValues.location.locality,
-        city: formValues.location.city,
-        state: formValues.location.state,
-        postalCode: formValues.location.postalCode,
-        country: formValues.location.country,
-        references: formValues.location.references,
-        coordinates: {
-          lat: formValues.location.coordinates.lat,
-          lng: formValues.location.coordinates.lng,
-        }
-      },
-
-      // Evidencias
-      images: formValues.images || [],
-
-      // Asignación de área
-      areaAssignments,
-
-      // Verificación
-      verifiedByReporter: formValues.verifiedByReporter,
-      verifiedBy: formValues.verifiedBy,
-
-      // Seguimiento
-      tracking: formValues.tracking || [],
-
-      // Auditoría
-      createdBy: formValues.createdBy,
-      createdAt: formValues.createdAt,
-      updatedAt: formValues.updatedAt,
-      luminaria: formValues.luminaria,
-    };
+    const ticket: Partial<Ticket> = this.reportForm.getRawValue();
 
     const evidencia = formValues.evidencia;
 
@@ -493,9 +490,10 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
         this.dialog.open(SuccessDialog, {
           data: { folio: res.ticket?.folio || 'Sin folio' }
         });
-        this.reportForm.reset();
-        this.ticketsService.clearTicket?.();
-        this.previewUrl = null;
+        this.ticketsService.getTicketById(res.ticket._id).subscribe((updatedTicket) => {
+          this.ticketsService.setTicket(updatedTicket); // 🔁 actualiza el ticket actual en el signal
+          this.patchFormWithTicket(updatedTicket);      // 🔁 vuelve a cargar los datos en el formulario
+        });
       },
       (err) => {
         console.error('Error al enviar el ticket', err);
@@ -503,85 +501,74 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
     );
   }
 
-
-  ngOnDestroy() {
-    if (this.isBrowser && this.map) {
-      this.map = null;
-      this.marker = null;
-    }
-    this.ticketsService.clearTicket?.();
-  }
-  loadCatalogos() {
-    this.ticketsService.getTemas().subscribe(data => this.temas.set(data));
-    this.ticketsService.getAreas().subscribe(data => this.areas.set(data));
-    this.ticketsService.getSources().subscribe(data => { this.sources.set(data); });
-  }
-
-  onTemaSelected(temaId: string) {
-
-    const tema = this.temas().find(t => t._id === temaId);
-    if (!tema) return;
-
-    const areaAssignments = this.reportForm.get('areaAssignments');
-    const luminariaControl = this.reportForm.get('luminaria');
-
-    // Cargar luminarias solo si es necesario
-    if (tema.requiresLuminaria) {
-      this.ticketsService.getLuminarias().subscribe(data => this.luminarias.set(data));
-      this.showLuminarias.set(true);
-      luminariaControl?.enable();
-    } else {
-      this.luminarias.set([]);
-      this.showLuminarias.set(false);
-      luminariaControl?.disable();
-      luminariaControl?.reset();
-    }
-
-    if (tema.areaId) {
-      const assignedBy = this.currentUser?._id || null;
-      const areaAssignments = this.reportForm.get('areaAssignments');
-      const currentAssignments = areaAssignments?.value || [];
-      const lastAssignment = currentAssignments.at(-1);
-
-      const temaAreaId = typeof tema.areaId === 'string' ? tema.areaId : tema.areaId._id;
-      const lastAreaId = lastAssignment?.area?.toString?.();
-      const temaAreaIdStr = temaAreaId?.toString?.();
-
-      const sameArea = lastAreaId === temaAreaIdStr;
-
-      if (!sameArea) {
-        const newAssignment = this.fb.group({
-          area: temaAreaId,
-          assignedBy,
-          assignedAt: new Date(),
-          accepted: null,
-          respondedAt: null,
-        });
-        (areaAssignments as any).push(newAssignment);
-      }
-    }
-
-    // Admin y atención pueden editarla manualmente
-    this.areaEditable.set(this.isAdminOrAtencion || !tema.areaId);
-
-
-
-
-  }
-  onManualAreaSelected(areaId: string) {
-    const assignedBy = this.currentUser?._id || null;
-    const newAssignment = this.fb.group({
-      area: areaId,
-      assignedBy,
-      assignedAt: new Date(),
-      accepted: null,
-      rejectionReason: '',
-      respondedAt: null,
+  private patchFormWithTicket(ticket: Ticket) {
+    this.reportForm.patchValue({
+      _id: ticket._id || '',
+      folio: ticket.folio || '',
+      name: ticket.name || '',
+      first_lastname: ticket.first_lastname || '',
+      second_lastname: ticket.second_lastname || '',
+      phone: ticket.phone || '',
+      email: ticket.email || '',
+      source: ticket.source || '',
+      status: ticket.status || '68814abc0000000000000001',
+      problem: ticket.problem || '',
+      description: ticket.description || '',
+      location: {
+        street: ticket.location?.street || '',
+        extNumber: ticket.location?.extNumber || '',
+        intNumber: ticket.location?.intNumber || '',
+        crossStreets: ticket.location?.crossStreets || '',
+        neighborhood: ticket.location?.neighborhood || '',
+        locality: ticket.location?.locality || '',
+        city: ticket.location?.city || '',
+        state: ticket.location?.state || '',
+        postalCode: ticket.location?.postalCode || '',
+        country: ticket.location?.country || '',
+        references: ticket.location?.references || '',
+        coordinates: {
+          lat: ticket.location?.coordinates?.lat || null,
+          lng: ticket.location?.coordinates?.lng || null,
+        },
+      },
+      images: ticket.images || [],
+      verifiedByReporter: ticket.verifiedByReporter ?? false,
+      verifiedBy: ticket.verifiedBy || '',
+      createdBy: ticket.createdBy || '',
+      createdAt: ticket.createdAt || null,
+      updatedAt: ticket.updatedAt || null,
+      luminaria: ticket.luminaria || '',
     });
 
-    (this.reportForm.get('areaAssignments') as any).push(newAssignment);
+    this.reportForm.setControl('areaAssignments', this.buildFormArrayFromObjects(ticket.areaAssignments || []));
+    this.reportForm.setControl('crewAssignments', this.buildFormArrayFromObjects(ticket.crewAssignments || []));
+    this.reportForm.setControl('tracking', this.buildFormArrayFromObjects(ticket.tracking || []));
+
+    if (ticket.images?.length > 0) {
+      this.previewUrl = ticket.images[0];
+    }
+
+    const temaId = ticket.problem;
+    if (temaId) this.onTemaSelected(temaId);
+    if (ticket.createdBy && typeof ticket.createdBy === 'object') {
+      const creator = ticket.createdBy as {
+        name: string;
+        first_lastname?: string;
+        second_lastname?: string;
+        email?: string;
+        phone?: string;
+      };
+
+      this.createdByUser.set({
+        name: creator.name,
+        first_lastname: creator.first_lastname || '',
+        second_lastname: creator.second_lastname || '',
+        email: creator.email || '',
+        phone: creator.phone || '',
+      });
+
+    }
+
   }
-
-
 
 }

@@ -29,6 +29,9 @@ import { Subject } from 'rxjs/internal/Subject';
 import { debounceTime } from 'rxjs/internal/operators/debounceTime';
 import { Console } from 'console';
 import { Cuadrilla } from '../../../models/Cuadrilla';
+
+type SortableTicketField = keyof Ticket | 'area' | 'cuadrilla' | 'semaforo';
+
 @Component({
   selector: 'app-tickets',
   standalone: true,
@@ -62,7 +65,6 @@ export class Tickets {
   readonly filterStatus = signal('Todos');
   readonly searchTerm = signal('');
   private readonly fb = inject(FormBuilder);
-  readonly sortColumn = signal<keyof Ticket | ''>('');
   readonly sortDirection = signal<'asc' | 'desc'>('asc');
   readonly ticketStatusCounts = signal<Record<string, number>>({});
   readonly ticketSemaforoCounts = signal<Record<string, number>>({});
@@ -74,7 +76,7 @@ export class Tickets {
   protected ticketStatuses = signal<TicketStatus[]>([]);
   readonly filterSemaforo = signal<'verde' | 'ambar' | 'rojo' | 'todos'>('todos');
   ticketProblems = signal<Tema[]>([]);
-
+  readonly sortColumn = signal<SortableTicketField | ''>('');
   cuadrillas = signal<Cuadrilla[]>([]);
   areas = signal<Area[]>([]);
   readonly displayedColumns = [
@@ -83,6 +85,7 @@ export class Tickets {
     'area',
     'cuadrilla',
     'createdAt',
+    'updatedAt',
     'status',
     'actions',
     'semaforo',
@@ -91,6 +94,9 @@ export class Tickets {
   readonly isUser = this.authService.currentUser.role?.name === 'user';
   readonly isAtencion = this.authService.currentUser.role?.name === 'atencion';
   readonly isAdminOrAtencion = this.isAdmin || this.isAtencion || this.isUser;
+
+
+
   readonly currentUserArea = computed(() => this.authService.currentUser?.area || null);
   readonly visibleProblems = computed(() => {
     const all = this.ticketProblems();
@@ -109,38 +115,39 @@ export class Tickets {
       return areaId === this.currentUserArea();
     });
   });
+
+  getLastValidCrew(ticket: Ticket): any | null {
+    return ticket.crewAssignments?.filter(a => a.valid !== false).at(-1) || null;
+  }
+
+
   getStatusCssClass(statusId: string): string {
     const status = this.ticketStatuses().find(s => s._id === statusId);
     return status ? status.cssClass : 'default';
   }
-  getRespondableAssignment(ticket: Ticket): any | null {
+
+  canRespondToTicket(ticket: Ticket): boolean {
     const user = this.authService.currentUser;
 
-    // FUNCIONARIO: responder por área
     if (user.role.name === 'funcionario') {
-      return ticket.areaAssignments?.find(a => a.area === user.area);
+      const assignment = ticket.areaAssignments?.find(a => a.area === user.area);
+      return !!assignment && !assignment.accepted;
     }
 
-    // CUADRILLA o SUPERVISOR: solo evaluar el último crewAssignment
     if (user.role.name === 'cuadrilla' || user.role.name === 'supervisor') {
-      const lastAssignment = ticket.crewAssignments?.at(-1);
-      if (!lastAssignment) return null;
+      const lastAssignment = ticket.crewAssignments?.filter(a => a.valid !== false).at(-1) || null;
+      if (!lastAssignment) return false;
 
       const cuadrilla = this.cuadrillas().find(q => q._id === lastAssignment.cuadrilla);
       const isMiembro = cuadrilla?.members?.includes(user._id);
       const isSupervisor = cuadrilla?.supervisor === user._id;
 
-      return isMiembro || isSupervisor ? lastAssignment : null;
+      return (isMiembro || isSupervisor) && !lastAssignment.accepted;
     }
 
-    return null;
+    return false;
   }
 
-
-
-  canRespondToAssignment(assignment: any): boolean {
-    return !!assignment && !assignment.accepted;
-  }
 
   respondToAssignment(ticketId: string, accepted: boolean) {
     const rejectionReason = accepted ? '' : prompt('Motivo de rechazo:');
@@ -224,7 +231,6 @@ export class Tickets {
   openAssignmentDialog(ticket: Ticket) {
     const latestAreaAssignment = ticket.areaAssignments.at(-1);
 
-    // Solo bloquear si el usuario es de área y el área aún no ha aceptado ni rechazado
     if (
       this.authService.currentUser.role?.name === 'funcionario' &&
       latestAreaAssignment &&
@@ -298,7 +304,8 @@ export class Tickets {
       this.page(),
       this.pageSize(),
       this.searchTerm(),
-      this.sortColumn() ? { [this.sortColumn()]: this.sortDirection() === 'asc' ? 1 : -1 } : { createdAt: -1 }
+      this.sortColumn() ? { [this.sortColumn()]: this.sortDirection() === 'asc' ? 1 : -1 } : { updatedAt: -1 }
+
     ).subscribe({
       next: (response) => {
         this.ticketsSignal.set(response.data);
@@ -323,14 +330,9 @@ export class Tickets {
     this.loadTickets();
   }
 
-  sortBy(column: keyof Ticket) {
-    if (this.sortColumn() === column) {
-      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortColumn.set(column);
-      this.sortDirection.set('asc');
-    }
-  }
+
+
+
   setFilterSemaforo(color: 'verde' | 'ambar' | 'rojo') {
     this.filterSemaforo.set(color);
     this.page.set(1);
@@ -341,8 +343,22 @@ export class Tickets {
     this.page.set(1);
     this.loadTickets();
   }
-  getSortIndicator = (column: keyof Ticket) =>
-    this.sortColumn() === column ? (this.sortDirection() === 'asc' ? '▲' : '▼') : '';
+
+  getSortIndicator(column: SortableTicketField): string {
+    if (this.sortColumn() !== column) return '';
+    return this.sortDirection() === 'asc' ? '▲' : '▼';
+  }
+
+  sortBy(column: SortableTicketField) {
+    if (this.sortColumn() === column) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortColumn.set(column);
+      this.sortDirection.set('asc');
+    }
+    this.loadTickets();
+  }
+
 
   getProblemIcon(problem: string): string {
     return {
@@ -531,29 +547,6 @@ export class Tickets {
 
   countByStatus = (statusId: string) =>
     this.ticketStatusCounts()[statusId] ?? 0;
-
-
-  private sortTickets = (tickets: Ticket[]): Ticket[] => {
-    const column = this.sortColumn();
-    if (!column) return tickets;
-
-    const dir = this.sortDirection();
-    return [...tickets].sort((a, b) => {
-      const aVal = a[column] ?? '';
-      const bVal = b[column] ?? '';
-
-      if (aVal instanceof Date && bVal instanceof Date) {
-        return dir === 'asc' ? aVal.getTime() - bVal.getTime() : bVal.getTime() - aVal.getTime();
-      }
-
-      return dir === 'asc'
-        ? String(aVal).localeCompare(String(bVal))
-        : String(bVal).localeCompare(String(aVal));
-    });
-  };
-
-
-
 
 
 }
