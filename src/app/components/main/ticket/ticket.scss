@@ -16,30 +16,33 @@
   display: flex;
   flex-wrap: wrap;
   gap: 2rem;
-  background: rgba(255, 255, 255, 0.05);
+  @include glass-overlay;
   border-radius: $radius;
   padding: 1.5rem 2rem;
-  @include glass-overlay;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   justify-content: space-between;
 }
 
-.folio-block, .user-block {
+.folio-block,
+.user-block {
   display: flex;
   align-items: center;
   gap: 1rem;
   flex: 1;
   min-width: 280px;
 
-  .folio-icon, .user-icon {
+  .folio-icon,
+  .user-icon {
     font-size: 2rem;
     color: var(--mat-sys-primary);
   }
 
-  .folio-info, .user-info {
+  .folio-info,
+  .user-info {
     .label {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 500;
+      color: var(--mat-sys-on-surface);
       opacity: 0.8;
     }
 
@@ -51,33 +54,64 @@
 
     .meta {
       font-size: 0.85rem;
-      opacity: 0.7;
+      color: #666;
     }
   }
 }
 
-.timeline-comments-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
-  align-items: start;
-
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr;
-  }
-}
-
 .form-section {
-  background: rgba(255, 255, 255, 0.05);
+  @include glass-overlay;
   border-radius: $radius;
   padding: 2rem;
-  @include glass-overlay;
-  backdrop-filter: blur(18px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  box-sizing: border-box;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.08);
+  
 
-  &:last-of-type {
-    margin-bottom: 6rem;
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+  }
+
+  .form-grid {
+    margin-top: 1rem;
+  }
+
+  mat-form-field {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: $radius;
+    padding: 0 0.5rem;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 0 0 transparent;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    &.mat-focused {
+      box-shadow: inset 0 0 0 2px var(--mat-sys-primary);
+    }
+
+    .mat-form-field-wrapper {
+      color: var(--mat-sys-on-surface);
+    }
+  }
+
+  input,
+  textarea,
+  mat-select {
+    color: var(--mat-sys-on-surface);
+    font-weight: 500;
+  }
+
+  .mat-form-field-label {
+    color: var(--mat-sys-on-surface);
+    font-weight: 600;
+  }
+
+  .mat-icon {
+    color: var(--mat-sys-primary);
   }
 }
 
@@ -85,13 +119,14 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-weight: 600;
-  font-size: 1.2rem;
+  font-weight: 700;
+  font-size: 1.3rem;
   color: var(--mat-sys-primary);
+  margin-bottom: 1.5rem;
 
   mat-icon {
-    font-size: 1.4rem;
-    color: var(--mat-sys-on-surface);
+    font-size: 1.6rem;
+    color: var(--mat-sys-primary);
   }
 }
 
@@ -109,32 +144,21 @@
   gap: 1.2rem;
   width: 100%;
   box-sizing: border-box;
-}
 
-.comment-box {
-  align-self: start;
-  height: auto;
-  padding-bottom: 1rem;
-
-  form {
+  mat-form-field {
     width: 100%;
   }
-
-  .form-grid {
-    align-items: flex-end;
-  }
-
-  textarea {
-    min-height: 100px;
-    max-height: 160px;
-    resize: vertical;
-  }
 }
 
-.comment-form {
+.timeline-comments-grid {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 2rem;
+  align-items: flex-start;
+
+  > section {
+    flex: 1 1 600px;
+  }
 }
 
 .image-upload {
@@ -222,7 +246,7 @@
       justify-content: space-between;
       align-items: center;
       font-size: 0.9rem;
-      color: #000;
+      color: var(--mat-sys-on-surface);
 
       .user-info {
         display: flex;
@@ -253,7 +277,7 @@
 
       p {
         margin: 0.5rem 0 0;
-        color: var(--mat-sys-on-surface, #000);
+        color: var(--mat-sys-on-surface);
       }
     }
   }
