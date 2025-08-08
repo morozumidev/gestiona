@@ -49,6 +49,7 @@ import { AuthService } from '../../../services/auth.service';
 
 // Dialogs
 import { SuccessDialog } from '../../dialogs/success-dialog/success-dialog';
+import { GalleryDialog } from '../../dialogs/gallery-dialog/gallery-dialog';
 
 /// <reference types="google.maps" />
 declare const google: any;
@@ -100,8 +101,32 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   private isBrowser: boolean;
   private ticketHistory: TicketTracking[] = [];
   private origins: any;
+  protected activeSection: string = 'citizen';
+  protected activeStep: number = 0;
+  protected previewUrls: string[] = [];
 
+  /** Etiquetas de los pasos para mostrarlas en la barra lateral */
+  protected stepLabels: string[] = [
+    'Datos',
+    'Ubicación',
+    'Detalles',
+    'Seguimiento/Comentarios'
+  ];
 
+  /** Avanza al siguiente paso */
+  protected nextStep(): void {
+    const lastIndex = this.ticketFound ? this.stepLabels.length - 1 : this.stepLabels.length - 2;
+    if (this.activeStep < lastIndex) {
+      this.activeStep++;
+    }
+  }
+
+  /** Retrocede al paso anterior */
+  protected prevStep(): void {
+    if (this.activeStep > 0) {
+      this.activeStep--;
+    }
+  }
   constructor(
     private fb: FormBuilder,
     private dialog: MatDialog,
@@ -150,41 +175,47 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       updatedAt: [null],
       luminaria: [''],
     });
-     this.commentForm = this.fb.group({
-  description: ['', Validators.required],
-});
+    this.commentForm = this.fb.group({
+      description: ['', Validators.required],
+    });
   }
 
-  ngOnInit(): void {
-    this.loadCatalogos();
+ngOnInit(): void {
+  this.loadCatalogos();
 
-    // 🔁 Restaurar desde sessionStorage si se recargó
-    if (this.isBrowser && !this.ticketsService.getTicket()()) {
+  if (this.isBrowser) {
+    const existing = sessionStorage.getItem('ticket:current');
+    if (existing) {
+      sessionStorage.setItem('ticket:origin', 'active');
+    }
+
+    if (!this.ticketsService.getTicket()()) {
       this.ticketsService.restoreTicketFromSession();
     }
 
-    runInInjectionContext(this.injector, () => {
-      effect(() => {
-        const ticket = this.ticketsService.getTicket()();
-        if (ticket) {
-          this.ticketFound = true;
-          this.patchFormWithTicket(ticket);
-        }
+    const ticket = this.ticketsService.getTicket()();
+    if (ticket && ticket._id) {
+      this.ticketsService.getTicketById(ticket._id).subscribe((freshTicket) => {
+        this.ticketsService.setTicket(freshTicket);
+        this.ticketFound = true;
+        this.patchFormWithTicket(freshTicket);
       });
-    });
-
-    // 👤 Autocompletar si es ciudadano y no hay ticket cargado
-    if (this.currentUser?.role?.name === 'user' && !this.ticketFound) {
-      const user = this.authService.currentUser;
-      this.reportForm.patchValue({
-        name: user.name,
-        first_lastname: user.first_lastname || '',
-        second_lastname: user.second_lastname || '',
-        phone: user.phone || '',
-        email: user.email || ''
-      });
+    } else {
+      // 👤 Autocompletar si no hay ticket
+      if (this.currentUser?.role?.name === 'user') {
+        const user = this.authService.currentUser;
+        this.reportForm.patchValue({
+          name: user.name,
+          first_lastname: user.first_lastname || '',
+          second_lastname: user.second_lastname || '',
+          phone: user.phone || '',
+          email: user.email || ''
+        });
+      }
     }
   }
+}
+
 
   ngAfterViewInit(): void {
     if (this.isBrowser && this.showMap) {
@@ -193,12 +224,16 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   }
 
   ngOnDestroy() {
-    if (this.isBrowser && this.map) {
+    if (this.isBrowser) {
+      // Limpiar mapa
       this.map = null;
       this.marker = null;
     }
-    this.ticketsService.clearTicket?.();
+
+    // Limpiar signal
+    this.ticketsService.clearTicket();
   }
+
 
   private buildFormArrayFromObjects(items: any[]): FormArray {
     return this.fb.array(
@@ -309,24 +344,43 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       }
     });
   }
-protected submitComment(): void {
-  if (!this.commentForm.valid) return;
 
-  const newComment = {
-    event: 'Comentario',
-    description: this.commentForm.value.description,
-    user: {
-      _id: this.currentUser._id,
-      name: `${this.currentUser.name} ${this.currentUser.first_lastname || ''}`,
-      role: this.currentUser.role?.name || 'desconocido'
-    },
-    date: new Date()
-  };
 
-  const trackingArray = this.reportForm.get('tracking') as FormArray;
-  trackingArray.push(this.fb.group(newComment));
-  this.commentForm.reset();
-}
+  protected submitComment(): void {
+    if (!this.commentForm.valid) return;
+
+    const newComment = {
+      event: 'Comentario',
+      description: this.commentForm.getRawValue().description,
+      user: {
+        _id: this.currentUser._id,
+        name: `${this.currentUser.name} ${this.currentUser.first_lastname || ''}`,
+        role: this.currentUser.role?.name || 'desconocido'
+      },
+      files: [],
+      date: new Date()
+    };
+
+    const ticketId = this.reportForm.get('_id')?.value;
+
+    this.ticketsService.addComment(ticketId, newComment).subscribe({
+      next: (updatedTicket) => {
+        this.reportForm.setControl('tracking', this.buildFormArrayFromObjects(updatedTicket.tracking || []));
+
+        // ✅ actualiza el signal global
+        this.ticketsService.setTicket(updatedTicket);
+
+        this.commentForm.reset();
+      },
+      error: (err) => {
+        console.error('Error al guardar comentario:', err);
+      }
+    });
+
+  }
+
+
+
   private loadCatalogos() {
     this.ticketsService.getTemas().subscribe(data => this.temas.set(data));
     this.ticketsService.getAreas().subscribe(data => this.areas.set(data));
@@ -422,77 +476,81 @@ protected submitComment(): void {
 
   protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-
     if (input.files && input.files.length > 0) {
-      const file = input.files[0];
+      const files = Array.from(input.files);
 
-      this.reportForm.patchValue({ evidencia: file });
+      const currentImages = this.reportForm.get('images')?.value || [];
+      this.reportForm.patchValue({ images: [...currentImages, ...files] });
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.zone.run(() => {
-          this.previewUrl = reader.result;
-          this.fileInput.nativeElement.value = '';
-          this.cdr.detectChanges();
-        });
-      };
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          this.zone.run(() => {
+            this.previewUrls.push(reader.result as string);
+            this.cdr.detectChanges();
+          });
+        };
+        reader.readAsDataURL(file);
+      });
 
-      reader.readAsDataURL(file);
+      input.value = ''; // reset
+    }
+  }
+  protected removeImage(url: string): void {
+    const index = this.previewUrls.indexOf(url);
+    if (index >= 0) {
+      this.previewUrls.splice(index, 1);
+      const currentImages = this.reportForm.get('images')?.value || [];
+      currentImages.splice(index, 1);
+      this.reportForm.patchValue({ images: currentImages });
     }
   }
 
+  protected openGallery(): void {
+    const images = this.reportForm.get('images')?.value || [];
+    this.dialog.open(GalleryDialog, {
+      data: { images },
+      panelClass: 'image-dialog',
+      maxWidth: '100vw',
+      maxHeight: '100vh',
+      autoFocus: false,
+      disableClose: false
+    });
+
+
+
+  }
   protected submitForm(): void {
     if (!this.reportForm.valid) return;
+
     const formValues = this.reportForm.getRawValue();
-    const previousAssignments: any = this.ticketsService.getTicket()()?.areaAssignments || [];
+    const ticket: Partial<Ticket> = { ...formValues };
+    const images = formValues.images as File[];
 
-    const currentUser = this.currentUser;
+    // 🧱 Construir FormData para enviar archivos + JSON
+    const formData = new FormData();
 
-    const areaId = formValues.areaAssignments?.at(-1)?.area ?? null;
+    // 🎯 Añadir ticket como JSON string
+    formData.append('ticket', JSON.stringify(ticket));
 
-    const isSameAssignment = (a: any, b: any) => {
-      return (
-        a?.area?.toString?.() === b?.area?.toString?.() &&
-        a?.assignedBy?.toString?.() === b?.assignedBy?.toString?.() &&
-        a?.accepted === b?.accepted &&
-        !a?.rejectionReason && !b?.rejectionReason
-      );
-    };
+    // 📸 Añadir cada imagen
+    images.forEach((img, index) => {
+      formData.append('images', img);
+    });
 
-    const newAssignment = {
-      area: areaId,
-      assignedBy: currentUser?._id || null,
-      accepted: false
-    };
-    const lastAssignment = previousAssignments.at(-1);
-
-    const alreadyAssigned = lastAssignment ? isSameAssignment(lastAssignment, newAssignment) : false;
-    let areaAssignments = previousAssignments;
-
-    if (!alreadyAssigned) {
-      areaAssignments = [
-        ...previousAssignments,
-        {
-          area: areaId,
-          assignedBy: currentUser?._id || null,
-          assignedAt: new Date(),
-          accepted: false
-        }
-      ];
-    }
-
-    const ticket: Partial<Ticket> = this.reportForm.getRawValue();
-
-    const evidencia = formValues.evidencia;
-
-    this.ticketsService.manageTicket(ticket, evidencia).subscribe(
+    // 📤 Enviar al backend con FormData
+    this.ticketsService.manageTicket(formData).subscribe(
       (res: any) => {
         this.dialog.open(SuccessDialog, {
-          data: { folio: res.ticket?.folio || 'Sin folio' }
+          data: {
+            folio: res.ticket?.folio || 'Sin folio',
+            isUpdate: this.ticketFound
+          }
         });
+
         this.ticketsService.getTicketById(res.ticket._id).subscribe((updatedTicket) => {
-          this.ticketsService.setTicket(updatedTicket); // 🔁 actualiza el ticket actual en el signal
-          this.patchFormWithTicket(updatedTicket);      // 🔁 vuelve a cargar los datos en el formulario
+          this.ticketsService.setTicket(updatedTicket);
+          this.patchFormWithTicket(updatedTicket);
         });
       },
       (err) => {
@@ -500,6 +558,7 @@ protected submitComment(): void {
       }
     );
   }
+
 
   private patchFormWithTicket(ticket: Ticket) {
     this.reportForm.patchValue({
@@ -545,10 +604,26 @@ protected submitComment(): void {
     this.reportForm.setControl('tracking', this.buildFormArrayFromObjects(ticket.tracking || []));
 
     if (ticket.images?.length > 0) {
-      this.previewUrl = ticket.images[0];
+      const firstImage = ticket.images?.[0];
+
+      if (typeof firstImage === 'string') {
+        this.previewUrl = firstImage; // ✅ es una URL ya lista
+      } else if (firstImage instanceof File) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          this.zone.run(() => {
+            this.previewUrl = reader.result;
+          });
+        };
+        reader.readAsDataURL(firstImage);
+      } else {
+        this.previewUrl = null;
+      }
+
     }
 
     const temaId = ticket.problem;
+    console.log(temaId)
     if (temaId) this.onTemaSelected(temaId);
     if (ticket.createdBy && typeof ticket.createdBy === 'object') {
       const creator = ticket.createdBy as {

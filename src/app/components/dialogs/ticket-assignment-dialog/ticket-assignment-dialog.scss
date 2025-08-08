@@ -35,7 +35,7 @@ mat-dialog-content {
 mat-dialog-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: $color1;
+  color: var(--mat-sys-primrary);
   margin-bottom: 0.25rem;
 }
 
@@ -55,4 +55,3 @@ mat-dialog-actions {
 .mat-mdc-option {
   backdrop-filter: blur(6px);
 }
-

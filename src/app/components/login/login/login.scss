@@ -3,9 +3,7 @@
 @use '../../../../app_theme-colors' as theme;
 @use '../../../../global_variables' as *;
 
-.test {
-  color: $color1; // si truena aquí, es que la importación falló
-}
+
 
 @keyframes fadeInUp {
   from {

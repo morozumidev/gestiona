@@ -3,7 +3,7 @@
 @use './app_theme-colors' as theme;
 
 // Definir color por defecto si no se ha definido antes
-$color: negro !default;
+$color: guinda !default;
 
 // Obtener la paleta personalizada completa (por ejemplo, 'negro')
 $primary-palette: theme.get-palette($color);
@@ -15,20 +15,8 @@ $neutral-variant-palette: map.get($primary-palette, 'neutral-variant');
 $error-palette: map.get($primary-palette, 'error');
 
 // Construir el mapa de colores completo requerido por Angular Material
-$color-config: (
-  primary: $primary-palette,
-  secondary: $secondary-palette,
-  tertiary: $tertiary-palette,
-  neutral: $neutral-palette,
-  neutral-variant: $neutral-variant-palette,
-  error: $error-palette,
-  theme-type: light
-);
 
-// Gradiente de fondo dinámico
-$color1: map.get($primary-palette, 10);
-$color2: map.get($primary-palette, 20);
-$color3: map.get($primary-palette, 25);
+
 
 $radius: 1.2rem;
 
@@ -39,6 +27,20 @@ $radius: 1.2rem;
   background: rgba(255, 255, 255, 0.5);
 }
 
+// Mixin para el efecto glassmorphism
+@mixin card-glass-style {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: $radius;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.65); // tarjeta más clara
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+
+  @media (prefers-color-scheme: dark) {
+    background: rgba(20, 20, 20, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+}
 
 //Global classes:
 

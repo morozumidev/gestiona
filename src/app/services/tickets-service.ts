@@ -9,6 +9,7 @@ import { TicketStatus } from '../models/TicketStatus';
 import { Cuadrilla } from '../models/Cuadrilla';
 import { Observable } from 'rxjs/internal/Observable';
 import { User } from '../models/User';
+import { TicketTracking } from '../models/TicketTracking';
 
 @Injectable({
   providedIn: 'root'
@@ -39,9 +40,14 @@ export class TicketsService {
   getTicket(): Signal<Ticket | null> {
     return this.ticketSignal.asReadonly();
   }
-
+  addComment(ticketId: string, comment: TicketTracking) {
+    return this.http.post<Ticket>(`${this.coreService.URI_API}tickets/comments`, { comment: comment, id: ticketId });
+  }
   restoreTicketFromSession(): void {
     if (typeof window !== 'undefined') {
+      const origin = sessionStorage.getItem('ticket:origin');
+      if (origin !== 'active') return; // ❌ no restaurar si ya saliste del componente
+
       const raw = sessionStorage.getItem('ticket:current');
       if (raw) {
         try {
@@ -49,20 +55,28 @@ export class TicketsService {
           this.ticketSignal.set(parsed);
         } catch {
           sessionStorage.removeItem('ticket:current');
+          this.ticketSignal.set(null);
         }
       }
     }
   }
 
+
+
   clearTicket(): void {
     this.ticketSignal.set(null);
-    if (typeof window !== 'undefined') {
+    try {
       sessionStorage.removeItem('ticket:current');
+      sessionStorage.removeItem('ticket:origin');
+    } catch (err) {
+      console.warn('⚠️ Error eliminando ticket de sessionStorage:', err);
     }
   }
 
 
+
   getTicketById(id: string): Observable<Ticket> {
+ 
     return this.http.post<Ticket>(this.coreService.URI_API + 'tickets/getTicketById', { id });
   }
 
@@ -91,14 +105,11 @@ export class TicketsService {
 
 
 
-  manageTicket(ticket: Partial<Ticket>, file?: File) {
-    const formData = new FormData();
-    formData.append('ticket', JSON.stringify(ticket));
-    if (file) {
-      formData.append('image', file);
-    }
+  manageTicket(formData: FormData) {
     return this.http.post(this.coreService.URI_API + 'tickets/manageTicket', formData);
   }
+
+
 
   getTemas() {
     return this.http.post<Tema[]>(this.coreService.URI_API + 'tickets/getTemas', {});

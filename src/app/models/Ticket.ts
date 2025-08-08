@@ -39,7 +39,8 @@ export interface Ticket {
   };
 
   // Evidencias
-  images: string[];
+images: (string | File)[]; // ✅ mezcla de URLs y archivos nuevos
+
 
   // Asignaciones a áreas (historial)
   areaAssignments: {

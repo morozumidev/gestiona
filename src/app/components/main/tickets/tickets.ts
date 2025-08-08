@@ -25,11 +25,9 @@ import { Area } from '../../../models/Area';
 import { TicketAssignmentDialog } from '../../dialogs/ticket-assignment-dialog/ticket-assignment-dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { RejectionDetailsDialog } from '../../dialogs/rejection-details-dialog/rejection-details-dialog';
-import { Subject } from 'rxjs/internal/Subject';
-import { debounceTime } from 'rxjs/internal/operators/debounceTime';
-import { Console } from 'console';
 import { Cuadrilla } from '../../../models/Cuadrilla';
-
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { Subject, forkJoin } from 'rxjs';
 type SortableTicketField = keyof Ticket | 'area' | 'cuadrilla' | 'semaforo';
 
 @Component({
@@ -79,6 +77,11 @@ export class Tickets {
   readonly sortColumn = signal<SortableTicketField | ''>('');
   cuadrillas = signal<Cuadrilla[]>([]);
   areas = signal<Area[]>([]);
+  private areaMap = new Map<string, string>();
+  private statusMap = new Map<string, string>();
+  private statusClassMap = new Map<string, string>();
+  private problemMap = new Map<string, string>();
+
   readonly displayedColumns = [
     'folio',
     'problem',
@@ -121,9 +124,20 @@ export class Tickets {
   }
 
 
+  getAreaName(id: string): string {
+    return this.areaMap?.get(id) || 'Desconocida';
+  }
+
+  getStatusName(statusId: string): string {
+    return this.statusMap?.get(statusId) || 'Sin estado';
+  }
+
   getStatusCssClass(statusId: string): string {
-    const status = this.ticketStatuses().find(s => s._id === statusId);
-    return status ? status.cssClass : 'default';
+    return this.statusClassMap?.get(statusId) || 'default';
+  }
+
+  getProblemName(problemId: string): string {
+    return this.problemMap?.get(problemId) || 'Sin problema';
   }
 
   canRespondToTicket(ticket: Ticket): boolean {
@@ -152,7 +166,6 @@ export class Tickets {
   respondToAssignment(ticketId: string, accepted: boolean) {
     const rejectionReason = accepted ? '' : prompt('Motivo de rechazo:');
     if (!accepted && !rejectionReason) return;
-    console.log(ticketId, accepted)
 
     this.ticketsService
       .respondToAssignment(ticketId, accepted, rejectionReason || '')
@@ -172,17 +185,83 @@ export class Tickets {
     status: ['']
   });
   constructor() {
-    this.searchSubject.pipe(debounceTime(400)).subscribe(value => {
-      this.searchTerm.set(value);
-      this.page.set(1);
-      this.loadTickets();
+
+    this.searchSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      switchMap((term) => {
+        this.searchTerm.set(term);
+        this.page.set(1);
+        return this.ticketsService.getAllTickets(
+          this.buildFilters(),
+          this.page(),
+          this.pageSize(),
+          term,
+          this.sortColumn() ? { [this.sortColumn()]: this.sortDirection() === 'asc' ? 1 : -1 } : { updatedAt: -1 }
+        );
+      })
+    ).subscribe({
+      next: (response) => {
+        this.ticketsSignal.set(response.data);
+        this.totalTickets.set(response.total);
+        this.ticketStatusCounts.set(response.statusCounts);
+        this.ticketSemaforoCounts.set(response.semaforoCounts);
+      },
+      error: (err) => {
+        console.error('Error inesperado al buscar tickets:', err);
+      }
     });
     this.loadTickets();
     this.loadCatalogs();
-    this.columnFilters.controls['area'].valueChanges.subscribe(value => {
-      this.selectedArea.set(value);
-    });
+    this.columnFilters.controls['area'].valueChanges
+      .pipe(distinctUntilChanged())
+      .subscribe(value => {
+        this.selectedArea.set(value);
+      });
 
+
+  }
+  private buildFilters() {
+    const filters = [];
+
+    if (this.filterStatus() !== 'Todos') {
+      filters.push({ field: 'status', value: this.filterStatus() });
+    }
+
+    if (this.filterSemaforo() !== 'todos') {
+      filters.push({ field: 'semaforo', value: this.filterSemaforo() });
+    }
+
+    if (this.isUser) {
+      filters.push({ field: 'createdBy', value: this.authService.currentUser._id });
+    }
+
+    const colFilters = this.columnFilters.value as any;
+    const { startDate, endDate, ...restFilters } = colFilters;
+
+    for (const key in restFilters) {
+      const value = restFilters[key];
+      if (!value || value === '') continue;
+
+      if (key === 'area') {
+        if (this.isAdminOrAtencion) {
+          filters.push({ field: 'areaAssignments.area', value });
+        }
+      } else if (key === 'problem') {
+        filters.push({ field: 'problem', value });
+      } else {
+        filters.push({ field: key, value });
+      }
+    }
+
+    if (startDate || endDate) {
+      const createdAtFilter: any = {};
+      if (startDate) createdAtFilter.$gte = new Date(startDate);
+      if (endDate) createdAtFilter.$lte = new Date(endDate);
+      filters.push({ field: 'createdAt', value: createdAtFilter });
+    }
+
+    return filters;
   }
 
   get isAdminOrAtencionOrFuncionario(): boolean {
@@ -194,11 +273,26 @@ export class Tickets {
   }
 
   private loadCatalogs() {
-    this.ticketsService.getTicketStatuses().subscribe(data => this.ticketStatuses.set(data));
-    this.ticketsService.getTemas().subscribe(data => { this.ticketProblems.set(data); });
-    this.ticketsService.getAreas().subscribe(data => { this.areas.set(data); });
-    this.ticketsService.getCuadrillas().subscribe(data => { this.cuadrillas.set(data) });
+    forkJoin({
+      statuses: this.ticketsService.getTicketStatuses(),
+      temas: this.ticketsService.getTemas(),
+      areas: this.ticketsService.getAreas(),
+      cuadrillas: this.ticketsService.getCuadrillas()
+    }).subscribe(({ statuses, temas, areas, cuadrillas }) => {
+      this.ticketStatuses.set(statuses);
+      this.ticketProblems.set(temas);
+      this.areas.set(areas);
+      this.cuadrillas.set(cuadrillas);
+
+      // 🧠 Ahora que los datos están cargados, inicializa los Mapas:
+      this.areaMap = new Map(areas.map(a => [a._id, a.name]));
+      this.statusMap = new Map(statuses.map(s => [s._id!, s.name]));
+      this.statusClassMap = new Map(statuses.map(s => [s._id!, s.cssClass]));
+      this.problemMap = new Map(temas.map(t => [t._id!, t.name]));
+    });
   }
+
+
 
   onColumnFilterChange() {
     const selectedProblem = this.columnFilters.controls['problem'].value;
@@ -213,19 +307,10 @@ export class Tickets {
     this.loadTickets();
   }
 
-  getAreaName(id: string): string {
-    return this.areas().find(a => a._id === id)?.name ?? 'Desconocida';
-  }
 
 
-  getStatusName(statusId: string): string {
-    const status = this.ticketStatuses().find(s => s._id === statusId);
-    return status ? status.name : 'Sin estado';
-  }
-  getProblemName(problemId: string): string {
-    const problem = this.ticketProblems().find(s => s._id === problemId);
-    return problem ? problem.name : 'Sin problema';
-  }
+
+
 
 
   openAssignmentDialog(ticket: Ticket) {
@@ -259,53 +344,12 @@ export class Tickets {
     );
   }
   private loadTickets() {
-    const filters = [];
-
-    if (this.filterStatus() !== 'Todos') {
-      filters.push({ field: 'status', value: this.filterStatus() });
-    }
-
-    if (this.filterSemaforo() !== 'todos') {
-      filters.push({ field: 'semaforo', value: this.filterSemaforo() });
-    }
-
-    filters.push({ field: 'createdBy', value: this.authService.currentUser._id });
-
-    // 👇 Agrega filtros de columna:
-    const colFilters = this.columnFilters.value as any;
-    const { startDate, endDate, ...restFilters } = colFilters;
-
-    for (const key in restFilters) {
-      const value = restFilters[key];
-      if (!value || value === '') continue;
-
-      if (key === 'area') {
-        if (this.isAdminOrAtencion) {
-          filters.push({ field: 'areaAssignments.area', value });
-        }
-      } else if (key === 'problem') {
-        filters.push({ field: 'problem', value });
-      } else {
-        filters.push({ field: key, value });
-      }
-    }
-
-    if (startDate || endDate) {
-      const createdAtFilter: any = {};
-      if (startDate) createdAtFilter.$gte = new Date(startDate);
-      if (endDate) createdAtFilter.$lte = new Date(endDate);
-      filters.push({ field: 'createdAt', value: createdAtFilter });
-    }
-
-
-
     this.ticketsService.getAllTickets(
-      filters,
+      this.buildFilters(),
       this.page(),
       this.pageSize(),
       this.searchTerm(),
       this.sortColumn() ? { [this.sortColumn()]: this.sortDirection() === 'asc' ? 1 : -1 } : { updatedAt: -1 }
-
     ).subscribe({
       next: (response) => {
         this.ticketsSignal.set(response.data);
@@ -320,9 +364,13 @@ export class Tickets {
   }
 
 
-  setSearch(value: string) {
+
+ setSearch(value: string) {
+  if (value !== this.searchTerm()) {
     this.searchSubject.next(value);
   }
+}
+
 
   setFilterStatus(value: string) {
     this.filterStatus.set(value);
@@ -544,6 +592,7 @@ export class Tickets {
       }
     });
   }
+  
 
   countByStatus = (statusId: string) =>
     this.ticketStatusCounts()[statusId] ?? 0;

@@ -22,6 +22,7 @@ import {
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import autoTable from 'jspdf-autotable';
+import { TicketsService } from '../../../services/tickets-service';
 
 export interface Luminaria {
   id: string;
@@ -102,6 +103,7 @@ const LUMINARIAS_DATA: Luminaria[] = [
   ],
 })
 export class Luminarias implements OnInit {
+
   displayedColumns: string[] = [
     'id',
     'nomenclatura',

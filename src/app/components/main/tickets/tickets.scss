@@ -20,17 +20,17 @@
     transition: all 0.3s ease;
 
     &:focus-within {
-      border: 1px solid rgba($color1, 0.6);
-      box-shadow: 0 0 0 3px rgba($color2, 0.9);
+      border: 1px solid rgba(var(--mat-sys-primary), 0.6);
+      box-shadow: 0 0 0 3px rgba(var(--mat-sys-secondary), 0.9);
     }
 
     .search-icon {
       font-size: 1.6rem;
-      color: $color1;
+      color: var(--mat-sys-primary);
       transition: color 0.3s ease;
 
       .search-wrapper:focus-within & {
-        color: $color1;
+        color: var(--mat-sys-primary);
       }
     }
 
@@ -63,7 +63,6 @@
 }
 
 .ticket-card.pending {
-  background-color: #d0e8ff;
 
   .ticket-icon {
     color: #007bff;
@@ -76,7 +75,6 @@
 }
 
 .ticket-card.in-process {
-  background-color: #fff3cd;
 
   .ticket-icon {
     color: #ffa000;
@@ -89,7 +87,6 @@
 }
 
 .ticket-card.solved {
-  background-color: #c8facc;
 
   .ticket-icon {
     color: #2e7d32;
@@ -102,7 +99,6 @@
 }
 
 .ticket-card.canceled {
-  background-color: #f8d7da;
 
   .ticket-icon {
     color: #c62828;
@@ -115,7 +111,6 @@
 }
 
 .ticket-card.total {
-  background-color: #e1bee7;
 
   .ticket-icon {
     color: #ab47bc;
@@ -141,8 +136,8 @@
     position: relative;
     overflow: hidden;
     transition: transform 0.3s ease;
-    @include glass-overlay;
     color: white;
+    @include glass-overlay;
 
     &:hover {
       transform: scale(1.05);
@@ -288,7 +283,7 @@
   letter-spacing: 0.5px;
   text-transform: uppercase;
   transition: all 0.3s ease;
-  background-color: rgba($color2, .7);
+  background-color: rgba(var(--mat-sys-secondary), .7);
 }
 
 .status-badge {
@@ -351,9 +346,10 @@
 
 // 🎯 FOLIO (neutro)
 .folio-badge {
-  background: rgba($color2, .9);
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 85%, transparent);
   color: white;
 }
+
 
 // 🎯 PRIORIDAD con colores vivos
 .badge-prioridad-alta {
@@ -369,17 +365,21 @@
   background: rgba(0, 162, 255, 0.85); // azul
 }
 
+
+.area-badge,
+.crew-badge,
 .badge-problema {
   @extend .badge;
-  background: rgba(255, 255, 255, 0.85); // naranja vibrante
-  color: #000000;
+  background-color: var(--mat-sys-surface-container-lowest);
+  font-weight: 500;
+  color: var(--mat-sys-neutral10);
 }
 
 .badge-fecha {
   @extend .badge;
-  background: rgb(255, 255, 255);
+  background-color: var(--mat-sys-on-surface-variant);
   font-weight: 500;
-  color: #000000;
+  color: var(--mat-sys-surface-container-lowest);
 }
 
 table {
@@ -524,5 +524,84 @@ table {
     margin-left: 4px;
     font-size: 0.8rem;
     color: #888;
+  }
+}
+
+.viewport {
+  height: 72vh;
+  overflow: auto;
+  border-radius: 12px;
+}
+
+.ticket-row {
+  display: grid;
+  grid-template-columns: 100px 160px 160px 160px 110px 160px 140px 80px auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  transition: background 0.2s ease;
+  border-radius: 12px;
+  @include glass-overlay;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .acciones {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .folio,
+  .problema,
+  .area,
+  .cuadrilla,
+  .estado,
+  .fecha,
+  .semaforo {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+  scroll-snap-type: x mandatory;
+  border-radius: $radius;
+  margin-inline: 1rem; // 👈 Agrega este margen horizontal
+
+  table {
+    min-width: 1000px;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    scroll-snap-align: start;
+  }
+
+  th,
+  td {
+    white-space: nowrap;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .ticket-summary {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    mat-form-field {
+      max-width: 100% !important;
+    }
   }
 }

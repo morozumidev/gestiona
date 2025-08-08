@@ -1,0 +1,26 @@
+<mat-dialog-content class="image-dialog-content" (click)="dialogRef.close()">
+  <div class="image-wrapper" (click)="$event.stopPropagation()">
+    <!-- Botones flotantes externos -->
+    <button matIconButton  (click)="prev()" class="floating-nav left">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+
+    <button matIconButton  (click)="next()" class="floating-nav right">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+
+    <!-- Imagen -->
+    <div class="image-container">
+      <img
+        [src]="coreService.URI_API + data.images[currentIndex]"
+        alt="Imagen"
+        class="responsive-image"
+      />
+    </div>
+
+    <!-- Contador -->
+    <div class="counter" (click)="$event.stopPropagation()">
+      <span>{{ currentIndex + 1 }} / {{ data.images.length }}</span>
+    </div>
+  </div>
+</mat-dialog-content>
