@@ -1,0 +1,40 @@
+
+Warning: This is a simple server for use in testing or debugging Angular applications
+locally. It hasn't been reviewed for security issues.
+
+Binding this server to an open connection can result in compromising your application or
+computer. Using a different host than the one passed to the "--host" flag might result in
+websocket connection issues.
+    
+❯ Building...
+✔ Building...
+Browser bundles     
+Initial chunk files  | Names            |  Raw size
+main-JH44VG5V.js     | main             | 348.41 kB | 
+styles-LSHURS7Y.css  | styles           |  21.41 kB | 
+
+                     | Initial total    | 369.82 kB
+
+
+Server bundles      
+Initial chunk files  | Names            |  Raw size
+main.server.mjs      | main.server      | 349.79 kB | 
+server.mjs           | server           |   1.95 kB | 
+polyfills.server.mjs | polyfills.server | 243 bytes | 
+
+Application bundle generation complete. [9.100 seconds]
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+  ➜  Local:   https://localhost:8787/
+  ➜  Local:   https://hcpboca.ddns.net:8787/
+  ➜  Network: https://172.18.1.4:8787/
+
+Warning: This is a simple server for use in testing or debugging Angular applications
+locally. It hasn't been reviewed for security issues.
+
+Binding this server to an open connection can result in compromising your application or
+computer. Using a different host than the one passed to the "--host" flag might result in
+websocket connection issues.
+    
+❯ Building...
