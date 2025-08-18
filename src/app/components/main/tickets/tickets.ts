@@ -90,8 +90,9 @@ export class Tickets {
     'createdAt',
     'updatedAt',
     'status',
-    'actions',
     'semaforo',
+    'actions',
+
   ];
   readonly isAdmin = this.authService.currentUser.role?.name === 'admin';
   readonly isUser = this.authService.currentUser.role?.name === 'user';
@@ -496,7 +497,7 @@ export class Tickets {
     if (!assignment) return 'help';
     if (assignment.accepted) return 'check_circle';
     if (assignment.rejectionReason) return 'cancel';
-    return 'hourglass_empty';
+    return 'schedule';
   }
 
   getAreaStatusIconColor(ticket: Ticket): string {
@@ -528,7 +529,7 @@ export class Tickets {
     if (!crew) return 'help';
     if (crew.accepted) return 'check_circle';
     if (crew.rejectionReason) return 'cancel';
-    return 'hourglass_empty';
+    return 'schedule';
   }
   getCuadrillaName(crewId: string | undefined | null): string {
     if (!crewId) return 'Desconocida';

@@ -50,6 +50,7 @@ import { AuthService } from '../../../services/auth.service';
 // Dialogs
 import { SuccessDialog } from '../../dialogs/success-dialog/success-dialog';
 import { GalleryDialog } from '../../dialogs/gallery-dialog/gallery-dialog';
+import { TicketDto } from '../../../models/TicketDto';
 
 /// <reference types="google.maps" />
 declare const google: any;
@@ -560,7 +561,7 @@ ngOnInit(): void {
   }
 
 
-  private patchFormWithTicket(ticket: Ticket) {
+  private patchFormWithTicket(ticket: TicketDto) {
     this.reportForm.patchValue({
       _id: ticket._id || '',
       folio: ticket.folio || '',
@@ -623,26 +624,15 @@ ngOnInit(): void {
     }
 
     const temaId = ticket.problem;
-    console.log(temaId)
     if (temaId) this.onTemaSelected(temaId);
-    if (ticket.createdBy && typeof ticket.createdBy === 'object') {
-      const creator = ticket.createdBy as {
-        name: string;
-        first_lastname?: string;
-        second_lastname?: string;
-        email?: string;
-        phone?: string;
-      };
-
-      this.createdByUser.set({
-        name: creator.name,
-        first_lastname: creator.first_lastname || '',
-        second_lastname: creator.second_lastname || '',
-        email: creator.email || '',
-        phone: creator.phone || '',
-      });
-
-    }
+  // Datos del creador (ya siempre como objeto poblado)
+  this.createdByUser.set({
+    name: ticket.createdByPreview?.name ?? 'Usuario desconocido',
+    first_lastname: ticket.createdByPreview?.first_lastname ?? '',
+    second_lastname: ticket.createdByPreview?.second_lastname ?? '',
+    email: ticket.createdByPreview?.email ?? '',
+    phone: ticket.createdByPreview?.phone ?? '',
+  });
 
   }
 

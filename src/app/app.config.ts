@@ -15,6 +15,7 @@ import { authInterceptor } from './interceptors/auth-interceptor';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptorsFromDi, withFetch, withInterceptors } from '@angular/common/http';
 import { JWT_OPTIONS, JwtHelperService } from '@auth0/angular-jwt';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAnimationsAsync(),
