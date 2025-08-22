@@ -1,9 +1,13 @@
-<h2 mat-dialog-title>Asignación de ticket</h2>
+<h2 mat-dialog-title>
+  {{ mode === 'reopen' ? 'Reabrir y asignar área' : 'Asignación de ticket' }}
+</h2>
+
 <mat-dialog-content [formGroup]="form">
-  <div *ngIf="canAssignArea()">
+  <!-- Área (siempre visible en reopen; en assign según permisos) -->
+  <div *ngIf="mode === 'reopen' || canAssignArea()">
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Área asignada</mat-label>
-      <mat-select formControlName="area">
+      <mat-select formControlName="area" required>
         <mat-option *ngFor="let a of areas" [value]="a._id">
           {{ a.name }}
         </mat-option>
@@ -11,15 +15,22 @@
     </mat-form-field>
   </div>
 
-  <div *ngIf="canAssignCuadrilla()">
+  <!-- Motivo (solo en reopen) -->
+  <div *ngIf="mode === 'reopen'">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Motivo de reapertura (opcional)</mat-label>
+      <textarea matInput formControlName="reason" rows="3"></textarea>
+    </mat-form-field>
+  </div>
+
+  <!-- Cuadrilla (solo en assign y si aplica) -->
+  <div *ngIf="mode === 'assign' && canAssignCuadrilla()">
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Cuadrilla asignada</mat-label>
       <mat-select formControlName="cuadrilla">
-        @for( c of cuadrillas(); let i = $index; track i) {
-        <mat-option [value]="c._id">
-          {{ c.name }}
-        </mat-option>
-    }
+        @for (c of cuadrillas(); let i = $index; track i) {
+          <mat-option [value]="c._id">{{ c.name }}</mat-option>
+        }
       </mat-select>
     </mat-form-field>
   </div>
@@ -28,6 +39,6 @@
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancel()">Cancelar</button>
   <button mat-flat-button color="primary" (click)="submit()" [disabled]="form.invalid">
-    Asignar
+    {{ mode === 'reopen' ? 'Reabrir' : 'Asignar' }}
   </button>
 </mat-dialog-actions>

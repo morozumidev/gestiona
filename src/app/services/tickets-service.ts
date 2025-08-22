@@ -10,11 +10,38 @@ import { Cuadrilla } from '../models/Cuadrilla';
 import { Observable } from 'rxjs/internal/Observable';
 import { User } from '../models/User';
 import { TicketTracking } from '../models/TicketTracking';
+import { Status } from '../models/Status';
+// 👉 Coloca estos tipos junto con tus imports de modelos
+export interface TicketActionResponse {
+  message: string;
+  ticket: Ticket;
+}
+
+export interface CrewClosePayload {
+  ticketId: string;
+  workSummary: string;
+  materialsUsed?: string[];
+  photos?: string[];
+}
+
+export interface SendToAttentionPayload {
+  ticketId: string;
+  comment?: string;
+}
+
+export interface VerifyCitizenPayload {
+  ticketId: string;
+  resolved: boolean;
+  citizenComment?: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class TicketsService {
+reopenTicket(payload: { ticketId: string; reason?: string; areaId?: string }) {
+  return this.http.post<any>(`${this.coreService.URI_API}tickets/reopen`, payload);
+}
 
 
 
@@ -28,6 +55,37 @@ export class TicketsService {
       { lat, lng }
     );
   }
+// Cerrar por cuadrilla (supervisor)
+crewClose(payload: CrewClosePayload) {
+  return this.http.post<TicketActionResponse>(
+    `${this.coreService.URI_API}tickets/crewClose`,
+    payload
+  );
+}
+
+// Enviar a atención (admin/atención/funcionario/area_user/funcionario_area)
+sendToAttention(payload: SendToAttentionPayload) {
+  return this.http.post<TicketActionResponse>(
+    `${this.coreService.URI_API}tickets/sendToAttention`,
+    payload
+  );
+}
+
+// Verificación con ciudadano (admin/atención)
+verifyCitizen(payload: VerifyCitizenPayload) {
+  return this.http.post<TicketActionResponse>(
+    `${this.coreService.URI_API}tickets/verifyCitizen`,
+    payload
+  );
+}
+
+// (Opcional) Asignación estricta de área
+assignAreaStrict(ticketId: string, areaId: string, comment?: string) {
+  return this.http.post<TicketActionResponse>(
+    `${this.coreService.URI_API}tickets/assignAreaStrict`,
+    { ticketId, areaId, comment }
+  );
+}
 
 
   setTicket(ticket: Ticket): void {
@@ -128,6 +186,9 @@ export class TicketsService {
     return this.http.post<Luminaria[]>(this.coreService.URI_API + 'tickets/getLuminarias', {});
   }
 
+  getStatusById(_id: string): Observable<Status> {
+  return this.http.post<Status>(this.coreService.URI_API + 'tickets/getStatusById', { _id });
+}
 
   getStatuses() {
     return this.http.post<{ _id: string; name: string }[]>('/api/catalogs/statuses', {});
