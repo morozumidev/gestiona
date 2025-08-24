@@ -1,8 +1,7 @@
-import { Component,  inject,  OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, inject, OnInit, ViewEncapsulation } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { take } from 'rxjs';
 import { NavigationComponent } from './components/main/navigation/navigation.component';
-import { ThemeService } from './services/theme.service';
 import { MatIconRegistry } from '@angular/material/icon';
 
 @Component({
@@ -19,9 +18,9 @@ export class App implements OnInit {
   isCollapsed = false;
 
   private noNavRoutes = ['/login', '/'];
- private readonly iconRegistry = inject(MatIconRegistry);
-  constructor(private router: Router,private themeService:ThemeService  ) {
- this.iconRegistry.registerFontClassAlias('material-icons');            // clásico
+  private readonly iconRegistry = inject(MatIconRegistry);
+  constructor(private router: Router) {
+    this.iconRegistry.registerFontClassAlias('material-icons');            // clásico
     this.iconRegistry.registerFontClassAlias('material-symbols-outlined'); // symbols
     this.iconRegistry.registerFontClassAlias('material-symbols-rounded');
     this.iconRegistry.registerFontClassAlias('material-symbols-sharp');
