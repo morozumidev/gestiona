@@ -1,7 +1,7 @@
 <div class="ticket-admin">
   <div class="ticket-summary glass-container">
     @for (status of ticketStatuses(); track status._id) {
-      <div class="ticket-card {{ status.cssClass }}" (click)="onCardClick(status._id!)">
+      <div class="ticket-card" [attr.data-status]="status.cssClass" (click)="onCardClick(status._id!)">
         <mat-icon class="ticket-icon">
           {{ getStatusIcon(status.cssClass) }}
         </mat-icon>
@@ -99,7 +99,7 @@
   </section>
 
   <div class="table-fluid glass-container">
-    <!-- OJO: usamos visibleTickets() para cumplir visibilidad por rol/etapa -->
+    <!-- Usamos visibleTickets() para cumplir visibilidad por rol/etapa -->
     <table mat-table [dataSource]="visibleTickets()" aria-label="Tabla de tickets">
 
       <ng-container matColumnDef="folio">
@@ -229,68 +229,82 @@
           <mat-icon>table_edit</mat-icon>
         </th>
         <td mat-cell *matCellDef="let ticket">
-          <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Más acciones" matTooltip="Acciones">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-
-          <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="editTicket(ticket)">
-              <mat-icon>edit</mat-icon>
-              <span>Ver Ticket/Editar</span>
+          @if (hasAnyMenuAction(ticket)) {
+            <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Más acciones" matTooltip="Acciones">
+              <mat-icon>more_vert</mat-icon>
             </button>
 
-            @if(isAdmin){
-              <button mat-menu-item (click)="deleteTicket(ticket._id)">
-                <mat-icon color="warn">delete</mat-icon>
-                <span>Eliminar</span>
-              </button>
-            }
-
-            <!-- Asignar (se mantiene como en tu HTML original; las validaciones viven en openAssignmentDialog) -->
-            @if (isAdminOrAtencionOrFuncionario) {
-              <button mat-menu-item (click)="openAssignmentDialog(ticket)">
-                <mat-icon>assignment_ind</mat-icon>
-                <span>Asignar</span>
-              </button>
-            }
-
-            <!-- Responder asignación -->
-            @if (canRespondToTicket(ticket)) {
-              <button mat-menu-item (click)="respondToAssignment(ticket._id, true)">
-                <mat-icon color="primary">check</mat-icon>
-                <span>Aceptar</span>
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="editTicket(ticket)">
+                <mat-icon>edit</mat-icon>
+                <span>Ver Ticket/Editar</span>
               </button>
 
-              <button mat-menu-item (click)="respondToAssignment(ticket._id, false)">
-                <mat-icon color="warn">close</mat-icon>
-                <span>Rechazar</span>
-              </button>
-            }
+              @if(isAdmin){
+                <button mat-menu-item (click)="deleteTicket(ticket._id)">
+                  <mat-icon color="warn">delete</mat-icon>
+                  <span>Eliminar</span>
+                </button>
+              }
 
-            <!-- Cerrar por cuadrilla (solo etapa tech) -->
-            @if (canTechClose(ticket)) {
-              <button mat-menu-item (click)="crewClose(ticket._id)">
-                <mat-icon>task_alt</mat-icon>
-                <span>Cerrar cuadrilla</span>
-              </button>
-            }
+              <!-- Asignar (dialog valida reglas internas) -->
+              @if (isAdminOrAtencionOrFuncionario) {
+                <button mat-menu-item (click)="openAssignmentDialog(ticket)">
+                  <mat-icon>assignment_ind</mat-icon>
+                  <span>Asignar</span>
+                </button>
+              }
 
-            <!-- Enviar a atención (desde área) -->
-            @if (canSendToAttention(ticket)) {
-              <button mat-menu-item (click)="sendToAttention(ticket._id)">
-                <mat-icon>support_agent</mat-icon>
-                <span>Enviar a atención</span>
-              </button>
-            }
+              <!-- Responder asignación -->
+              @if (canRespondToTicket(ticket)) {
+                <button mat-menu-item (click)="respondToAssignment(ticket._id, true)">
+                  <mat-icon color="primary">check</mat-icon>
+                  <span>Aceptar</span>
+                </button>
 
-            <!-- Verificación con ciudadano (en atención; oculta si ya verificado) -->
-@if (canReopen(ticket)) {
-  <button mat-menu-item (click)="openReopenDialog(ticket)">
-    <mat-icon>history_toggle_off</mat-icon>
-    <span>Reabrir</span>
-  </button>
-}
-          </mat-menu>
+                <button mat-menu-item (click)="respondToAssignment(ticket._id, false)">
+                  <mat-icon color="warn">close</mat-icon>
+                  <span>Rechazar</span>
+                </button>
+              }
+
+              <!-- Cerrar por cuadrilla -->
+              @if (canTechClose(ticket)) {
+                <button mat-menu-item (click)="crewClose(ticket._id)">
+                  <mat-icon>task_alt</mat-icon>
+                  <span>Cerrar cuadrilla</span>
+                </button>
+              }
+
+              <!-- Enviar a atención (etapa área) -->
+              @if (canSendToAttention(ticket)) {
+                <button mat-menu-item (click)="sendToAttention(ticket._id)">
+                  <mat-icon>support_agent</mat-icon>
+                  <span>Enviar a atención</span>
+                </button>
+              }
+
+              <!-- Verificar con ciudadano (etapa atención) -->
+              @if (canVerifyWithCitizen(ticket)) {
+                <button mat-menu-item (click)="verifyCitizen(ticket._id, true)">
+                  <mat-icon>verified</mat-icon>
+                  <span>Verificar ciudadano (resuelto)</span>
+                </button>
+                <button mat-menu-item (click)="verifyCitizen(ticket._id, false)">
+                  <mat-icon>published_with_changes</mat-icon>
+                  <span>Verificar ciudadano (no resuelto)</span>
+                </button>
+              }
+
+              <!-- Reabrir (solo si está cerrado) -->
+              @if (canReopen(ticket)) {
+                <button mat-menu-item (click)="openReopenDialog(ticket)">
+                  <mat-icon>history_toggle_off</mat-icon>
+                  <span>Reabrir</span>
+                </button>
+              }
+            </mat-menu>
+          }
         </td>
       </ng-container>
 
@@ -301,8 +315,7 @@
 
   <mat-paginator
     [length]="totalTickets()"
-    [pageSize]="pageSize()
-    "
+    [pageSize]="pageSize()"
     [pageIndex]="page() - 1"
     [pageSizeOptions]="[5, 10, 15, 20]"
     showFirstLastButtons

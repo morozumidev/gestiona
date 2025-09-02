@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
@@ -164,67 +164,58 @@ export class Tickets {
 
   // ========= Etapas del flujo =========
 
-  private hasCrewClosed(ticket: Ticket): boolean {
-    return !!ticket.crewAssignments?.at(-1)?.closure?.closedAt;
-  }
-
-  /** ¿Fue enviado a atención? */
+  /** ¿Fue enviado a atención (etapa intermedia para verificación)? */
   private hasBeenSentToAttention(ticket: Ticket): boolean {
     const t: any = ticket as any;
 
-    if (t.sentToAttentionAt || t.sentBackToAttentionAt || t.attention?.sentAt) return true;
+    if (t.attention?.sentAt || t.sentToAttentionAt || t.sentBackToAttentionAt) return true;
 
     if (Array.isArray(t.tracking)) {
       const sentEvt = t.tracking.some((ev: any) =>
-        /atenci[oó]n/i.test(ev?.event || '') && /(enviad|derivad|turnad)/i.test(ev?.event || '')
+        /atenci[oó]n/i.test(`${ev?.event ?? ''} ${ev?.description ?? ''}`) &&
+        /(enviad|derivad|turnad)/i.test(`${ev?.event ?? ''} ${ev?.description ?? ''}`)
       );
       if (sentEvt) return true;
     }
 
     const statusName = (this.getStatusName(ticket.status!) || '').toLowerCase();
-    if (/atenci[oó]n/.test(statusName) || /verificaci[oó]n/.test(statusName)) return true;
+    if (/(atenci[oó]n|verificaci[oó]n)/.test(statusName)) return true;
 
     return false;
   }
 
-  /** ¿Ya hubo verificación ciudadana? */
-private isCitizenVerified(ticket: Ticket): boolean {
-  const t: any = ticket as any;
-
-  // 1) Si hay un área activa, no está cerrado para efectos operativos
-  if (t.activeArea) return false;
-
-  // 2) Bandera/estado “fuente de verdad”
-  if (t.verifiedByReporter === true) return true;
-
-  const statusName = (this.getStatusName(ticket.status!) || '').toLowerCase();
-  if (statusName === 'verified_closed' || /cerrad[oa].*verificad/.test(statusName)) {
-    return true;
+  /** ¿Ya hubo cierre técnico por cuadrilla? */
+  private hasCrewClosed(ticket: Ticket): boolean {
+    return !!ticket.crewAssignments?.at(-1)?.closure?.closedAt;
   }
 
-  // 3) Heurística con tracking: verificación solo cuenta si es POSTERIOR a la última Reapertura
-  const log: any[] = Array.isArray(t.tracking) ? t.tracking : [];
-  const last = (regex: RegExp) =>
-    [...log].reverse().find(ev => regex.test(`${ev?.event ?? ''} ${ev?.description ?? ''}`.toLowerCase()));
+  /** ¿Ya hubo verificación ciudadana/final? */
+  private isCitizenVerified(ticket: Ticket): boolean {
+    const t: any = ticket as any;
+    if (t.verifiedByReporter === true) return true;
 
-  const ver = last(/verificaci[oó]n.*ciudadan|confirmad[oa].*ciudadan/);
-  const rep = last(/reapertur/);
+    const statusName = (this.getStatusName(ticket.status!) || '').toLowerCase();
+    if (statusName === 'verified_closed' || /cerrad[oa].*verificad/.test(statusName)) return true;
 
-  const verAt = ver?.date ? new Date(ver.date).getTime() : -1;
-  const repAt = rep?.date ? new Date(rep.date).getTime() : -1;
+    const log: any[] = Array.isArray(t.tracking) ? t.tracking : [];
+    const last = (rx: RegExp) => [...log].reverse()
+      .find(ev => rx.test(`${ev?.event ?? ''} ${ev?.description ?? ''}`.toLowerCase()));
 
-  return verAt > 0 && verAt > repAt;
-}
+    const ver = last(/verificaci[oó]n.*ciudadan|confirmad[oa].*ciudadan/);
+    const rep = last(/reapertur/);
 
+    const verAt = ver?.date ? new Date(ver.date).getTime() : -1;
+    const repAt = rep?.date ? new Date(rep.date).getTime() : -1;
+    return verAt > 0 && verAt > repAt;
+  }
 
-  /** Deriva la etapa actual para reglas de visibilidad/acciones */
-private getStage(ticket: Ticket): TicketStage {
-  if ((ticket as any).activeArea) return 'tech'; // o 'area' si prefieres
-  if (this.isCitizenVerified(ticket)) return 'closed';
-  if (this.hasBeenSentToAttention(ticket)) return 'attention';
-  if (this.hasCrewClosed(ticket)) return 'area';
-  return 'tech';
-}
+  /** Etapa actual del ticket (deriva visibilidad y acciones) */
+  private getStage(ticket: Ticket): TicketStage {
+    if (this.isCitizenVerified(ticket)) return 'closed';
+    if (this.hasBeenSentToAttention(ticket)) return 'attention';
+    if (this.hasCrewClosed(ticket)) return 'area';
+    return 'tech';
+  }
 
   // ========= Visibilidad por rol =========
 
@@ -242,20 +233,16 @@ private getStage(ticket: Ticket): TicketStage {
         return stage === 'attention' || stage === 'closed';
       }
 
-if (role === 'funcionario') {
-  const lastArea = this.getLatestAreaAssignment(ticket);
-  const effectiveArea = (ticket as any).activeArea ?? lastArea?.area ?? null;
-  const isMyArea =
-    effectiveArea != null && String(effectiveArea) === String(myArea);
-
-  if (!isMyArea) return false;
-
-  return stage === 'tech' || stage === 'area';
-}
-
+      if (role === 'funcionario') {
+        const lastArea = this.getLatestAreaAssignment(ticket);
+        const effectiveArea = (ticket as any).activeArea ?? lastArea?.area ?? null;
+        const isMyArea = effectiveArea != null && String(effectiveArea) === String(myArea);
+        if (!isMyArea) return false;
+        return stage === 'tech' || stage === 'area';
+      }
 
       if (role === 'cuadrilla' || role === 'supervisor') {
-        if (stage !== 'tech') return false; // tras cierre técnico, ya no lo ve
+        if (stage !== 'tech') return false; // tras cierre técnico o atención, ya no lo ve
         const lastCrew = this.getLastValidCrew(ticket);
         if (!lastCrew) return false;
         const cuadrilla = this.cuadrillas().find(q => q._id === lastCrew.cuadrilla);
@@ -277,29 +264,30 @@ if (role === 'funcionario') {
 
   /** Cerrar por cuadrilla (solo etapa tech) */
   canTechClose(ticket: Ticket): boolean {
-    const role = this.authService.currentUser?.role?.name;
     if (this.getStage(ticket) !== 'tech') return false;
 
+    const role = this.authService.currentUser?.role?.name;
     if (!this.hasAreaResponded(ticket) || !this.hasAreaAccepted(ticket)) return false;
+
     const lastCrew = this.getLastValidCrew(ticket);
     if (!lastCrew) return false;
+
+    if (role === 'admin') return true;
 
     if (role === 'supervisor' || role === 'cuadrilla') {
       const cuadrilla = this.cuadrillas().find(q => q._id === lastCrew.cuadrilla);
       const userId = this.authService.currentUser._id;
       const isMiembro = !!cuadrilla?.members?.includes(userId);
       const isSupervisor = cuadrilla?.supervisor === userId;
-      return isMiembro || isSupervisor;
+      return (isMiembro || isSupervisor) && !lastCrew.closure?.closedAt;
     }
 
-    if (role === 'admin') return true;
     return false;
   }
 
   /** Enviar a atención (etapa área; admin/funcionario del área) */
   canSendToAttention(ticket: Ticket): boolean {
-    const stage = this.getStage(ticket);
-    if (stage !== 'area') return false;
+    if (this.getStage(ticket) !== 'area') return false;
 
     const role = this.authService.currentUser?.role?.name;
     if (role === 'admin') return true;
@@ -319,29 +307,26 @@ if (role === 'funcionario') {
     return role === 'atencion' || role === 'admin';
   }
 
-  /** Reabrir (solo etapa closed; admin/atención) */
-// 👇 Mostrar "Reabrir" solo para admin/atención y cuando ya hubo verificación ciudadana/cierre final
-canReopen(ticket: Ticket): boolean {
-  const role = this.authService.currentUser?.role?.name;
-  // Reabrir lo hace atención/admin. Puedes acotar más si quieres:
-  return role === 'admin' || role === 'atencion';
-}
+  /** Reabrir (solo cuando el ticket ya está cerrado y rol permitido) */
+  canReopen(ticket: Ticket): boolean {
+    const role = this.authService.currentUser?.role?.name;
+    const roleCan = role === 'admin' || role === 'atencion';
+    // ⬇️ Cambio clave: exigir que esté cerrado para mostrar "Reabrir"
+    return roleCan && this.isClosed(ticket);
+  }
 
-openReopenDialog(ticket: Ticket) {
-  this.dialog.open(TicketAssignmentDialog, {
-    data: {
-      ticket,
-      areas: this.areas(),
-      mode: 'reopen'              // 👈 clave para activar el flujo de reopen
-    },
-    width: '600px'
-  }).afterClosed().subscribe(refresh => {
-    if (refresh) this.loadTickets();
-  });
-}
-
-
-
+  /** ¿Hay al menos una acción aplicable? */
+  hasAnyMenuAction(ticket: Ticket): boolean {
+    return (
+      true // mantener "Ver/Editar" siempre disponible
+      || this.isAdmin
+      || this.canTechClose(ticket)
+      || this.canSendToAttention(ticket)
+      || this.canVerifyWithCitizen(ticket)
+      || this.canReopen(ticket)
+      || this.canRespondToTicket(ticket)
+    );
+  }
 
   // ========= Acciones backend por fila =========
 
@@ -370,23 +355,22 @@ openReopenDialog(ticket: Ticket) {
       });
   }
 
-
   // ========= Lógica previa existente (conservada) =========
-private sameId(a: any, b: any) {
-  return String(a ?? '') === String(b ?? '');
-}
+
+  private sameId(a: any, b: any) {
+    return String(a ?? '') === String(b ?? '');
+  }
 
   canRespondToTicket(ticket: Ticket): boolean {
     const user = this.authService.currentUser;
 
-if (user.role.name === 'funcionario') {
-  const last = ticket.areaAssignments?.at(-1);
-  // Solo si la ÚLTIMA asignación es de su área y está pendiente
-  return !!last
-    && this.sameId(last.area, user.area)
-    && last.accepted !== true
-    && !last.rejectionReason;
-}
+    if (user.role.name === 'funcionario') {
+      const last = ticket.areaAssignments?.at(-1);
+      return !!last
+        && this.sameId(last.area, user.area)
+        && last.accepted !== true
+        && !last.rejectionReason;
+    }
 
     if (user.role.name === 'cuadrilla' || user.role.name === 'supervisor') {
       if (!this.hasAreaResponded(ticket)) return false;
@@ -394,7 +378,7 @@ if (user.role.name === 'funcionario') {
 
       const lastCrew = this.getLastValidCrew(ticket);
       if (!lastCrew) return false;
-      if (lastCrew.closure?.closedAt) return false; // ya cerrado => no responde
+      if (lastCrew.closure?.closedAt) return false;
 
       const cuadrilla = this.cuadrillas().find(q => q._id === lastCrew.cuadrilla);
       const isMiembro = !!cuadrilla?.members?.includes(user._id);
@@ -406,11 +390,6 @@ if (user.role.name === 'funcionario') {
     return false;
   }
 
-  /**
-   * Acción de respuesta (aceptar/rechazar)
-   * Bloqueo explícito: cuadrilla/supervisor no puede ACEPTAR NI RECHAZAR
-   * hasta que el área haya respondido; y solo puede cuando el área ACEPTÓ.
-   */
   respondToAssignment(ticketId: string, accepted: boolean) {
     const ticket = this.ticketsSignal().find(t => t._id === ticketId);
     if (!ticket) return;
@@ -510,7 +489,7 @@ if (user.role.name === 'funcionario') {
 
       if (key === 'area') {
         if (this.isAdminOrAtencion) {
-          filters.push({ field: 'activeArea', value }); // antes: 'areaAssignments.area'
+          filters.push({ field: 'activeArea', value });
         }
       } else if (key === 'problem') {
         filters.push({ field: 'problem', value });
@@ -570,46 +549,42 @@ if (user.role.name === 'funcionario') {
     this.loadTickets();
   }
 
- openAssignmentDialog(ticket: Ticket) {
-  const last = ticket.areaAssignments.at(-1);
+  openAssignmentDialog(ticket: Ticket) {
+    const last = ticket.areaAssignments.at(-1);
 
-  if (this.authService.currentUser.role?.name === 'funcionario') {
-    // Debe ser su área
-    if (!last || !this.sameId(last.area, this.authService.currentUser.area)) {
-      alert('Este ticket no está asignado a tu área.');
+    if (this.authService.currentUser.role?.name === 'funcionario') {
+      if (!last || !this.sameId(last.area, this.authService.currentUser.area)) {
+        alert('Este ticket no está asignado a tu área.');
+        return;
+      }
+      if (!last.accepted) {
+        alert('Primero debes aceptar el ticket del área.');
+        return;
+      }
+    }
+
+    if (
+      (this.authService.currentUser.role?.name === 'cuadrilla' ||
+       this.authService.currentUser.role?.name === 'supervisor') &&
+      !this.hasAreaResponded(ticket)
+    ) {
+      alert('El área debe responder primero para gestionar la asignación de cuadrilla.');
       return;
     }
-    // Y debe estar aceptado por área antes de gestionar cuadrilla
-    if (!last.accepted) {
-      alert('Primero debes aceptar el ticket del área.');
+    if (
+      (this.authService.currentUser.role?.name === 'cuadrilla' ||
+       this.authService.currentUser.role?.name === 'supervisor') &&
+      !this.hasAreaAccepted(ticket)
+    ) {
+      alert('El área no aceptó el ticket. No procede la gestión de cuadrilla.');
       return;
     }
-  }
 
-  // Reglas para cuadrilla/supervisor (las tuyas están bien):
-  if (
-    (this.authService.currentUser.role?.name === 'cuadrilla' ||
-     this.authService.currentUser.role?.name === 'supervisor') &&
-    !this.hasAreaResponded(ticket)
-  ) {
-    alert('El área debe responder primero para gestionar la asignación de cuadrilla.');
-    return;
+    this.dialog.open(TicketAssignmentDialog, {
+      data: { ticket, areas: this.areas() },
+      width: '600px'
+    }).afterClosed().subscribe(refresh => { if (refresh) this.loadTickets(); });
   }
-  if (
-    (this.authService.currentUser.role?.name === 'cuadrilla' ||
-     this.authService.currentUser.role?.name === 'supervisor') &&
-    !this.hasAreaAccepted(ticket)
-  ) {
-    alert('El área no aceptó el ticket. No procede la gestión de cuadrilla.');
-    return;
-  }
-
-  this.dialog.open(TicketAssignmentDialog, {
-    data: { ticket, areas: this.areas() },
-    width: '600px'
-  }).afterClosed().subscribe(refresh => { if (refresh) this.loadTickets(); });
-}
-
 
   wasRejected(ticket: Ticket): boolean {
     return ticket.areaAssignments.some(
@@ -688,23 +663,22 @@ if (user.role.name === 'funcionario') {
     }[problem] ?? 'report_problem';
   }
 
-getStatusIcon(statusSlug: string): string {
-  const m: Record<string,string> = {
-    new: 'fiber_new',
-    assigned_area: 'assignment_ind',
-    accepted_area: 'task_alt',
-    rejected_area: 'block',
-    assigned_crew: 'groups',
-    accepted_crew: 'fact_check',
-    rejected_crew: 'block',
-    attended_by_crew: 'home_repair_service',
-    attended_by_area: 'task',
-    verified_closed: 'verified',
-    reopened: 'published_with_changes',
-  };
-  return m[statusSlug] ?? 'help';
-}
-
+  getStatusIcon(statusSlug: string): string {
+    const m: Record<string,string> = {
+      new: 'fiber_new',
+      assigned_area: 'assignment_ind',
+      accepted_area: 'task_alt',
+      rejected_area: 'block',
+      assigned_crew: 'groups',
+      accepted_crew: 'fact_check',
+      rejected_crew: 'block',
+      attended_by_crew: 'home_repair_service',
+      attended_by_area: 'task',
+      verified_closed: 'verified',
+      reopened: 'published_with_changes',
+    };
+    return m[statusSlug] ?? 'help';
+  }
 
   updateStatus(id: string, newStatus: Ticket['status']) {
     const updated = this.ticketsSignal().map(t =>
@@ -797,7 +771,7 @@ getStatusIcon(statusSlug: string): string {
   getCrewStatusIcon(ticket: Ticket): string {
     const crew = ticket.crewAssignments?.at(-1);
     if (!crew) return 'help';
-    if (crew.closure?.closedAt) return 'task_alt'; // check “final”
+    if (crew.closure?.closedAt) return 'task_alt';
     if (crew.accepted) return 'check_circle';
     if (crew.rejectionReason) return 'cancel';
     return 'schedule';
@@ -868,4 +842,17 @@ getStatusIcon(statusSlug: string): string {
   }
 
   countByStatus = (statusId: string) => this.ticketStatusCounts()[statusId] ?? 0;
+
+  openReopenDialog(ticket: Ticket) {
+    this.dialog.open(TicketAssignmentDialog, {
+      data: {
+        ticket,
+        areas: this.areas(),
+        mode: 'reopen' // flujo de reopen
+      },
+      width: '600px'
+    }).afterClosed().subscribe(refresh => {
+      if (refresh) this.loadTickets();
+    });
+  }
 }

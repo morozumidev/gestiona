@@ -3,7 +3,7 @@
 @use './app_theme-colors' as theme;
 
 // Definir color por defecto si no se ha definido antes
-$color: guinda !default;
+$color: negro !default;
 
 // Obtener la paleta personalizada completa (por ejemplo, 'negro')
 $primary-palette: theme.get-palette($color);
@@ -25,6 +25,7 @@ $radius: 1.2rem;
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.6);
   background: rgba(255, 255, 255, 0.5);
+  color:$color;
 }
 
 // Mixin para el efecto glassmorphism

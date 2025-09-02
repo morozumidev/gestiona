@@ -52,6 +52,8 @@ import { GalleryDialog } from '../../dialogs/gallery-dialog/gallery-dialog';
 import { TicketDto } from '../../../models/TicketDto';
 import { Status } from '../../../models/Status';
 import { Maintenance } from '../../../models/Maintenance';
+import { Cuadrilla } from '../../../models/Cuadrilla';
+import { User } from '../../../models/User';
 
 /// <reference types="google.maps" />
 declare const google: any;
@@ -87,9 +89,38 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   protected showLuminarias = signal(false);
   protected areaEditable = signal(false);
   protected createdByUser = signal<{ name: string; first_lastname?: string; second_lastname?: string; email?: string; phone?: string } | null>(null);
-
+protected currentCuadrilla = signal<Cuadrilla | null>(null);
+protected currentSupervisor = signal<User | null>(null);
   protected reportForm: FormGroup;
   protected commentForm: FormGroup;
+/** Muestra nombre de área ya sea id (string) u objeto poblado */
+protected displayArea(a: unknown): string {
+  if (!a) return '—';
+  if (typeof a === 'string') return a;
+  if (typeof a === 'object' && 'name' in (a as any)) return (a as any).name ?? '—';
+  return '—';
+}
+
+/** Muestra nombre de turno ya sea id (string) u objeto poblado */
+protected displayShift(s: unknown): string {
+  if (!s) return '—';
+  if (typeof s === 'string') return s;
+  if (typeof s === 'object' && 'name' in (s as any)) return (s as any).name ?? '—';
+  return '—';
+}
+
+/** Nombre legible de un miembro ya sea id (string) u objeto poblado */
+protected displayMemberName(m: unknown): string {
+  if (!m) return '—';
+  if (typeof m === 'string') return m;
+  const o = m as any;
+  const parts = [o?.name, o?.first_lastname, o?.second_lastname].filter(Boolean);
+  return parts.length ? parts.join(' ') : '—';
+}
+
+/** trackBy para miembros (soporta string u objeto con _id) */
+protected trackByMember = (_: number, m: unknown) =>
+  (m && typeof m === 'object' && '_id' in (m as any)) ? (m as any)._id : m as string;
 
   protected currentUser = this.authService.currentUser;
   protected previewUrl: string | ArrayBuffer | null = null;
@@ -196,6 +227,85 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
       return 'Usuario desconocido';
     }
   }
+public canReopen(): boolean {
+  // Debe existir ticket cargado, rol permitido y estar realmente cerrado
+  const hasTicket = !!this.reportForm?.get('_id')?.value;
+  if (!hasTicket) return false;
+
+  const role = this.currentUser?.role?.name ?? '';
+  const roleCan = role === 'admin' || role === 'atencion';
+
+  return roleCan && this.isClosedStrict();
+}
+
+private isClosedStrict(): boolean {
+  // CERRADO = verificado por ciudadano (bandera del backend)
+  return this.reportForm.get('verifiedByReporter')?.value === true;
+}
+
+// (opcional pero recomendado) protege el handler también
+protected reopenFromAttention(): void {
+  const ticketId = this.reportForm.get('_id')?.value;
+  if (!ticketId || !this.isClosedStrict()) return; // si está abierto, no hace nada
+
+  const citizenComment = (window.prompt('Motivo de reapertura:', '') || '').trim();
+
+  this.ticketsService.verifyCitizen({ ticketId, resolved: false, citizenComment }).subscribe({
+    next: (resp) => {
+      this.ticketsService.setTicket(resp.ticket);
+      this.patchFormWithTicket(resp.ticket);
+      this.dialog.open(SuccessDialog, {
+        data: { folio: resp.ticket?.folio, isUpdate: true, message: 'Ticket reabierto.' }
+      });
+    },
+    error: (err) => console.error('Error al reabrir:', err)
+  });
+}
+
+private isClosed(): boolean {
+  // “Cerrado” = verificado por ciudadano (estado final)
+  return this.isCitizenVerified();
+}
+
+private get trackingLog(): any[] {
+  const arr = (this.reportForm.get('tracking') as FormArray)?.value;
+  return Array.isArray(arr) ? arr : [];
+}
+
+/** ¿El ticket ya está cerrado (verificado por ciudadano)? */
+private isCitizenVerified(): boolean {
+  // 1) Fuente confiable: flag directo guardado por backend
+  if (this.reportForm.get('verifiedByReporter')?.value === true) return true;
+
+  // 2) Fallback robusto por timeline:
+  //    Buscar ÚLTIMO evento de verificación de ciudadano que no sea “no verificado”,
+  //    y verificar que sea posterior a cualquier reapertura.
+  const log = this.trackingLog;
+  if (!log.length) return false;
+
+  const flatText = (ev: any) =>
+    (`${ev?.event ?? ''} ${ev?.description ?? ''}`).toString().toLowerCase();
+
+  // A) Coincidencias “positivas” de verificación ciudadana
+  const isPositiveCitizenVerify = (t: string) =>
+    // “verificación/confirmación … ciudadan” (tolerante a acentos)
+    /(?:verificaci[oó]n|confirmaci[oó]n).*(ciudadan)/.test(t)
+    // y NO contenga negaciones cercanas (no verificación / sin verificación)
+    && !/(?:^|\s)(no|sin)\s+(?:verificaci[oó]n|confirmaci[oó]n)/.test(t)
+    // y NO contenga “no verificado”
+    && !/(?:^|\s)no\s+verificad[oa]\b/.test(t);
+
+  const lastVerify = [...log].reverse().find(ev => isPositiveCitizenVerify(flatText(ev)));
+
+  // B) Cualquier reapertura anula verificación previa
+  const isReopen = (t: string) => /reabr/.test(t); // reapertura / reabrir / reabierto
+  const lastReopen = [...log].reverse().find(ev => isReopen(flatText(ev)));
+
+  const verAt = lastVerify?.date ? new Date(lastVerify.date).getTime() : -1;
+  const repAt = lastReopen?.date ? new Date(lastReopen.date).getTime() : -1;
+
+  return verAt > 0 && verAt > repAt;
+}
   private async resolveStatusNameById(id?: string): Promise<string> {
     if (!id) return '—';
     if (this.statusCache.has(id)) return this.statusCache.get(id)!;
@@ -262,7 +372,11 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
     }
     this.ticketsService.clearTicket();
   }
-
+private toFullName(u?: User | null): string {
+  if (!u) return 'Desconocido';
+  const parts = [u.name, u.first_lastname, u.second_lastname].filter(Boolean);
+  return parts.length ? parts.join(' ') : 'Desconocido';
+}
   // ---------- Helpers de catálogo / formato ----------
   private getTemaName(id?: string | null): string {
     if (!id) return '—';
@@ -299,20 +413,24 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   }
 
   // ---------- PDF: botón público ----------
-  protected async generatePdfs(): Promise<void> {
-    await this.generateTicketPdf();
-    const lumId = this.reportForm.get('luminaria')?.value;
-    if (lumId) {
-      // asegurar catálogo cargado (si el ticket viene ya con luminaria)
-      if (!this.luminarias().length) {
-        try {
-          const data = await this.ticketsService.getLuminarias().toPromise();
-          this.luminarias.set(data || []);
-        } catch { /* ignora */ }
+
+protected async generatePdfs(): Promise<void> {
+  await this.generateTicketPdf();
+  const lumId = this.reportForm.get('luminaria')?.value;
+  if (lumId) {
+    // asegurar catálogo cargado (si el ticket viene ya con luminaria)
+    if (!this.luminarias().length) {
+      try {
+        const data = await firstValueFrom(this.ticketsService.getLuminarias());
+        this.luminarias.set(data || []);
+      } catch {
+        // ignora
       }
-      await this.generateLuminariaPdf();
     }
+    await this.generateLuminariaPdf();
   }
+}
+
 
   // ---------- Implementación PDF ----------
   private async generateTicketPdf(): Promise<void> {
@@ -487,124 +605,252 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
     ];
   }
 
-  private async generateLuminariaPdf(): Promise<void> {
-    const { jsPDF } = await import('jspdf');
-    const autoTable = (await import('jspdf-autotable')).default;
 
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-    const folio = this.reportForm.get('folio')?.value || 'Sin folio';
-    const lumId: string | null = this.reportForm.get('luminaria')?.value || null;
 
-    // Resuelve la luminaria desde catálogo local (ya cargado en tu flujo)
-    const lum: Luminaria | undefined = this.getLuminariaById(lumId || undefined);
-    if (!lum) {
-      doc.setFontSize(14);
-      doc.text(`No se encontró la luminaria asociada al Ticket ${folio}`, 40, 60);
-      doc.save(`Luminaria_${folio}.pdf`);
-      return;
+private async generateLuminariaPdf(): Promise<void> {
+  // === Helpers autocontenidos ===
+  const daysBetween = (a: Date | string | null | undefined, b: Date | string | null | undefined): number | '—' => {
+    if (!a || !b) return '—';
+    const d1 = typeof a === 'string' ? new Date(a) : a;
+    const d2 = typeof b === 'string' ? new Date(b) : b;
+    if (isNaN((d1 as Date).getTime()) || isNaN((d2 as Date).getTime())) return '—';
+    const ms = Math.abs((d2 as Date).getTime() - (d1 as Date).getTime());
+    return Math.floor(ms / (1000 * 60 * 60 * 24));
+  };
+
+  const nextAutoTableY = (doc: any, gap = 16, reserve = 120, bottomMargin = 60, topOnNewPage = 40): number => {
+    const lastY = (doc as any).lastAutoTable?.finalY ?? 75;
+    const y = lastY + gap;
+    const pageH = doc.internal.pageSize.getHeight();
+    if (y > pageH - bottomMargin - reserve) {
+      doc.addPage();
+      return topOnNewPage;
     }
+    return y;
+  };
 
-    doc.setFontSize(16);
-    doc.text(`Luminaria asociada · Ticket ${folio}`, 40, 40);
-    doc.setFontSize(10);
-    doc.text(`Generado: ${this.formatDate(new Date())}`, 40, 58);
+  // Normaliza anchos: respeta mínimos y ancho útil, sin rebasar margen
+  const normalizeColumnWidths = (
+    contentW: number,
+    percents: number[], // deben sumar ~1.0
+    mins: number[],
+    expandTo: number[] // índices que pueden crecer si sobra (p.ej. [3,4])
+  ): number[] => {
+    // Paso 1: base por porcentaje
+    let w = percents.map(p => p * contentW);
+    // Paso 2: aplica mínimos
+    w = w.map((val, i) => Math.max(val, mins[i]));
+    // Paso 3: si se pasa, recorta proporcionalmente solo lo que excede de su mínimo
+    let sum = w.reduce((a, b) => a + b, 0);
+    if (sum > contentW) {
+      let overflow = sum - contentW;
+      // capacidad de reducción por columna
+      const caps = w.map((val, i) => Math.max(0, val - mins[i]));
+      let totalCap = caps.reduce((a, b) => a + b, 0);
 
-    // --------- Datos básicos ----------
-    const statusId =
-      typeof lum.statusId === 'string'
-        ? lum.statusId
-        : (lum.statusId as any)?._id;
-
-    const statusLabel = await this.resolveStatusNameById(statusId);
-
-    const latTxt = lum.location?.lat != null ? String(lum.location.lat) : '—';
-    const lngTxt = lum.location?.lng != null ? String(lum.location.lng) : '—';
-
-    autoTable(doc, {
-      startY: 75,
-      head: [['Datos de luminaria', '']],
-      body: [
-        ['Código', lum.code ?? '—'],
-        ['Tipo', lum.type ?? '—'],
-        ['Potencia (W)', lum.power != null ? String(lum.power) : '—'],
-        ['Voltaje (V)', lum.voltage != null ? String(lum.voltage) : '—'],
-        ['Altura de poste (m)', lum.poleHeight != null ? String(lum.poleHeight) : '—'],
-        ['Ubicación (lat, lng)', `${latTxt}, ${lngTxt}`],
-        ['Estado', statusLabel],
-        ['Instalada el', lum.installationDate ? this.formatDate(lum.installationDate) : '—'],
-        ['Creada el', lum.createdAt ? this.formatDate(lum.createdAt) : '—'],
-        ['Actualizada el', lum.updatedAt ? this.formatDate(lum.updatedAt) : '—'],
-      ],
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [255, 193, 7] }
-    });
-
-    // Antes de autoTable de mantenimientos:
-    const maint = Array.isArray(lum.maintenances) ? lum.maintenances : [];
-    const uniqueStatusIds = Array.from(new Set([
-      statusId,
-      ...maint.map(m => m.resolvedStatusId).filter(Boolean) as string[],
-    ])).filter(Boolean) as string[];
-
-    await Promise.all(uniqueStatusIds.map(id => this.resolveStatusNameById(id)));
-    const bodyRows = await Promise.all(
-      maint.slice(0, 10).map(async (m, i) => {
-        const dateTxt = m?.date ? this.formatDate(m.date) : '—';
-        const cuadrillaTxt = m?.cuadrillaId || '—'; // TODO opcional: resolver a nombre de cuadrilla
-        const descTxt = m?.description || '—';
-        const obsTxt = m?.observations || '—';
-        const materialsTxt = Array.isArray(m?.materialsUsed) && m.materialsUsed.length
-          ? m.materialsUsed.join(', ')
-          : '—';
-        const resolvedStatusTxt = await this.resolveStatusNameById(m?.resolvedStatusId);
-
-        return [
-          String(i + 1),
-          dateTxt,
-          cuadrillaTxt,
-          descTxt,
-          obsTxt,
-          materialsTxt,
-          resolvedStatusTxt,
-        ];
-      })
-    );
-
-    autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 16,
-      head: [[
-        '#',
-        'Fecha',
-        'Cuadrilla',
-        'Descripción',
-        'Observaciones',
-        'Materiales usados',
-        'Estatus resuelto'
-      ]],
-      body: bodyRows.length ? bodyRows : [['—', '—', '—', '—', '—', '—', '—']],
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [76, 175, 80] },
-      margin: { left: 40, right: 40 }
-    });
-
-
-
-    // Pie de página
-    doc.setFontSize(9);
-    const pages = doc.getNumberOfPages();
-    for (let p = 1; p <= pages; p++) {
-      doc.setPage(p);
-      const w = doc.internal.pageSize.getWidth();
-      doc.text(
-        `Ticket ${folio} · Luminaria ${lum.code || lum._id || ''}`,
-        w - 40,
-        doc.internal.pageSize.getHeight() - 20,
-        { align: 'right' }
-      );
+      if (totalCap > 0) {
+        // reduce proporcionalmente respetando mínimos
+        w = w.map((val, i) => {
+          if (caps[i] === 0) return val;
+          const cut = overflow * (caps[i] / totalCap);
+          const newVal = Math.max(mins[i], val - cut);
+          return newVal;
+        });
+        // ajuste fino por redondeos
+        sum = w.reduce((a, b) => a + b, 0);
+        const diff = sum - contentW;
+        if (Math.abs(diff) > 0.5) {
+          // corrige en la última columna "flexible"
+          const lastFlex = caps.lastIndexOf(Math.max(...caps));
+          if (lastFlex >= 0) w[lastFlex] = Math.max(mins[lastFlex], w[lastFlex] - diff);
+        }
+      } else {
+        // no hay de dónde recortar: forzamos que la última columna quepa
+        w[w.length - 1] -= overflow;
+      }
+    } else if (sum < contentW && expandTo.length) {
+      // Paso 4: reparte sobrante a columnas largas (Descripción/Observaciones)
+      let leftover = contentW - sum;
+      const base = expandTo.map(i => w[i]);
+      const baseSum = base.reduce((a, b) => a + b, 0) || 1;
+      expandTo.forEach((i, idx) => {
+        const add = leftover * (w[i] / baseSum);
+        w[i] += add;
+      });
     }
+    // Redondeo estable y ajuste final para que sumen EXACTO contentW
+    w = w.map(v => Math.round(v)); // enteros
+    let finalSum = w.reduce((a, b) => a + b, 0);
+    if (finalSum !== contentW) {
+      // corrige en la última columna grande (Observaciones si existe)
+      const prefer = expandTo.length ? expandTo[expandTo.length - 1] : (w.length - 1);
+      w[prefer] = Math.max(mins[prefer], w[prefer] + (contentW - finalSum));
+    }
+    return w;
+  };
 
+  const { jsPDF } = await import('jspdf');
+  const autoTable = (await import('jspdf-autotable')).default;
+
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const folio = this.reportForm.get('folio')?.value || 'Sin folio';
+  const lumId: string | null = this.reportForm.get('luminaria')?.value || null;
+
+  const lum: Luminaria | undefined = this.getLuminariaById(lumId || undefined);
+  if (!lum) {
+    doc.setFontSize(14);
+    doc.text(`No se encontró la luminaria asociada al Ticket ${folio}`, 40, 60);
     doc.save(`Luminaria_${folio}.pdf`);
+    return;
   }
+
+  // Header
+  doc.setFontSize(16);
+  doc.text(`Luminaria asociada · Ticket ${folio}`, 40, 40);
+  doc.setFontSize(10);
+  doc.text(`Generado: ${this.formatDate(new Date())}`, 40, 58);
+
+  // --------- Datos básicos ----------
+  const statusId = typeof lum.statusId === 'string' ? lum.statusId : (lum.statusId as any)?._id;
+  const statusLabel = await this.resolveStatusNameById(statusId);
+  const latTxt = lum.location?.lat != null ? String(lum.location.lat) : '—';
+  const lngTxt = lum.location?.lng != null ? String(lum.location.lng) : '—';
+
+  autoTable(doc, {
+    startY: 75,
+    head: [['Datos de luminaria', '']],
+    body: [
+      ['Código', lum.code ?? '—'],
+      ['Tipo', lum.type ?? '—'],
+      ['Potencia (W)', lum.power != null ? String(lum.power) : '—'],
+      ['Voltaje (V)', lum.voltage != null ? String(lum.voltage) : '—'],
+      ['Altura de poste (m)', lum.poleHeight != null ? String(lum.poleHeight) : '—'],
+      ['Ubicación (lat, lng)', `${latTxt}, ${lngTxt}`],
+      ['Estado', statusLabel],
+      ['Instalada el', lum.installationDate ? this.formatDate(lum.installationDate) : '—'],
+      ['Creada el', lum.createdAt ? this.formatDate(lum.createdAt) : '—'],
+      ['Actualizada el', lum.updatedAt ? this.formatDate(lum.updatedAt) : '—'],
+    ],
+    styles: { fontSize: 10 },
+    headStyles: { fillColor: [255, 193, 7] },
+    margin: { left: 40, right: 40, top: 40, bottom: 60 }
+  });
+
+  // --------- Historial de mantenimientos ----------
+  const maint = Array.isArray(lum.maintenances) ? lum.maintenances.slice() : [];
+  maint.sort((a, b) => {
+    const da = a?.date ? new Date(a.date).getTime() : 0;
+    const db = b?.date ? new Date(b.date).getTime() : 0;
+    return db - da;
+  });
+
+  const uniqueStatusIds = Array.from(new Set([statusId, ...maint.map(m => m?.resolvedStatusId).filter(Boolean) as string[]].filter(Boolean))) as string[];
+  await Promise.all(uniqueStatusIds.map(id => this.resolveStatusNameById(id)));
+
+  const totalMaint = maint.length;
+  const lastMaintDate = totalMaint ? maint[0]?.date ?? null : null;
+  const daysSinceLast = daysBetween(lastMaintDate || null, new Date());
+
+  autoTable(doc, {
+    startY: nextAutoTableY(doc, 12, 60),
+    head: [['Resumen histórico', '']],
+    body: [
+      ['Total de mantenimientos', String(totalMaint)],
+      ['Última falla/mantenimiento', lastMaintDate ? this.formatDate(lastMaintDate) : '—'],
+      ['Días desde la última atención', typeof daysSinceLast === 'number' ? String(daysSinceLast) : '—'],
+    ],
+    styles: { fontSize: 10 },
+    headStyles: { fillColor: [66, 165, 245] },
+    margin: { left: 40, right: 40, top: 40, bottom: 60 }
+  });
+
+
+const hardWrapLongTokens = (s: string, max = 28): string => {
+  if (!s) return '';
+  // asegura separadores después de comas para ayudar al wrap
+  const spaced = s.replace(/,\s*/g, ', ');
+  // inserta ZWSP dentro de runs largos sin espacios ni guiones
+  return spaced.replace(new RegExp(`([^\\s-]{${max}})`, 'g'), '$1\u200B');
+};
+  const bodyRows = await Promise.all(
+    maint.map(async (m, i) => {
+      const dateTxt = m?.date ? this.formatDate(m.date) : '—';
+      const cuadrillaTxt = m?.cuadrillaId || '—';
+      const descTxt = m?.description || '—';
+      const obsTxt = m?.observations || '—';
+      const materialsTxt = Array.isArray(m?.materialsUsed) && m.materialsUsed.length ? m.materialsUsed.join(', ') : '—';
+      const resolvedStatusTxt = await this.resolveStatusNameById(m?.resolvedStatusId);
+      return [String(i + 1), dateTxt, cuadrillaTxt, descTxt, obsTxt, materialsTxt, resolvedStatusTxt];
+    })
+  );
+// --------- Tabla de mantenimientos (ancho normalizado + wrap fuerte por ZWSP) ----------
+{
+  const pageW = doc.internal.pageSize.getWidth();
+  const left = 40, right = 40;
+  const contentW = Math.round(pageW - left - right);
+
+  //   0:#, 1:Fecha, 2:Cuadrilla, 3:Descripción, 4:Observaciones, 5:Materiales, 6:Estatus
+  const P = [0.045, 0.11, 0.11, 0.25, 0.23, 0.16, 0.095];
+  const mins = [22, 60, 60, 120, 110, 90, 72];
+  const growCols = [3, 4, 5];
+
+  const colW = normalizeColumnWidths(contentW, P, mins, growCols);
+
+  autoTable(doc, {
+    startY: nextAutoTableY(doc, 16, 160),
+    head: [[ '#', 'Fecha', 'Cuadrilla', 'Descripción', 'Observaciones', 'Materiales usados', 'Estatus resuelto' ]],
+    body: bodyRows.length ? bodyRows : [['—', '—', '—', '—', '—', '—', '—']],
+    margin: { left, right, top: 40, bottom: 60 },
+    tableWidth: contentW,
+    styles: {
+      fontSize: 9,
+      cellPadding: { top: 3, right: 3, bottom: 3, left: 3 },
+      overflow: 'linebreak', // con los \u200B ya puede romper tokens largos
+      halign: 'left',
+      valign: 'top'
+    },
+    headStyles: {
+      fillColor: [76, 175, 80],
+      fontStyle: 'bold',
+      halign: 'left',
+      cellPadding: { top: 4, right: 3, bottom: 4, left: 3 }
+    },
+    columnStyles: {
+      0: { cellWidth: colW[0], halign: 'center' },
+      1: { cellWidth: colW[1], halign: 'center' },
+      2: { cellWidth: colW[2] },
+      3: { cellWidth: colW[3], overflow: 'linebreak' },
+      4: { cellWidth: colW[4], overflow: 'linebreak' },
+      5: { cellWidth: colW[5], overflow: 'linebreak' },
+      6: { cellWidth: colW[6] }
+    },
+    rowPageBreak: 'avoid',
+    pageBreak: 'auto'
+  });
+}
+
+
+
+  // Footer paginado
+  doc.setFontSize(9);
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p);
+    const w = doc.internal.pageSize.getWidth();
+    doc.text(
+      `Ticket ${folio} · Luminaria ${lum.code || lum._id || ''}  ·  Página ${p} de ${pages}`,
+      w - 40,
+      doc.internal.pageSize.getHeight() - 20,
+      { align: 'right' }
+    );
+  }
+
+  doc.save(`Luminaria_${folio}.pdf`);
+}
+
+
+
+
   // ---------- Google Maps ----------
   private buildFormArrayFromObjects(items: any[]): FormArray {
     return this.fb.array(
@@ -958,6 +1204,59 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
     this.reportForm.setControl('areaAssignments', this.buildFormArrayFromObjects(ticket.areaAssignments || []));
     this.reportForm.setControl('crewAssignments', this.buildFormArrayFromObjects(ticket.crewAssignments || []));
     this.reportForm.setControl('tracking', this.buildFormArrayFromObjects(ticket.tracking || []));
+    // --- Resolver cuadrilla asignada (última) y supervisor ---
+try {
+  const lastCrew = this.getCurrentCrewAssignment(); // ya tienes este helper
+  const crewId: string | undefined = lastCrew?.cuadrilla;
+  if (crewId) {
+    this.ticketsService.getCuadrillaById(crewId).subscribe({
+      next: (resp) => {
+        console.log(resp)
+        if (resp?.ok && resp.cuadrilla) {
+          this.currentCuadrilla.set(resp.cuadrilla);
+
+          // supervisor puede venir poblado como objeto; si viniera como id, caemos a getUserById
+          const sup = resp.cuadrilla.supervisor as any;
+          if (sup && typeof sup === 'object' && sup._id) {
+            this.currentSupervisor.set(sup as User);
+          } else if (typeof sup === 'string') {
+            this.ticketsService.getUserById(sup).subscribe({
+              next: (usr: any) => {
+                const supervisor: User = {
+                  _id: usr?._id,
+                  name: usr?.name,
+                  first_lastname: usr?.first_lastname,
+                  second_lastname: usr?.second_lastname,
+                  email: usr?.email,
+                  phone: usr?.phone
+                };
+                this.currentSupervisor.set(supervisor);
+              },
+              error: () => this.currentSupervisor.set(null)
+            });
+          } else {
+            this.currentSupervisor.set(null);
+          }
+        } else {
+          this.currentCuadrilla.set(null);
+          this.currentSupervisor.set(null);
+        }
+      },
+      error: () => {
+        this.currentCuadrilla.set(null);
+        this.currentSupervisor.set(null);
+      }
+    });
+  } else {
+    this.currentCuadrilla.set(null);
+    this.currentSupervisor.set(null);
+  }
+} catch {
+  this.currentCuadrilla.set(null);
+  this.currentSupervisor.set(null);
+}
+
+
     if (ticket.images?.length > 0) {
       const firstImage = ticket.images?.[0];
       if (typeof firstImage === 'string') {
@@ -1081,21 +1380,6 @@ protected verifyResolved(): void {
   });
 }
 
-protected reopenFromAttention(): void {
-  const ticketId = this.reportForm.get('_id')?.value;
-  if (!ticketId) return;
-  const citizenComment = (window.prompt('Motivo de reapertura:', '') || '').trim();
 
-  this.ticketsService.verifyCitizen({ ticketId, resolved: false, citizenComment }).subscribe({
-    next: (resp) => {
-      this.ticketsService.setTicket(resp.ticket);
-      this.patchFormWithTicket(resp.ticket);
-      this.dialog.open(SuccessDialog, {
-        data: { folio: resp.ticket?.folio, isUpdate: true, message: 'Ticket reabierto.' }
-      });
-    },
-    error: (err) => console.error('Error al reabrir:', err)
-  });
-}
 
 }

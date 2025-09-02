@@ -221,4 +221,10 @@ assignAreaStrict(ticketId: string, areaId: string, comment?: string) {
       rejectionReason
     });
   }
+  getCuadrillaById(id: string) {
+  return this.http.post<{ ok: boolean; cuadrilla: Cuadrilla }>(
+    `${this.coreService.URI_API}cuadrillas/getById`,
+    { id }
+  );
+}
 }

@@ -36,7 +36,7 @@
         <mat-icon>picture_as_pdf</mat-icon>
         Generar Orden - PDF
       </button>
-      <!-- Cierre técnico (supervisor) -->
+
       @if (canTechClose()) {
       <button mat-stroked-button color="primary" type="button" (click)="closeAsSupervisor()">
         <mat-icon>build_circle</mat-icon>
@@ -44,7 +44,6 @@
       </button>
       }
 
-      <!-- Enviar a atención (si ya hubo cierre técnico) -->
       @if (canSendToAttention()) {
       <button mat-stroked-button color="accent" type="button" (click)="sendTicketToAttention()">
         <mat-icon>outgoing_mail</mat-icon>
@@ -52,27 +51,27 @@
       </button>
       }
 
-      <!-- Verificación final por atención -->
       @if (canVerifyWithCitizen()) {
       <button mat-stroked-button color="primary" type="button" (click)="verifyResolved()">
         <mat-icon>verified</mat-icon>
         Confirmar resuelto
       </button>
+      }
 
-      <button mat-stroked-button color="warn" type="button" (click)="reopenFromAttention()">
+      @if (canReopen()) {
+      <button mat-raised-button color="warn" (click)="reopenFromAttention()">
         <mat-icon>restart_alt</mat-icon>
         Reabrir
       </button>
       }
-
     </div>
   </div>
   }
 
-  <!-- TIMELINE + COMENTARIOS -->
+  <!-- TIMELINE + COLUMNA DERECHA (2 filas: cuadrilla auto, comentario 1fr) -->
   @if (ticketFound) {
   <div class="timeline-comments-grid">
-    <!-- TIMELINE -->
+    <!-- TIMELINE (columna izquierda) -->
     <section class="form-section timeline">
       <h2 class="section-title"><mat-icon>track_changes</mat-icon>Seguimiento del Ticket</h2>
       <div class="timeline">
@@ -81,11 +80,11 @@
           <div class="timeline-marker">
             <mat-icon>
               @switch (item.event) {
-              @case ('creación') { add_circle }
-              @case ('Asignación de área') { groups }
-              @case ('Asignación de cuadrilla') { engineering }
-              @case ('Actualización') { edit }
-              @default { info }
+                @case ('creación') { add_circle }
+                @case ('Asignación de área') { groups }
+                @case ('Asignación de cuadrilla') { engineering }
+                @case ('Actualización') { edit }
+                @default { info }
               }
             </mat-icon>
           </div>
@@ -111,21 +110,82 @@
       </div>
     </section>
 
-    <!-- COMENTARIOS -->
-    <section class="form-section">
-      <h2 class="section-title"><mat-icon>comment</mat-icon>Agregar Comentario</h2>
-      <form [formGroup]="commentForm" (ngSubmit)="submitComment()" class="comment-form">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Comentario</mat-label>
-          <textarea matInput formControlName="description" rows="3"></textarea>
-        </mat-form-field>
-        <div class="full-width align-end">
-          <button mat-raised-button color="primary" type="submit" [disabled]="!commentForm.valid">
-            <mat-icon>send</mat-icon> Enviar Comentario
-          </button>
-        </div>
-      </form>
-    </section>
+    <!-- COLUMNA DERECHA: 2 filas -->
+    <div class="right-stack">
+      <!-- Fila 1 (auto): Cuadrilla asignada -->
+      @if (currentCuadrilla(); as crew) {
+      <section class="form-section crew-section">
+        <h2 class="section-title"><mat-icon>engineering</mat-icon>Cuadrilla asignada</h2>
+        <mat-card class="glass-container">
+          <mat-card-content>
+            <div class="form-grid">
+              <div>
+                <strong>Nombre de cuadrilla</strong><br>
+                <span>{{ crew.name }}</span>
+              </div>
+
+              <div>
+                <strong>Área</strong><br>
+                <span>{{ displayArea(crew.area) }}</span>
+              </div>
+
+              <div>
+                <strong>Turno</strong><br>
+                <span>{{ displayShift(crew.shift) }}</span>
+              </div>
+
+              <div>
+                <strong>Disponible</strong><br>
+                <span>{{ crew.available ? 'Sí' : 'No' }}</span>
+              </div>
+
+              <div class="full-width">
+                <strong>Supervisor</strong><br>
+                <span>
+                  @if (currentSupervisor(); as sup) {
+                    {{
+                      (sup.name || '')
+                      + (sup.first_lastname ? ' ' + sup.first_lastname : '')
+                      + (sup.second_lastname ? ' ' + sup.second_lastname : '')
+                    }}
+                    @if (sup.phone) { · {{ sup.phone }} }
+                    @if (sup.email) { · {{ sup.email }} }
+                  } @else { — }
+                </span>
+              </div>
+
+              <div class="full-width">
+                <strong>Integrantes</strong><br>
+                <span>
+                  @if (crew.members && crew.members.length > 0) {
+                    @for (m of crew.members; let i = $index; track i) {
+                      <span class="member-chip">{{ displayMemberName(m) }}</span>
+                    }
+                  } @else { — }
+                </span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </section>
+      }
+
+      <!-- Fila 2 (1fr): Agregar comentario (ocupa el resto) -->
+      <section class="form-section comment-section">
+        <h2 class="section-title"><mat-icon>comment</mat-icon>Agregar Comentario</h2>
+        <form [formGroup]="commentForm" (ngSubmit)="submitComment()" class="comment-form">
+          <mat-form-field appearance="outline" class="full-width fill-height">
+            <mat-label>Comentario</mat-label>
+            <textarea matInput formControlName="description" class="grow-textarea"></textarea>
+          </mat-form-field>
+          <div class="full-width align-end">
+            <button mat-raised-button color="primary" type="submit" [disabled]="!commentForm.valid">
+              <mat-icon>send</mat-icon> Enviar Comentario
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
   </div>
   }
 
@@ -179,28 +239,17 @@
                 <mat-icon>map</mat-icon> Seleccionar en Mapa
               </button>
               <div class="form-grid">
-                <mat-form-field appearance="outline"><mat-label>Calle</mat-label><input matInput
-                    formControlName="street" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>No. exterior</mat-label><input matInput
-                    formControlName="extNumber" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>No. interior</mat-label><input matInput
-                    formControlName="intNumber" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Entre calles</mat-label><input matInput
-                    formControlName="crossStreets" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Colonia / Barrio</mat-label><input matInput
-                    formControlName="neighborhood" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Municipio</mat-label><input matInput
-                    formControlName="locality" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Ciudad</mat-label><input matInput
-                    formControlName="city" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Estado</mat-label><input matInput
-                    formControlName="state" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Código Postal</mat-label><input matInput
-                    formControlName="postalCode" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>País</mat-label><input matInput
-                    formControlName="country" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Referencias</mat-label><input matInput
-                    formControlName="references" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Calle</mat-label><input matInput formControlName="street" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>No. exterior</mat-label><input matInput formControlName="extNumber" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>No. interior</mat-label><input matInput formControlName="intNumber" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Entre calles</mat-label><input matInput formControlName="crossStreets" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Colonia / Barrio</mat-label><input matInput formControlName="neighborhood" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Municipio</mat-label><input matInput formControlName="locality" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Ciudad</mat-label><input matInput formControlName="city" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Estado</mat-label><input matInput formControlName="state" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Código Postal</mat-label><input matInput formControlName="postalCode" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>País</mat-label><input matInput formControlName="country" /></mat-form-field>
+                <mat-form-field appearance="outline"><mat-label>Referencias</mat-label><input matInput formControlName="references" /></mat-form-field>
               </div>
             </div>
             }
