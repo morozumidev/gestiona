@@ -1,0 +1,58 @@
+.users-container {
+  display: grid;
+  gap: 16px;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.toolbar .title {
+  font-size: 22px;
+  font-weight: 700;
+}
+.toolbar .spacer {
+  flex: 1 1 auto;
+}
+.filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr)) auto;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+.table-wrapper {
+  padding: 8px;
+  border-radius: 16px;
+  overflow: auto;
+}
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.sort {
+  opacity: 0.2;
+  vertical-align: middle;
+}
+.sort.active {
+  opacity: 1;
+}
+.name {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.lastname {
+  color: #888;
+}
+.loading {
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+}
+.glass {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}

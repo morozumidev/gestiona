@@ -1,0 +1,69 @@
+@if (viewReady()) {
+  <mat-card class="glass">
+    <mat-card-header>
+      <mat-card-title>{{ title() }}</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="form" class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Primer apellido</mat-label>
+          <input matInput formControlName="first_lastname" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Segundo apellido</mat-label>
+          <input matInput formControlName="second_lastname" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Correo</mat-label>
+          <input matInput formControlName="email" type="email" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Teléfono</mat-label>
+          <input matInput formControlName="phone" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>groups</mat-icon>
+          <mat-label>Seleccionar Rol</mat-label>
+          <mat-select formControlName="role">
+            @for (role of roles(); track role._id) {
+              <mat-option [value]="role._id">{{ role.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-icon matPrefix>groups</mat-icon>
+          <mat-label>Seleccionar Área</mat-label>
+          <mat-select formControlName="area">
+            @for (area of areas(); track area._id) {
+              <mat-option [value]="area._id">{{ area.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>{{ isCreating() ? 'Contraseña' : 'Nueva contraseña (opcional)' }}</mat-label>
+          <input matInput type="password" formControlName="password" />
+        </mat-form-field>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-stroked-button routerLink="/users">Cancelar</button>
+      <button mat-flat-button color="primary" (click)="save()" [disabled]="loading()">
+        <mat-icon>save</mat-icon>
+        Guardar
+      </button>
+    </mat-card-actions>
+  </mat-card>
+}

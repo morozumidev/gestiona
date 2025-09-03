@@ -54,6 +54,7 @@ import { Status } from '../../../models/Status';
 import { Maintenance } from '../../../models/Maintenance';
 import { Cuadrilla } from '../../../models/Cuadrilla';
 import { User } from '../../../models/User';
+import { UserService } from '../../../services/user-service';
 
 /// <reference types="google.maps" />
 declare const google: any;
@@ -76,6 +77,7 @@ declare const google: any;
 })
 export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   private readonly authService = inject(AuthService);
+  private readonly userService = inject(UserService);
   private readonly ticketsService = inject(TicketsService);
   private readonly zone = inject(NgZone);
 
@@ -219,7 +221,7 @@ protected trackByMember = (_: number, m: unknown) =>
     if (this.userCache.has(userId)) return this.userCache.get(userId)!;
 
     try {
-      const user = await firstValueFrom(this.ticketsService.getUserById(userId));
+      const user = await firstValueFrom(this.userService.getById(userId));
       const fullName = [user.name, user.first_lastname, user.second_lastname].filter(Boolean).join(' ');
       this.userCache.set(userId, fullName || 'Usuario desconocido');
       return this.userCache.get(userId)!;
@@ -765,13 +767,7 @@ private async generateLuminariaPdf(): Promise<void> {
   });
 
 
-const hardWrapLongTokens = (s: string, max = 28): string => {
-  if (!s) return '';
-  // asegura separadores después de comas para ayudar al wrap
-  const spaced = s.replace(/,\s*/g, ', ');
-  // inserta ZWSP dentro de runs largos sin espacios ni guiones
-  return spaced.replace(new RegExp(`([^\\s-]{${max}})`, 'g'), '$1\u200B');
-};
+
   const bodyRows = await Promise.all(
     maint.map(async (m, i) => {
       const dateTxt = m?.date ? this.formatDate(m.date) : '—';
@@ -1220,7 +1216,7 @@ try {
           if (sup && typeof sup === 'object' && sup._id) {
             this.currentSupervisor.set(sup as User);
           } else if (typeof sup === 'string') {
-            this.ticketsService.getUserById(sup).subscribe({
+            this.userService.getById(sup).subscribe({
               next: (usr: any) => {
                 const supervisor: User = {
                   _id: usr?._id,

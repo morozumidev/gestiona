@@ -29,6 +29,7 @@ import { Cuadrilla } from '../../../models/Cuadrilla';
 
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Subject, forkJoin } from 'rxjs';
+import { UserService } from '../../../services/user-service';
 
 type SortableTicketField = keyof Ticket | 'area' | 'cuadrilla' | 'semaforo';
 type TicketStage = 'tech' | 'area' | 'attention' | 'closed';
@@ -61,7 +62,7 @@ export class Tickets {
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   protected readonly authService = inject(AuthService);
-
+protected readonly userService = inject(UserService);
   readonly ticketsSignal = signal<Ticket[]>([]);
   readonly filterStatus = signal('Todos');
   readonly searchTerm = signal('');
@@ -607,7 +608,6 @@ export class Tickets {
         this.totalTickets.set(response.total);
         this.ticketStatusCounts.set(response.statusCounts);
         this.ticketSemaforoCounts.set(response.semaforoCounts);
-        console.log('Tickets cargados:', response.data);
       },
       error: (err) => {
         console.error('Error inesperado al cargar tickets:', err);
@@ -812,7 +812,7 @@ export class Tickets {
     const latestRejection = this.getLatestRejection(ticket);
     if (!latestRejection) return;
 
-    this.ticketsService.getUserById(latestRejection.rejectedBy!).subscribe({
+    this.userService.getById(latestRejection.rejectedBy!).subscribe({
       next: (user) => {
         const fullName = user
           ? `${user.name} ${user.first_lastname} ${user.second_lastname}`

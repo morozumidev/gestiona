@@ -1,0 +1,134 @@
+<div class="users-container">
+  <div class="toolbar">
+    <div class="title">Usuarios</div>
+    <div class="spacer"></div>
+    <button mat-button color="primary" (click)="newUser()">
+      <mat-icon>person_add</mat-icon>
+      Nuevo
+    </button>
+  </div>
+
+  <div class="filters glass">
+    <mat-form-field appearance="outline">
+      <mat-label>Buscar</mat-label>
+      <input
+        matInput
+        [formControl]="filtersForm.controls.search"
+        (keyup.enter)="page.set(1)"
+        placeholder="Nombre, correo, teléfono"
+      />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-icon matPrefix>groups</mat-icon>
+      <mat-label>Seleccionar Rol</mat-label>
+      <mat-select [formControl]="filtersForm.controls.role">
+        <mat-option [value]="">Todos los roles</mat-option>
+        @for (role of roles(); track role._id) {
+          <mat-option [value]="role.name">{{ role.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-icon matPrefix>groups</mat-icon>
+      <mat-label>Seleccionar Área</mat-label>
+      <mat-select [formControl]="filtersForm.controls.area">
+        <mat-option [value]="">Todas las áreas</mat-option>
+        @for (area of areas(); track area._id) {
+          <mat-option [value]="area._id">{{ area.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-button (click)="clearFilters()">
+      <mat-icon>filter_alt_off</mat-icon>
+      Limpiar
+    </button>
+  </div>
+
+  <div class="table-wrapper glass">
+    <table mat-table [dataSource]="items()">
+      <!-- Nombre -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef (click)="onSort('name')" class="sortable">
+          Nombre
+          <mat-icon class="sort" [class.active]="sortField() === 'name'">
+            {{ sortDirection() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+          </mat-icon>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <div class="name">
+            {{ row.name }}
+            @if (row.first_lastname || row.second_lastname) {
+              <span class="lastname">
+                {{ (row.first_lastname || '') + ' ' + (row.second_lastname || '') }}
+              </span>
+            }
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Correo -->
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef (click)="onSort('email')" class="sortable">Correo</th>
+        <td mat-cell *matCellDef="let row">{{ row.email }}</td>
+      </ng-container>
+
+      <!-- Rol -->
+      <ng-container matColumnDef="role">
+        <th mat-header-cell *matHeaderCellDef (click)="onSort('role')" class="sortable">Rol</th>
+        <td mat-cell *matCellDef="let row">
+          <mat-chip
+            appearance="outlined"
+          >
+            {{row.role.name}}
+          </mat-chip>
+        </td>
+      </ng-container>
+
+      <!-- Área -->
+      <ng-container matColumnDef="area">
+        <th mat-header-cell *matHeaderCellDef>Área</th>
+        <td mat-cell *matCellDef="let row">
+          {{row.area.name||'Sin área'}}
+        </td>
+      </ng-container>
+
+      <!-- Acciones -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let row">
+          <button mat-icon-button matTooltip="Editar" (click)="editUser(row)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Eliminar" (click)="deleteUser(row)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+
+    @if (!loading() && items().length === 0) {
+      <div class="empty-state">Sin resultados</div>
+    }
+
+    <mat-paginator
+      [length]="total()"
+      [pageIndex]="page() - 1"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[5, 10, 25, 50]"
+      (page)="onPage($event)"
+    >
+    </mat-paginator>
+  </div>
+
+  @if (loading()) {
+    <div class="loading glass">
+      Cargando...
+    </div>
+  }
+</div>

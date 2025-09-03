@@ -8,9 +8,9 @@ import { Area } from '../models/Area';
 import { TicketStatus } from '../models/TicketStatus';
 import { Cuadrilla } from '../models/Cuadrilla';
 import { Observable } from 'rxjs/internal/Observable';
-import { User } from '../models/User';
 import { TicketTracking } from '../models/TicketTracking';
 import { Status } from '../models/Status';
+import { Role } from '../models/Role';
 // 👉 Coloca estos tipos junto con tus imports de modelos
 export interface TicketActionResponse {
   message: string;
@@ -182,6 +182,10 @@ assignAreaStrict(ticketId: string, areaId: string, comment?: string) {
     return this.http.post<Area[]>(this.coreService.URI_API + 'tickets/getAreas', {});
   }
 
+  getRoles() {
+    return this.http.post<Role[]>(this.coreService.URI_API + 'catalogs/roles', {});
+  }
+
   getLuminarias() {
     return this.http.post<Luminaria[]>(this.coreService.URI_API + 'tickets/getLuminarias', {});
   }
@@ -198,9 +202,7 @@ assignAreaStrict(ticketId: string, areaId: string, comment?: string) {
     return this.http.post<TicketStatus[]>(this.coreService.URI_API + 'tickets/getTicketStatuses', {});
   }
 
-  getUserById(_id: string): Observable<User> {
-    return this.http.post<User>(this.coreService.URI_API + 'users/getUserById', { _id });
-  }
+
 
   getCuadrillas(areaId?: string) {
     return this.http.post<Cuadrilla[]>(`${this.coreService.URI_API}catalogs/cuadrillas`, { areaId });

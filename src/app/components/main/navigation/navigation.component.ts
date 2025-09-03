@@ -68,6 +68,7 @@ export class NavigationComponent {
     ],
     admin: [
       { icon: 'dashboard', label: 'Dashboard', route: '/tickets' },
+      { icon: 'contacts_product', label: 'Usuarios', route: '/users-list' },
       { icon: 'model_training', label: 'Alumbrado', route: '/dashboard-alumbrado' },
       { icon: 'engineering', label: 'Mantenimiento Urban', route: '/tickets' },
       { icon: 'recycling', label: 'Limpia Pública', route: '/tickets' },
