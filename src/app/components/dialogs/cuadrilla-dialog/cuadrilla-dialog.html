@@ -1,0 +1,86 @@
+<h2 mat-dialog-title>
+  @if (isEdit()) { Editar cuadrilla } @else { Nueva cuadrilla }
+</h2>
+
+<div mat-dialog-content class="content">
+  <form [formGroup]="form" class="grid">
+
+    <!-- Nombre -->
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" />
+      <mat-error>
+        @if (form.controls.name.hasError('required')) { Requerido }
+        @else { @if (form.controls.name.hasError('minlength')) { Mínimo 2 caracteres } }
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Turno (1º) -->
+    <mat-form-field appearance="outline">
+      <mat-label>Turno</mat-label>
+      <mat-select formControlName="shift">
+        <mat-option [value]="null">—</mat-option>
+        @for (t of (turnosList() ); track t._id) {
+          <mat-option [value]="t._id">{{ t.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Área (2º) deshabilitado hasta elegir turno -->
+    <mat-form-field appearance="outline">
+      <mat-label>Área</mat-label>
+      <mat-select formControlName="area" >
+        @for (a of (areasList() ); track a._id) {
+          <mat-option [value]="a._id">{{ a.name }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>@if (!shiftId()) { Selecciona un turno primero }</mat-hint>
+      <mat-error>Requerida</mat-error>
+    </mat-form-field>
+
+    <!-- Supervisor (3º) solo supervisores del área y no ocupados -->
+    <mat-form-field appearance="outline">
+      <mat-label>Supervisor</mat-label>
+      <mat-select formControlName="supervisor" >
+        @for (u of (supervisors() ); track u._id) {
+          <mat-option [value]="u._id">
+            {{ u.name }} {{ u.first_lastname }} {{ u.second_lastname }}
+          </mat-option>
+        }
+      </mat-select>
+      <mat-hint>@if (!areaId()) { Selecciona un área primero }</mat-hint>
+      <mat-error>Requerido</mat-error>
+    </mat-form-field>
+
+    <!-- Miembros (4º) del área y libres -->
+    <mat-form-field appearance="outline" class="members">
+      <mat-label>Miembros</mat-label>
+      <mat-select formControlName="members" multiple >
+        @for (u of (availableMembers() ); track u._id) {
+          <mat-option [value]="u._id">
+            {{ u.name }} {{ u.first_lastname }} {{ u.second_lastname }}
+          </mat-option>
+        }
+      </mat-select>
+      <mat-hint>
+        Deben pertenecer al área seleccionada y no estar en otra cuadrilla.
+        El supervisor se agrega automáticamente si no está.
+      </mat-hint>
+      <mat-error>Requerido</mat-error>
+    </mat-form-field>
+
+    <!-- Disponible -->
+    <div class="available">
+      <button type="button" mat-stroked-button color="primary" (click)="toggleAvailable()">
+        <mat-icon>{{ form.value.available ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+        {{ form.value.available ? 'Disponible' : 'No disponible' }}
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="save()">Guardar</button>
+</div>

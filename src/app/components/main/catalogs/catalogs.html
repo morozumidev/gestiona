@@ -1,0 +1,99 @@
+<section class="toolbar glass-container">
+  <div class="left">
+    <mat-form-field appearance="outline">
+      <mat-label>Type</mat-label>
+      <mat-select [formControl]="filtersForm.controls.type" (selectionChange)="page.set(1); fetch()">
+        <mat-option value="">Todos</mat-option>
+        @for (t of types(); track t) {
+          <mat-option [value]="t">{{ t }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Activo</mat-label>
+      <mat-select [formControl]="filtersForm.controls.active" (selectionChange)="page.set(1); fetch()">
+        <mat-option value="">Todos</mat-option>
+        <mat-option value="true">Sí</mat-option>
+        <mat-option value="false">No</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="search">
+      <mat-label>Buscar</mat-label>
+      <input matInput [formControl]="filtersForm.controls.search" (keyup.escape)="clearSearch()" placeholder="key/label/description" />
+      @if (filtersForm.value.search) {
+        <button mat-icon-button matSuffix aria-label="clear" (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </mat-form-field>
+  </div>
+
+  <div class="right">
+    <button mat-stroked-button (click)="saveOrder()">
+      <mat-icon>save</mat-icon> Guardar orden
+    </button>
+    <button mat-flat-button color="primary" (click)="new()">
+      <mat-icon>add</mat-icon> Nuevo
+    </button>
+  </div>
+</section>
+
+<section class="table glass-container">
+  <table mat-table [dataSource]="rows()" matSort (matSortChange)="sortChange($event)" matSortDisableClear>
+    <!-- Orden -->
+    <ng-container matColumnDef="order">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="order">Orden</th>
+      <td mat-cell *matCellDef="let row">
+        <input matInput type="number" [(ngModel)]="row.order" style="width:80px" />
+      </td>
+    </ng-container>
+
+    <!-- Type -->
+    <ng-container matColumnDef="type">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="type">Type</th>
+      <td mat-cell *matCellDef="let row">{{ row.type }}</td>
+    </ng-container>
+
+    <!-- Key -->
+    <ng-container matColumnDef="key">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="key">Key</th>
+      <td mat-cell *matCellDef="let row">{{ row.key }}</td>
+    </ng-container>
+
+    <!-- Label -->
+    <ng-container matColumnDef="label">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="label">Label</th>
+      <td mat-cell *matCellDef="let row">{{ row.label }}</td>
+    </ng-container>
+
+    <!-- Active -->
+    <ng-container matColumnDef="active">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="active">Activo</th>
+      <td mat-cell *matCellDef="let row">
+        <mat-slide-toggle [checked]="row.active" (change)="toggleActive(row)"></mat-slide-toggle>
+      </td>
+    </ng-container>
+
+    <!-- Actions -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>Acciones</th>
+      <td mat-cell *matCellDef="let row">
+        <button mat-icon-button (click)="edit(row)"><mat-icon>edit</mat-icon></button>
+        <button mat-icon-button color="warn" (click)="remove(row)"><mat-icon>delete</mat-icon></button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+
+  <mat-paginator [length]="total()" [pageSize]="pageSize()" [pageIndex]="page()-1"
+                 [pageSizeOptions]="[10,20,50,100]" (page)="paginatorChange($event)">
+  </mat-paginator>
+
+  @if (loading()) {
+    <div class="skeleton">Cargando…</div>
+  }
+</section>

@@ -1,0 +1,54 @@
+<h2 mat-dialog-title>
+  @if (data.mode === 'create') { Nuevo rol } @else { Editar rol }
+</h2>
+
+<div mat-dialog-content class="dialog-content">
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" maxlength="60" />
+      @if (form.controls.name.touched && form.controls.name.invalid) {
+        <mat-error>Nombre requerido (mínimo 3 caracteres)</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>Descripción</mat-label>
+      <input matInput formControlName="description" maxlength="140" />
+    </mat-form-field>
+
+    <div class="chips-row">
+      <mat-form-field appearance="outline" class="flex-1">
+        <mat-label>Agregar permiso</mat-label>
+        <input matInput formControlName="permissionInput" (keyup.enter)="addPermissionFromInput()" placeholder="p. ej., read:user" />
+      </mat-form-field>
+      <button mat-flat-button type="button" (click)="addPermissionFromInput()">
+        <mat-icon>add</mat-icon>
+        Agregar
+      </button>
+    </div>
+
+    <mat-chip-set aria-label="Permisos">
+      @for (perm of (form.value.permissions || []); track perm) {
+        <mat-chip (removed)="removePermission(perm)">
+          {{ perm }}
+          <button matChipRemove type="button" aria-label="Quitar permiso">
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </mat-chip>
+      }
+      @if (!(form.value.permissions?.length)) {
+        <span class="muted">Sin permisos</span>
+      }
+    </mat-chip-set>
+  </form>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="close()" [disabled]="saving()">Cancelar</button>
+  <button mat-flat-button color="primary" type="button" (click)="submit()" [disabled]="saving()">
+    @if (saving()) { Guardando... } @else {
+      @if (data.mode === 'create') { Crear } @else { Guardar }
+    }
+  </button>
+</div>

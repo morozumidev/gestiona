@@ -1,0 +1,128 @@
+<section class="cuadrillas glass-container">
+
+  <header class="toolbar">
+    <div class="left">
+      <button mat-raised-button color="primary" (click)="create()">
+        <mat-icon>group_add</mat-icon> Nueva cuadrilla
+      </button>
+    </div>
+
+    <div class="right">
+      <mat-form-field appearance="outline" class="search">
+        <mat-label>Buscar por nombre</mat-label>
+        <input matInput [formControl]="searchCtrl" placeholder="Ej. guardia nocturna">
+        <button mat-icon-button matSuffix (click)="clearSearch()" *ngIf="search()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <!-- Filtro: disponibilidad (sin spreads en template) -->
+      <mat-form-field appearance="outline" class="filter">
+        <mat-label>Disponibilidad</mat-label>
+        <mat-select
+          [value]="filters().available ?? null"
+          (selectionChange)="setAvailableFilter($event.value)">
+          <mat-option [value]="null">Todas</mat-option>
+          <mat-option [value]="true">Disponibles</mat-option>
+          <mat-option [value]="false">No disponibles</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </header>
+
+  <div class="table-wrapper">
+    <table mat-table [dataSource]="rows()">
+
+      <!-- Nombre -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>
+          <button mat-button (click)="setSort('name')">
+            Nombre
+            <mat-icon>
+              @if (sort().field === 'name') { {{ sort().dir === 'asc' ? 'arrow_upward' : 'arrow_downward' }} }
+            </mat-icon>
+          </button>
+        </th>
+        <td mat-cell *matCellDef="let r">{{ r.name }}</td>
+      </ng-container>
+
+      <!-- Área -->
+      <ng-container matColumnDef="area">
+        <th mat-header-cell *matHeaderCellDef>Área</th>
+        <td mat-cell *matCellDef="let r">{{ r.area?.name }}</td>
+      </ng-container>
+
+      <!-- Turno -->
+      <ng-container matColumnDef="shift">
+        <th mat-header-cell *matHeaderCellDef>Turno</th>
+        <td mat-cell *matCellDef="let r">{{ r.shift?.name || '—' }}</td>
+      </ng-container>
+
+      <!-- Supervisor -->
+      <ng-container matColumnDef="supervisor">
+        <th mat-header-cell *matHeaderCellDef>Supervisor</th>
+        <td mat-cell *matCellDef="let r">
+          {{ r.supervisor?.name }} {{ r.supervisor?.first_lastname }} {{ r.supervisor?.second_lastname }}
+        </td>
+      </ng-container>
+
+      <!-- Miembros -->
+      <ng-container matColumnDef="membersCount">
+        <th mat-header-cell *matHeaderCellDef>Miembros</th>
+        <td mat-cell *matCellDef="let r">
+          <mat-chip-set>
+            <mat-chip>{{ r.members?.length ?? 0 }}</mat-chip>
+          </mat-chip-set>
+        </td>
+      </ng-container>
+
+      <!-- Disponible -->
+      <ng-container matColumnDef="available">
+        <th mat-header-cell *matHeaderCellDef>
+          <button mat-button (click)="setSort('available')">
+            Disponible
+            <mat-icon>
+              @if (sort().field === 'available') { {{ sort().dir === 'asc' ? 'arrow_upward' : 'arrow_downward' }} }
+            </mat-icon>
+          </button>
+        </th>
+        <td mat-cell *matCellDef="let r">
+          <button mat-stroked-button [color]="r.available ? 'primary' : 'warn'" (click)="toggle(r)">
+            <mat-icon>{{ r.available ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+            {{ r.available ? 'Sí' : 'No' }}
+          </button>
+        </td>
+      </ng-container>
+
+      <!-- Creado -->
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef>Creado</th>
+        <td mat-cell *matCellDef="let r">{{ r.createdAt | date:'short' }}</td>
+      </ng-container>
+
+      <!-- Acciones -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let r">
+          <button mat-icon-button color="primary" (click)="edit(r)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button color="warn" (click)="remove(r)"><mat-icon>delete</mat-icon></button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+      <tr class="empty" *matNoDataRow>
+        <td [attr.colspan]="displayedColumns.length">Sin resultados</td>
+      </tr>
+    </table>
+  </div>
+
+  <mat-paginator
+    [length]="total()"
+    [pageIndex]="page()-1"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="[5,10,20,50]"
+    (page)="paginatorChange($event)">
+  </mat-paginator>
+</section>

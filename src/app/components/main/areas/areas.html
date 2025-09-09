@@ -1,0 +1,131 @@
+<div class="areas-admin">
+  <!-- Tarjetas resumen (glass) -->
+  <div class="areas-summary glass-container">
+    <div class="areas-card total" (click)="page.set(1)">
+      <mat-icon class="areas-icon">corporate_fare</mat-icon>
+      <div class="areas-title">Total de áreas</div>
+      <div class="areas-count">{{ total() }}</div>
+    </div>
+
+    <div class="areas-card filtered">
+      <mat-icon class="areas-icon">filter_alt</mat-icon>
+      <div class="areas-title">En esta vista</div>
+      <div class="areas-count">{{ rows().length }}</div>
+    </div>
+
+    <div class="areas-card action" (click)="create()">
+      <mat-icon class="areas-icon">add_circle</mat-icon>
+      <div class="areas-title">Nueva área</div>
+      <div class="areas-count">Crear</div>
+    </div>
+  </div>
+
+  <!-- Barra de búsqueda (glass) -->
+  <section class="search-bar glass-container">
+    <div class="search-wrapper">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input
+        type="text"
+        class="search-input"
+        [formControl]="searchCtrl"
+        placeholder="Buscar áreas..." />
+      @if (searchCtrl.value) {
+        <button mat-icon-button matTooltip="Limpiar" (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- Tabla glass con skeleton y header sticky -->
+  <div class="table-fluid glass-container" [class.loading]="loading()">
+    @if (loading()) {
+      <div class="skeleton">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line short"></div>
+      </div>
+    }
+
+    <table mat-table [dataSource]="rows()" aria-label="Tabla de áreas">
+      <!-- Nombre -->
+      <ng-container matColumnDef="name">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          (click)="sortBy('name')"
+          class="sortable-header"
+          [attr.data-sort-indicator]="getSortIndicator('name')">
+          <mat-icon>badge</mat-icon>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <span class="badge area-badge">{{ row.name }}</span>
+        </td>
+      </ng-container>
+
+      <!-- createdAt -->
+      <ng-container matColumnDef="createdAt">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          (click)="sortBy('createdAt')"
+          class="sortable-header"
+          [attr.data-sort-indicator]="getSortIndicator('createdAt')">
+          <mat-icon>calendar_add_on</mat-icon>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <span class="badge badge-fecha">{{ row.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </td>
+      </ng-container>
+
+      <!-- updatedAt -->
+      <ng-container matColumnDef="updatedAt">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          (click)="sortBy('updatedAt')"
+          class="sortable-header"
+          [attr.data-sort-indicator]="getSortIndicator('updatedAt')">
+          <mat-icon>event_repeat</mat-icon>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <span class="badge badge-fecha">{{ row.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </td>
+      </ng-container>
+
+      <!-- actions -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-icon>table_edit</mat-icon>
+        </th>
+        <td mat-cell *matCellDef="let row" class="right">
+          <button mat-icon-button color="primary" matTooltip="Editar" (click)="edit(row)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" matTooltip="Eliminar" (click)="remove(row)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <!-- Header/rows -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns" class="sticky-header-row"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      <!-- ÚNICA fila sin datos -->
+      <tr class="empty" *matNoDataRow>
+        <td [attr.colspan]="displayedColumns.length">Sin resultados</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Paginador -->
+  <mat-paginator
+    [length]="total()"
+    [pageIndex]="page() - 1"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="[5,10,20,50]"
+    showFirstLastButtons
+    (page)="onPage($event)">
+  </mat-paginator>
+</div>

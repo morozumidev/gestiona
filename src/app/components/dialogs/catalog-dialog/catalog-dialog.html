@@ -1,0 +1,48 @@
+<h2 mat-dialog-title>@if (data.mode === 'create') { Nuevo catálogo } @else { Editar catálogo }</h2>
+
+<div mat-dialog-content>
+  <form [formGroup]="form" class="form-grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Type</mat-label>
+      <mat-select formControlName="type">
+        @for (t of data.types; track t) {
+          <mat-option [value]="t">{{ t }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Key</mat-label>
+      <input matInput formControlName="key" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Label</mat-label>
+      <input matInput formControlName="label" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Descripción</mat-label>
+      <textarea matInput rows="3" formControlName="description"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="span-2">
+      <mat-label>Metadata (JSON)</mat-label>
+      <textarea matInput rows="8" formControlName="metadataText" spellcheck="false"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Orden</mat-label>
+      <input matInput type="number" formControlName="order" />
+    </mat-form-field>
+
+    <mat-slide-toggle formControlName="active">Activo</mat-slide-toggle>
+  </form>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="close()" [disabled]="busy()">Cancelar</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="busy() || form.invalid">
+    @if (data.mode === 'create') { Crear } @else { Guardar }
+  </button>
+</div>

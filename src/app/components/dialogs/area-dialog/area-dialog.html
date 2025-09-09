@@ -1,0 +1,18 @@
+<h2 mat-dialog-title>{{ data.mode==='create' ? 'Nueva área' : 'Editar área' }}</h2>
+    <form [formGroup]="form" class="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline" class="w100">
+        <mat-label>Nombre</mat-label>
+        <input matInput formControlName="name" maxlength="60" />
+        <mat-hint align="end">{{ form.controls.name.value || 0 }}/60</mat-hint>
+        @if (form.controls.name.invalid && (form.controls.name.dirty || form.controls.name.touched)) {
+          <mat-error>Nombre requerido (3-60)</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="actions">
+        <button mat-button type="button" (click)="close()">Cancelar</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || loading()">
+          {{ data.mode==='create' ? 'Crear' : 'Guardar' }}
+        </button>
+      </div>
+    </form>

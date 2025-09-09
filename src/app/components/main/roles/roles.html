@@ -1,0 +1,119 @@
+<!-- Tarjetas resumen (glass) -->
+<section class="roles-summary glass-container">
+  <div class="roles-card total" (click)="page.set(1)">
+    <mat-icon class="roles-icon">shield</mat-icon>
+    <div class="roles-title">Total de roles</div>
+    <div class="roles-count">{{ total() }}</div>
+  </div>
+
+  <div class="roles-card filtered">
+    <mat-icon class="roles-icon">filter_alt</mat-icon>
+    <div class="roles-title">En esta vista</div>
+    <div class="roles-count">{{ rows().length }}</div>
+  </div>
+
+  <div class="roles-card action" (click)="create()">
+    <mat-icon class="roles-icon">add_circle</mat-icon>
+    <div class="roles-title">Nuevo rol</div>
+    <div class="roles-count">Crear</div>
+  </div>
+</section>
+
+<!-- Barra de búsqueda (glass) -->
+<section class="search-bar glass-container">
+  <div class="search-wrapper">
+    <mat-icon class="search-icon">search</mat-icon>
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Buscar rol</mat-label>
+      <input matInput [formControl]="searchCtrl" placeholder="Nombre, descripción o permiso" />
+    </mat-form-field>
+  </div>
+</section>
+
+<!-- Tabla de roles -->
+<section class="roles-table glass-container">
+  @if (loading()) {
+    <div class="skeleton-list">
+      @for (i of [1,2,3,4,5,6,7,8]; track i) {
+        <div class="skeleton-row"></div>
+      }
+    </div>
+  } @else {
+    @if (error()) {
+      <div class="error">{{ error() }}</div>
+    } @else {
+      <table mat-table [dataSource]="rows()" class="mat-elevation-z0">
+
+        <!-- Nombre -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef (click)="sortBy('name')" class="sortable">
+            Nombre
+            <mat-icon class="sort-icon">unfold_more</mat-icon>
+          </th>
+          <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+        </ng-container>
+
+        <!-- Descripción -->
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef (click)="sortBy('description')" class="sortable">
+            Descripción
+            <mat-icon class="sort-icon">unfold_more</mat-icon>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            {{ row.description || '—' }}
+          </td>
+        </ng-container>
+
+        <!-- Permisos -->
+        <ng-container matColumnDef="permissions">
+          <th mat-header-cell *matHeaderCellDef>Permisos</th>
+          <td mat-cell *matCellDef="let row">
+            <mat-chip-set aria-label="Permisos">
+              @for (perm of (row.permissions || []); track perm) {
+                <mat-chip>{{ perm }}</mat-chip>
+              }
+              @if (!(row.permissions?.length)) {
+                <span class="muted">Sin permisos</span>
+              }
+            </mat-chip-set>
+          </td>
+        </ng-container>
+
+        <!-- Acciones -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="right">Acciones</th>
+          <td mat-cell *matCellDef="let row" class="right">
+            <button mat-button (click)="edit(row)">
+              <mat-icon>edit</mat-icon> Editar
+            </button>
+            <button mat-button color="warn" (click)="remove(row)">
+              <mat-icon>delete</mat-icon> Eliminar
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="['name','description','permissions','actions']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['name','description','permissions','actions']"></tr>
+      </table>
+
+      <mat-paginator
+        [length]="total()"
+        [pageIndex]="page() - 1"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="[5,10,20,50]"
+        (page)="paginatorChange($event)">
+      </mat-paginator>
+
+      @if (!rows().length) {
+        <div class="empty-state">
+          <mat-icon>shield</mat-icon>
+          <p>No hay roles que coincidan con tu búsqueda.</p>
+          <button mat-stroked-button color="primary" (click)="create()">
+            <mat-icon>add</mat-icon>
+            Crear rol
+          </button>
+        </div>
+      }
+    }
+  }
+</section>

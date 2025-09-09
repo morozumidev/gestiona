@@ -168,7 +168,7 @@ export class UsersList {
   }
 
   newUser() {
-    this.router.navigate(['/users/new']);
+    this.router.navigate(['/user-form', 'new']);
   }
 
   editUser(u: User) {

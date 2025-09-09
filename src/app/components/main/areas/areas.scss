@@ -1,0 +1,263 @@
+@use '@angular/material' as mat;
+@use '../../../../global_variables' as *; // Debe contener $radius y @include glass-overlay
+
+/* ==========
+   LAYOUT
+   ========== */
+.areas-admin {
+  margin: 2rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+/* ==========
+   SUMMARY CARDS (estilo Tickets)
+   ========== */
+.areas-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+
+  .areas-card {
+    flex: 1 1 220px;
+    border-radius: $radius;
+    padding: 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    color: white;
+    @include glass-overlay;
+
+    &:hover { transform: scale(1.05); }
+
+    &.total {
+      .areas-icon { color: #ab47bc; }
+      .areas-title, .areas-count { color: #6a1b9a; }
+    }
+
+    &.filtered {
+      .areas-icon { color: #26a69a; }
+      .areas-title, .areas-count { color: #00796b; }
+    }
+
+    &.action {
+      cursor: pointer;
+      .areas-icon { color: #2e7d32; }
+      .areas-title, .areas-count { color: #1b5e20; }
+    }
+
+    .areas-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      transition: color 0.3s ease;
+    }
+
+    .areas-title {
+      font-weight: 700;
+      font-size: 1.2rem;
+      letter-spacing: 0.3px;
+    }
+
+    .areas-count {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-top: 0.25rem;
+      background-color: transparent;
+    }
+  }
+}
+
+/* ==========
+   SEARCH BAR (idéntica a Tickets)
+   ========== */
+.search-bar {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  margin-bottom: 1rem;
+
+  .search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 1.4rem;
+    border-radius: $radius;
+    width: 100%;
+    @include glass-overlay;
+    backdrop-filter: blur(16px);
+    transition: all 0.3s ease;
+
+    &:focus-within {
+      border: 1px solid rgba(var(--mat-sys-primary), 0.6);
+      box-shadow: 0 0 0 3px rgba(var(--mat-sys-secondary), 0.9);
+    }
+
+    .search-icon {
+      font-size: 1.6rem;
+      color: var(--mat-sys-primary);
+      transition: color 0.3s ease;
+    }
+
+    .search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--mat-sys-on-surface);
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+
+      &::placeholder {
+        color: var(--mat-sys-on-surface);
+        opacity: 0.6;
+        font-weight: 400;
+      }
+    }
+  }
+}
+
+/* ==========
+   BADGES (como Tickets)
+   ========== */
+.badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border-radius: 999px;
+  color: white;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  background-color: rgba(var(--mat-sys-secondary), .7);
+}
+
+.area-badge {
+  @extend .badge;
+  background-color: var(--mat-sys-surface-container-lowest);
+  font-weight: 600;
+  color: var(--mat-sys-neutral10);
+  text-transform: none;
+}
+
+.badge-fecha {
+  @extend .badge;
+  background-color: var(--mat-sys-on-surface-variant);
+  color: var(--mat-sys-surface-container-lowest);
+  text-transform: none;
+  font-weight: 500;
+}
+
+/* ==========
+   TABLA GLASS (con header sticky)
+   ========== */
+.table-fluid {
+  position: relative;
+  border-radius: $radius;
+  @include glass-overlay;
+  padding: 1rem;
+
+  &.loading { pointer-events: none; opacity: .85; }
+
+  table {
+    background: transparent !important;
+    border: none !important;
+    width: 100%;
+
+    th, td {
+      background: transparent !important;
+      border: none !important;
+      color: var(--mat-sys-on-surface);
+      padding: 0.75rem 1rem;
+      vertical-align: middle;
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+}
+
+/* Indicadores de orden (como Tickets) */
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+
+  &[data-sort-indicator="asc"]::after,
+  &[data-sort-indicator="desc"]::after {
+
+    position: absolute;
+    right: .5rem;
+    font-size: .8rem;
+    opacity: .9;
+  }
+}
+
+/* Header sticky */
+.sticky-header-row {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: color-mix(in srgb, var(--mat-sys-surface) 70%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+/* Fila sin datos */
+tr.empty td {
+  text-align: center;
+  padding: 1rem;
+  color: rgba(0, 0, 0, .55);
+}
+
+/* ==========
+   SKELETON
+   ========== */
+.skeleton {
+  position: absolute;
+  inset: .5rem;
+  display: grid;
+  gap: .5rem;
+
+  .line {
+    height: 14px;
+    border-radius: 8px;
+    animation: shimmer 1.4s infinite;
+    background: linear-gradient(
+      to right,
+      rgba(0,0,0,.06) 8%,
+      rgba(0,0,0,.12) 18%,
+      rgba(0,0,0,.06) 33%
+    );
+    background-size: 120px 100%;
+  }
+
+  .short { width: 50%; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -120px 0 }
+  100% { background-position: 120px 0 }
+}
+
+/* ==========
+   UTILIDADES
+   ========== */
+.right { text-align: right; }
+
+.glass-container {
+  @include glass-overlay;
+  border-radius: $radius;
+}

@@ -67,17 +67,13 @@ export class NavigationComponent {
       },
     ],
     admin: [
-      { icon: 'dashboard', label: 'Dashboard', route: '/tickets' },
-      { icon: 'contacts_product', label: 'Usuarios', route: '/users-list' },
-      { icon: 'model_training', label: 'Alumbrado', route: '/dashboard-alumbrado' },
-      { icon: 'engineering', label: 'Mantenimiento Urban', route: '/tickets' },
-      { icon: 'recycling', label: 'Limpia Pública', route: '/tickets' },
-      { icon: 'table_chart_view', label: 'Reportes', route: '/tickets' },
-      { icon: 'currency_exchange', label: 'Cobro Municipal', route: '/tickets' },
-      { icon: 'holiday_village', label: 'Catastro', route: '/tickets' },
-      { icon: 'price_check', label: 'Predial', route: '/tickets' },
+      { icon: 'dashboard', label: 'Tickets', route: '/tickets' },
       { icon: 'add', label: 'Generar reporte', route: '/ticket' },
+      { icon: 'family_group', label: 'Áreas', route: '/areas' },
+      { icon: 'contacts_product', label: 'Usuarios', route: '/users-list' },
       { icon: 'lightbulb', label: 'Luminarias', route: '/luminarias' },
+      { icon: 'security', label: 'Roles', route: '/roles' },
+      { icon: 'clarify', label: 'Catálogos', route: '/catalogs' },
       {
         icon: 'gps_fixed',
         label: "Ver GPS's",
@@ -95,7 +91,7 @@ export class NavigationComponent {
       { icon: 'add', label: 'Generar reporte', route: '/ticket' },
 
     ],
-     funcionario: [
+    funcionario: [
       { icon: 'dashboard', label: 'Mis reportes', route: '/tickets' },
       { icon: 'add', label: 'Generar reporte', route: '/ticket' },
 

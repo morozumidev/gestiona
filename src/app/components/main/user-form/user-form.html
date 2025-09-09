@@ -59,7 +59,10 @@
     </mat-card-content>
 
     <mat-card-actions>
-      <button mat-stroked-button routerLink="/users">Cancelar</button>
+      <button mat-stroked-button routerLink="/users">
+        Cancelar
+      </button>
+
       <button mat-flat-button color="primary" (click)="save()" [disabled]="loading()">
         <mat-icon>save</mat-icon>
         Guardar

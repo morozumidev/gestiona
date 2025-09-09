@@ -10,6 +10,10 @@ import { TicketManagement } from './components/main/ticket/ticket';
 import { SuccessDialog } from './components/dialogs/success-dialog/success-dialog';
 import { UsersList } from './components/main/users-list/users-list';
 import { UserForm } from './components/main/user-form/user-form';
+import { Areas } from './components/main/areas/areas';
+import { Roles } from './components/main/roles/roles';
+import { Catalogs } from './components/main/catalogs/catalogs';
+import { Cuadrillas } from './components/main/cuadrillas/cuadrillas';
 
 export const routes: Routes = [
   // Redirección raíz
@@ -22,6 +26,36 @@ export const routes: Routes = [
   {
     path: 'tickets',
     component: Tickets,
+    canActivate: [canActivate],
+    data: { roles: ['ALL'] },
+  },
+  {
+    path: 'areas',
+    component: Areas,
+    canActivate: [canActivate],
+    data: { roles: ['ALL'] },
+  },
+   {
+    path: 'catalogs',
+    component: Catalogs,
+    canActivate: [canActivate],
+    data: { roles: ['ALL'] },
+  },
+     {
+    path: 'cuadrillas',
+    component: Cuadrillas,
+    canActivate: [canActivate],
+    data: { roles: ['ALL'] },
+  },
+  {
+    path: 'roles',
+    component: Roles,
+    canActivate: [canActivate],
+    data: { roles: ['ALL'] },
+  },
+  {
+    path: 'ticket',
+    component: TicketManagement,
     canActivate: [canActivate],
     data: { roles: ['ALL'] },
   },
@@ -63,6 +97,7 @@ export const routes: Routes = [
     canActivate: [canActivate],
     data: { roles: ['ALL'] },
   },
+
 
   // Fallback
   { path: '**', redirectTo: 'tickets' },

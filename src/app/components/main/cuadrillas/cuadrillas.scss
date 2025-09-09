@@ -1,0 +1,32 @@
+.cuadrillas {
+  display: grid;
+  gap: 1rem;
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .right {
+      display: flex;
+      gap: 0.75rem;
+      .search { width: 280px; }
+      .filter { width: 220px; }
+    }
+  }
+
+  .table-wrapper {
+    overflow: auto;
+    border-radius: 14px;
+    backdrop-filter: blur(8px);
+  }
+
+  table {
+    width: 100%;
+  }
+
+  tr.empty td {
+    text-align: center;
+    padding: 2rem;
+    color: #777;
+  }
+}
