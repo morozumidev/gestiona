@@ -18,7 +18,7 @@ export class CoreService {
     private readonly cookieService: CookieService,
     private readonly router: Router
   ) {
-    this.baseUrl = `https://${this.document.location.hostname}:3087/`;
+    this.baseUrl = `https://api-${this.document.location.hostname}/`;
     this.URI_API = `${this.baseUrl}api/`;
   }
 }

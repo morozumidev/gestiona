@@ -1,22 +1,24 @@
+// server.ts — detrás de Nginx (sin HTTPS en Node)
+import express, { type RequestHandler } from 'express';
 import {
   AngularNodeAppEngine,
   createNodeRequestHandler,
   isMainModule,
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
-import express from 'express';
-import { join } from 'node:path';
-import fs from 'fs';
-import https from 'https';
+import { fileURLToPath } from 'node:url';
+import { dirname, join, resolve } from 'node:path';
 
-const browserDistFolder = join(import.meta.dirname, '../browser');
+const __dirname = dirname(fileURLToPath(import.meta.url));         // ✅ en vez de import.meta.dirname
+const browserDistFolder = resolve(__dirname, '../browser');
+
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
-// Si en el futuro pones detrás de proxy, esto ayuda
+// si hay proxy (Nginx), confía en X-Forwarded-*
 app.set('trust proxy', true);
 
-// Archivos estáticos
+// estáticos del build
 app.use(
   express.static(browserDistFolder, {
     maxAge: '1y',
@@ -25,7 +27,7 @@ app.use(
   }),
 );
 
-// Angular SSR handler
+// SSR handler
 app.use((req, res, next) => {
   angularApp
     .handle(req)
@@ -35,16 +37,20 @@ app.use((req, res, next) => {
     .catch(next);
 });
 
-// Servidor HTTPS en 8787
-if (isMainModule(import.meta.url)) {
-  const httpsOptions = {
-    key: fs.readFileSync('certificate/key.pem'),
-    cert: fs.readFileSync('certificate/cert.pem'),
-  };
+// fallback por si alguna ruta no la toma el SSR
+const fallback: RequestHandler = (_req, res) => {
+  res.sendFile(join(browserDistFolder, 'index.html'));
+};
+app.use(fallback);
 
-  https.createServer(httpsOptions, app).listen(8787, '0.0.0.0', () => {
-    console.log('Servidor HTTPS activo en https://hcpboca.ddns.net:8787');
+// levanta en HTTP (Nginx hace el TLS)
+if (isMainModule(import.meta.url) || process.env['pm_id']) {
+  const port = Number(process.env['PORT'] ?? 7002);
+  const host = '0.0.0.0';
+  app.listen(port, host, () => {
+    console.log(`SSR listening on http://${host}:${port}`);
   });
 }
 
+// opcional: para integraciones
 export const reqHandler = createNodeRequestHandler(app);

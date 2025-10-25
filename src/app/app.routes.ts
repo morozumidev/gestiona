@@ -88,6 +88,7 @@ export const routes: Routes = [
     component: UserForm,
     canActivate: [canActivate],             // ← **FALTABA**: evita que renderice sin sesión al recargar
     data: { roles: ['admin'] },
+    
   },
 
   // (Opcional) Dejar navegación como ruta solo si la usas standalone
