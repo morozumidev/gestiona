@@ -3,7 +3,7 @@
 @use './app_theme-colors' as theme;
 
 // Definir color por defecto si no se ha definido antes
-$color: naranja !default;
+$color: negro !default;
 
 // Obtener la paleta personalizada completa (por ejemplo, 'negro')
 $primary-palette: theme.get-palette($color);
