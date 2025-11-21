@@ -1,4 +1,4 @@
-// Angular Core
+// gestiona/src/app/components/main/ticket/ticket.ts
 import {
   Component,
   AfterViewInit,

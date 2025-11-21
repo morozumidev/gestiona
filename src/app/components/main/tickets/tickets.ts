@@ -1,3 +1,4 @@
+// gestiona/src/app/components/main/tickets/tickets.ts
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -31,6 +32,10 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Subject, forkJoin } from 'rxjs';
 import { UserService } from '../../../services/user-service';
 
+// ✅ TIEMPO REAL
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { SocketService } from '../../../services/socket-service';
+
 type SortableTicketField = keyof Ticket | 'area' | 'cuadrilla' | 'semaforo';
 type TicketStage = 'tech' | 'area' | 'attention' | 'closed';
 
@@ -62,7 +67,11 @@ export class Tickets {
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   protected readonly authService = inject(AuthService);
-protected readonly userService = inject(UserService);
+  protected readonly userService = inject(UserService);
+
+  // ✅ realtime sockets
+  private readonly socketService = inject(SocketService);
+
   readonly ticketsSignal = signal<Ticket[]>([]);
   readonly filterStatus = signal('Todos');
   readonly searchTerm = signal('');
@@ -464,6 +473,44 @@ protected readonly userService = inject(UserService);
       .subscribe(value => {
         this.selectedArea.set(value);
       });
+
+    // ========================
+    // 🔥 TIEMPO REAL
+    // ========================
+    this.socketService.onTicketNew()
+      .pipe(takeUntilDestroyed())
+      .subscribe((ticket: Ticket) => {
+        if (!this.ticketPassesCurrentFilters(ticket)) return;
+
+        this.ticketsSignal.update(arr => [ticket, ...arr]);
+        this.totalTickets.update(t => t + 1);
+        this.bumpCountersFor(ticket);
+      });
+
+    this.socketService.onTicketUpdate()
+      .pipe(takeUntilDestroyed())
+      .subscribe((ticket: Ticket) => {
+        const prev = this.ticketsSignal().find(t => t._id === ticket._id);
+
+        this.ticketsSignal.update(arr =>
+          arr.map(t => (t._id === ticket._id ? ticket : t))
+        );
+
+        const nowPasses = this.ticketPassesCurrentFilters(ticket);
+        const prevPasses = prev ? this.ticketPassesCurrentFilters(prev) : false;
+
+        if (prev && prevPasses && !nowPasses) {
+          this.ticketsSignal.update(arr => arr.filter(t => t._id !== ticket._id));
+          this.totalTickets.update(t => Math.max(0, t - 1));
+        }
+
+        if (prev && !prevPasses && nowPasses) {
+          this.ticketsSignal.update(arr => [ticket, ...arr]);
+          this.totalTickets.update(t => t + 1);
+        }
+
+        this.recalcCountersLight(prev, ticket);
+      });
   }
 
   private buildFilters() {
@@ -508,6 +555,86 @@ protected readonly userService = inject(UserService);
 
     return filters;
   }
+
+  // ========================
+  // ✅ Helpers tiempo real
+  // ========================
+  private ticketPassesCurrentFilters(ticket: Ticket): boolean {
+    const filters = this.buildFilters();
+
+    for (const f of filters) {
+      const field = f.field;
+      const value = f.value;
+
+      if (field === 'status') {
+        if ((ticket as any).status !== value) return false;
+      } else if (field === 'semaforo') {
+        if ((ticket as any).semaforo !== value) return false;
+      } else if (field === 'createdBy') {
+        if ((ticket as any).createdBy !== value) return false;
+      } else if (field === 'problem') {
+        if ((ticket as any).problem !== value) return false;
+      } else if (field === 'activeArea') {
+        if ((ticket as any).activeArea !== value) return false;
+      } else if (field === 'createdAt') {
+        const createdAt = new Date((ticket as any).createdAt).getTime();
+        const gte = value?.$gte ? new Date(value.$gte).getTime() : null;
+        const lte = value?.$lte ? new Date(value.$lte).getTime() : null;
+        if (gte && createdAt < gte) return false;
+        if (lte && createdAt > lte) return false;
+      } else {
+        if ((ticket as any)[field] !== value) return false;
+      }
+    }
+
+    return true;
+  }
+
+  private bumpCountersFor(ticket: Ticket) {
+    const statusId = (ticket as any).status;
+    if (statusId) {
+      this.ticketStatusCounts.update(c => ({
+        ...c,
+        [statusId]: (c[statusId] ?? 0) + 1
+      }));
+    }
+
+    const sem = (ticket as any).semaforo as 'verde' | 'ambar' | 'rojo';
+    if (sem) {
+      this.ticketSemaforoCounts.update(c => ({
+        ...c,
+        [sem]: (c[sem] ?? 0) + 1
+      }));
+    }
+  }
+
+  private recalcCountersLight(prev: Ticket | undefined, next: Ticket) {
+    if (!prev) return;
+
+    const prevStatus = (prev as any).status;
+    const nextStatus = (next as any).status;
+
+    if (prevStatus !== nextStatus) {
+      this.ticketStatusCounts.update(c => ({
+        ...c,
+        [prevStatus]: Math.max(0, (c[prevStatus] ?? 1) - 1),
+        [nextStatus]: (c[nextStatus] ?? 0) + 1
+      }));
+    }
+
+    const prevSem = (prev as any).semaforo;
+    const nextSem = (next as any).semaforo;
+
+    if (prevSem !== nextSem && prevSem && nextSem) {
+      this.ticketSemaforoCounts.update(c => ({
+        ...c,
+        [prevSem]: Math.max(0, (c[prevSem] ?? 1) - 1),
+        [nextSem]: (c[nextSem] ?? 0) + 1
+      }));
+    }
+  }
+
+  // ========= Resto de lógica existente =========
 
   get isAdminOrAtencionOrFuncionario(): boolean {
     const role = this.authService.currentUser?.role?.name;

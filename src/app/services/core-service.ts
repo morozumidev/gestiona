@@ -1,3 +1,4 @@
+// gestiona/src/app/services/core-service.ts
 import { HttpClient } from '@angular/common/http';
 import { DOCUMENT, Inject, Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';

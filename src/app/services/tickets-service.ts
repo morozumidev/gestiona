@@ -1,3 +1,4 @@
+// gestiona/src/app/services/tickets-service.ts
 import { Injectable, Signal, signal } from '@angular/core';
 import { Ticket } from '../models/Ticket';
 import { HttpClient } from '@angular/common/http';

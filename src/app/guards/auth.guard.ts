@@ -1,3 +1,4 @@
+// gestiona/src/app/guards/auth.guard.ts
 import { inject } from '@angular/core';
 import {
   CanActivateFn,

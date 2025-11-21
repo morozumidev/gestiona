@@ -31,6 +31,7 @@
     "leaflet": "^1.9.4",
     "ngx-cookie-service": "^20.0.1",
     "rxjs": "~7.8.0",
+    "socket.io-client": "^4.8.1",
     "tslib": "^2.3.0"
   },
   "devDependencies": {

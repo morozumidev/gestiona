@@ -1,13 +1,14 @@
+<!-- gestiona/src/app/components/main/tickets/tickets.html -->
 <div class="ticket-admin">
   <div class="ticket-summary glass-container">
     @for (status of ticketStatuses(); track status._id) {
-      <div class="ticket-card" [attr.data-status]="status.cssClass" (click)="onCardClick(status._id!)">
-        <mat-icon class="ticket-icon">
-          {{ getStatusIcon(status.cssClass) }}
-        </mat-icon>
-        <div class="ticket-title">{{ status.name }}</div>
-        <div class="ticket-count">{{ countByStatus(status._id!) }}</div>
-      </div>
+    <div class="ticket-card" [attr.data-status]="status.cssClass" (click)="onCardClick(status._id!)">
+      <mat-icon class="ticket-icon">
+        {{ getStatusIcon(status.cssClass) }}
+      </mat-icon>
+      <div class="ticket-title">{{ status.name }}</div>
+      <div class="ticket-count">{{ countByStatus(status._id!) }}</div>
+    </div>
     }
 
     <div class="ticket-card total" (click)="onCardClick('Todos')">
@@ -45,15 +46,15 @@
 
   <div class="filter-row glass-container">
     @if (isAdminOrAtencion) {
-      <mat-form-field appearance="outline">
-        <mat-label>Área</mat-label>
-        <mat-select [formControl]="columnFilters.controls['area']" (selectionChange)="onColumnFilterChange()">
-          <mat-option value="">Todas</mat-option>
-          @for (a of areas(); track a._id) {
-            <mat-option [value]="a._id">{{ a.name }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Área</mat-label>
+      <mat-select [formControl]="columnFilters.controls['area']" (selectionChange)="onColumnFilterChange()">
+        <mat-option value="">Todas</mat-option>
+        @for (a of areas(); track a._id) {
+        <mat-option [value]="a._id">{{ a.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
     }
 
     <mat-form-field appearance="outline">
@@ -61,7 +62,7 @@
       <mat-select [formControl]="columnFilters.controls['problem']" (selectionChange)="onColumnFilterChange()">
         <mat-option value="">Todos</mat-option>
         @for (p of visibleProblems(); track p._id) {
-          <mat-option [value]="p._id">{{ p.name }}</mat-option>
+        <mat-option [value]="p._id">{{ p.name }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
@@ -81,7 +82,7 @@
       <mat-select [formControl]="columnFilters.controls['status']" (selectionChange)="onColumnFilterChange()">
         <mat-option value="">Todos</mat-option>
         @for (s of ticketStatuses(); track s._id) {
-          <mat-option [value]="s._id">{{ s.name }}</mat-option>
+        <mat-option [value]="s._id">{{ s.name }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
@@ -90,10 +91,7 @@
   <section class="search-bar glass-container">
     <div class="search-wrapper">
       <mat-icon class="search-icon">search</mat-icon>
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Buscar tickets..."
+      <input type="text" class="search-input" placeholder="Buscar tickets..."
         (input)="setSearch($any($event.target).value)" />
     </div>
   </section>
@@ -104,7 +102,7 @@
 
       <ng-container matColumnDef="folio">
         <th mat-header-cell *matHeaderCellDef (click)="sortBy('folio')" class="sortable-header"
-            [attr.data-sort-indicator]="getSortIndicator('folio')">
+          [attr.data-sort-indicator]="getSortIndicator('folio')">
           <mat-icon>pin</mat-icon>
         </th>
         <td mat-cell *matCellDef="let ticket">
@@ -114,7 +112,7 @@
 
       <ng-container matColumnDef="problem">
         <th mat-header-cell *matHeaderCellDef (click)="sortBy('problem')" class="sortable-header"
-            [attr.data-sort-indicator]="getSortIndicator('problem')">
+          [attr.data-sort-indicator]="getSortIndicator('problem')">
           <mat-icon>release_alert</mat-icon>
         </th>
         <td mat-cell *matCellDef="let ticket">
@@ -124,67 +122,63 @@
 
       <ng-container matColumnDef="area">
         <th mat-header-cell *matHeaderCellDef (click)="sortBy('area')" class="sortable-header"
-            [attr.data-sort-indicator]="getSortIndicator('area')">
+          [attr.data-sort-indicator]="getSortIndicator('area')">
           <mat-icon>corporate_fare</mat-icon>
         </th>
         <td mat-cell *matCellDef="let ticket">
           @if (ticket.areaAssignments?.length) {
-            <span class="badge area-badge">
-              {{ getAreaName(ticket.areaAssignments.at(-1)?.area) }}
-              <mat-icon
-                [ngClass]="getAreaStatusIconColor(ticket)"
-                [matTooltip]="getAreaStatusTooltip(ticket)"
-                class="area-status-icon">
-                {{ getAreaStatusIcon(ticket) }}
-              </mat-icon>
-            </span>
+          <span class="badge area-badge">
+            {{ getAreaName(ticket.areaAssignments.at(-1)?.area) }}
+            <mat-icon [ngClass]="getAreaStatusIconColor(ticket)" [matTooltip]="getAreaStatusTooltip(ticket)"
+              class="area-status-icon">
+              {{ getAreaStatusIcon(ticket) }}
+            </mat-icon>
+          </span>
           } @else {
-            @if (hasAreaRejection(ticket)) {
-              <span class="text-warn badge">Rechazado</span>
-              <button mat-icon-button [matTooltip]="'Ver detalles de rechazo'" (click)="openRejectionDialog(ticket)">
-                <mat-icon color="warn">info</mat-icon>
-              </button>
-            } @else {
-              <span class="badge area-badge">Sin asignar</span>
-            }
+          @if (hasAreaRejection(ticket)) {
+          <span class="text-warn badge">Rechazado</span>
+          <button mat-icon-button [matTooltip]="'Ver detalles de rechazo'" (click)="openRejectionDialog(ticket)">
+            <mat-icon color="warn">info</mat-icon>
+          </button>
+          } @else {
+          <span class="badge area-badge">Sin asignar</span>
+          }
           }
         </td>
       </ng-container>
 
       <ng-container matColumnDef="cuadrilla">
         <th mat-header-cell *matHeaderCellDef (click)="sortBy('cuadrilla')" class="sortable-header"
-            [attr.data-sort-indicator]="getSortIndicator('cuadrilla')">
+          [attr.data-sort-indicator]="getSortIndicator('cuadrilla')">
           <mat-icon>engineering</mat-icon>
         </th>
         <td mat-cell *matCellDef="let ticket">
           @if (getLastValidCrew(ticket)) {
-            <span class="badge crew-badge">
-              {{ getCuadrillaName(getLastValidCrew(ticket)?.cuadrilla) }}
-              <mat-icon
-                [ngClass]="getCrewStatusIconColor(ticket)"
-                [matTooltip]="getCrewStatusTooltip(ticket)"
-                class="crew-status-icon">
-                {{ getCrewStatusIcon(ticket) }}
-              </mat-icon>
-            </span>
+          <span class="badge crew-badge">
+            {{ getCuadrillaName(getLastValidCrew(ticket)?.cuadrilla) }}
+            <mat-icon [ngClass]="getCrewStatusIconColor(ticket)" [matTooltip]="getCrewStatusTooltip(ticket)"
+              class="crew-status-icon">
+              {{ getCrewStatusIcon(ticket) }}
+            </mat-icon>
+          </span>
           } @else {
-            @if (hasCrewRejection(ticket)) {
-              <span class="text-warn badge">
-                Rechazado
-                <button mat-icon-button [matTooltip]="'Ver detalles de rechazo'" (click)="openRejectionDialog(ticket)">
-                  <mat-icon color="warn">info</mat-icon>
-                </button>
-              </span>
-            } @else {
-              <span class="badge crew-badge">Sin asignar</span>
-            }
+          @if (hasCrewRejection(ticket)) {
+          <span class="text-warn badge">
+            Rechazado
+            <button mat-icon-button [matTooltip]="'Ver detalles de rechazo'" (click)="openRejectionDialog(ticket)">
+              <mat-icon color="warn">info</mat-icon>
+            </button>
+          </span>
+          } @else {
+          <span class="badge crew-badge">Sin asignar</span>
+          }
           }
         </td>
       </ng-container>
 
       <ng-container matColumnDef="createdAt">
         <th mat-header-cell *matHeaderCellDef (click)="sortBy('createdAt')" class="sortable-header"
-            [attr.data-sort-indicator]="getSortIndicator('createdAt')">
+          [attr.data-sort-indicator]="getSortIndicator('createdAt')">
           <mat-icon>calendar_check</mat-icon>
         </th>
         <td mat-cell *matCellDef="let ticket">
@@ -194,7 +188,7 @@
 
       <ng-container matColumnDef="updatedAt">
         <th mat-header-cell *matHeaderCellDef (click)="sortBy('updatedAt')" class="sortable-header"
-            [attr.data-sort-indicator]="getSortIndicator('updatedAt')">
+          [attr.data-sort-indicator]="getSortIndicator('updatedAt')">
           <mat-icon>event_repeat</mat-icon>
         </th>
         <td mat-cell *matCellDef="let ticket">
@@ -204,7 +198,7 @@
 
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef (click)="sortBy('status')" class="sortable-header"
-            [attr.data-sort-indicator]="getSortIndicator('status')">
+          [attr.data-sort-indicator]="getSortIndicator('status')">
           <mat-icon>flaky</mat-icon>
         </th>
         <td mat-cell *matCellDef="let ticket">
@@ -216,7 +210,7 @@
 
       <ng-container matColumnDef="semaforo">
         <th mat-header-cell *matHeaderCellDef (click)="sortBy('semaforo')" class="sortable-header"
-            [attr.data-sort-indicator]="getSortIndicator('semaforo')">
+          [attr.data-sort-indicator]="getSortIndicator('semaforo')">
           <mat-icon>traffic</mat-icon>
         </th>
         <td mat-cell *matCellDef="let ticket">
@@ -230,80 +224,80 @@
         </th>
         <td mat-cell *matCellDef="let ticket">
           @if (hasAnyMenuAction(ticket)) {
-            <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Más acciones" matTooltip="Acciones">
-              <mat-icon>more_vert</mat-icon>
+          <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Más acciones" matTooltip="Acciones">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="editTicket(ticket)">
+              <mat-icon>edit</mat-icon>
+              <span>Ver Ticket/Editar</span>
             </button>
 
-            <mat-menu #menu="matMenu">
-              <button mat-menu-item (click)="editTicket(ticket)">
-                <mat-icon>edit</mat-icon>
-                <span>Ver Ticket/Editar</span>
-              </button>
+            @if(isAdmin){
+            <button mat-menu-item (click)="deleteTicket(ticket._id)">
+              <mat-icon color="warn">delete</mat-icon>
+              <span>Eliminar</span>
+            </button>
+            }
 
-              @if(isAdmin){
-                <button mat-menu-item (click)="deleteTicket(ticket._id)">
-                  <mat-icon color="warn">delete</mat-icon>
-                  <span>Eliminar</span>
-                </button>
-              }
+            <!-- Asignar (dialog valida reglas internas) -->
+            @if (isAdminOrAtencionOrFuncionario) {
+            <button mat-menu-item (click)="openAssignmentDialog(ticket)">
+              <mat-icon>assignment_ind</mat-icon>
+              <span>Asignar</span>
+            </button>
+            }
 
-              <!-- Asignar (dialog valida reglas internas) -->
-              @if (isAdminOrAtencionOrFuncionario) {
-                <button mat-menu-item (click)="openAssignmentDialog(ticket)">
-                  <mat-icon>assignment_ind</mat-icon>
-                  <span>Asignar</span>
-                </button>
-              }
+            <!-- Responder asignación -->
+            @if (canRespondToTicket(ticket)) {
+            <button mat-menu-item (click)="respondToAssignment(ticket._id, true)">
+              <mat-icon color="primary">check</mat-icon>
+              <span>Aceptar</span>
+            </button>
 
-              <!-- Responder asignación -->
-              @if (canRespondToTicket(ticket)) {
-                <button mat-menu-item (click)="respondToAssignment(ticket._id, true)">
-                  <mat-icon color="primary">check</mat-icon>
-                  <span>Aceptar</span>
-                </button>
+            <button mat-menu-item (click)="respondToAssignment(ticket._id, false)">
+              <mat-icon color="warn">close</mat-icon>
+              <span>Rechazar</span>
+            </button>
+            }
 
-                <button mat-menu-item (click)="respondToAssignment(ticket._id, false)">
-                  <mat-icon color="warn">close</mat-icon>
-                  <span>Rechazar</span>
-                </button>
-              }
+            <!-- Cerrar por cuadrilla -->
+            @if (canTechClose(ticket)) {
+            <button mat-menu-item (click)="crewClose(ticket._id)">
+              <mat-icon>task_alt</mat-icon>
+              <span>Cerrar cuadrilla</span>
+            </button>
+            }
 
-              <!-- Cerrar por cuadrilla -->
-              @if (canTechClose(ticket)) {
-                <button mat-menu-item (click)="crewClose(ticket._id)">
-                  <mat-icon>task_alt</mat-icon>
-                  <span>Cerrar cuadrilla</span>
-                </button>
-              }
+            <!-- Enviar a atención (etapa área) -->
+            @if (canSendToAttention(ticket)) {
+            <button mat-menu-item (click)="sendToAttention(ticket._id)">
+              <mat-icon>support_agent</mat-icon>
+              <span>Enviar a atención</span>
+            </button>
+            }
 
-              <!-- Enviar a atención (etapa área) -->
-              @if (canSendToAttention(ticket)) {
-                <button mat-menu-item (click)="sendToAttention(ticket._id)">
-                  <mat-icon>support_agent</mat-icon>
-                  <span>Enviar a atención</span>
-                </button>
-              }
+            <!-- Verificar con ciudadano (etapa atención) -->
+            @if (canVerifyWithCitizen(ticket)) {
+            <button mat-menu-item (click)="verifyCitizen(ticket._id, true)">
+              <mat-icon>verified</mat-icon>
+              <span>Verificar ciudadano (resuelto)</span>
+            </button>
+            <button mat-menu-item (click)="verifyCitizen(ticket._id, false)">
+              <mat-icon>published_with_changes</mat-icon>
+              <span>Verificar ciudadano (no resuelto)</span>
+            </button>
+            }
 
-              <!-- Verificar con ciudadano (etapa atención) -->
-              @if (canVerifyWithCitizen(ticket)) {
-                <button mat-menu-item (click)="verifyCitizen(ticket._id, true)">
-                  <mat-icon>verified</mat-icon>
-                  <span>Verificar ciudadano (resuelto)</span>
-                </button>
-                <button mat-menu-item (click)="verifyCitizen(ticket._id, false)">
-                  <mat-icon>published_with_changes</mat-icon>
-                  <span>Verificar ciudadano (no resuelto)</span>
-                </button>
-              }
-
-              <!-- Reabrir (solo si está cerrado) -->
-              @if (canReopen(ticket)) {
-                <button mat-menu-item (click)="openReopenDialog(ticket)">
-                  <mat-icon>history_toggle_off</mat-icon>
-                  <span>Reabrir</span>
-                </button>
-              }
-            </mat-menu>
+            <!-- Reabrir (solo si está cerrado) -->
+            @if (canReopen(ticket)) {
+            <button mat-menu-item (click)="openReopenDialog(ticket)">
+              <mat-icon>history_toggle_off</mat-icon>
+              <span>Reabrir</span>
+            </button>
+            }
+          </mat-menu>
           }
         </td>
       </ng-container>
@@ -313,12 +307,7 @@
     </table>
   </div>
 
-  <mat-paginator
-    [length]="totalTickets()"
-    [pageSize]="pageSize()"
-    [pageIndex]="page() - 1"
-    [pageSizeOptions]="[5, 10, 15, 20]"
-    showFirstLastButtons
-    (page)="onPageChange($event)">
+  <mat-paginator [length]="totalTickets()" [pageSize]="pageSize()" [pageIndex]="page() - 1"
+    [pageSizeOptions]="[5, 10, 15, 20]" showFirstLastButtons (page)="onPageChange($event)">
   </mat-paginator>
 </div>
