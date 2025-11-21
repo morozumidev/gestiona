@@ -2,191 +2,204 @@
 
   <!-- HEADER: Folio + Usuario -->
   @if (ticketFound) {
-  <div class="ticket-header">
-    <div class="folio-block">
-      <mat-icon class="folio-icon">info</mat-icon>
-      <div class="folio-info">
-        <div class="label">Folio del Ticket</div>
-        <div class="value">{{ reportForm.get('folio')?.value || 'Sin folio' }}</div>
-      </div>
-    </div>
-
-    @if (createdByUser()) {
-    <div class="user-block">
-      <mat-icon class="user-icon">person</mat-icon>
-      <div class="user-info">
-        <div class="label">Creado por</div>
-        <div class="value">
-          {{
-          createdByUser()?.name
-          + (createdByUser()?.first_lastname ? ' ' + createdByUser()?.first_lastname : '')
-          + (createdByUser()?.second_lastname ? ' ' + createdByUser()?.second_lastname : '')
-          }}
-        </div>
-        <div class="meta">
-          {{ reportForm.get('phone')?.value }} · {{ createdByUser()?.email }}
+    <div class="ticket-header">
+      <div class="folio-block">
+        <mat-icon class="folio-icon">info</mat-icon>
+        <div class="folio-info">
+          <div class="label">Folio del Ticket</div>
+          <div class="value">{{ reportForm.get('folio')?.value || 'Sin folio' }}</div>
         </div>
       </div>
+
+      @if (createdByUser()) {
+        <div class="user-block">
+          <mat-icon class="user-icon">person</mat-icon>
+          <div class="user-info">
+            <div class="label">Creado por</div>
+            <div class="value">
+              {{
+                createdByUser()?.name
+                + (createdByUser()?.first_lastname ? ' ' + createdByUser()?.first_lastname : '')
+                + (createdByUser()?.second_lastname ? ' ' + createdByUser()?.second_lastname : '')
+              }}
+            </div>
+            <div class="meta">
+              {{ reportForm.get('phone')?.value }} · {{ createdByUser()?.email }}
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ACCIONES DEL HEADER -->
+      <div class="header-actions">
+        <button mat-stroked-button color="primary" type="button" (click)="generatePdfs()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          Generar Orden - PDF
+        </button>
+
+        @if (canTechClose()) {
+          <button mat-stroked-button color="primary" type="button" (click)="closeAsSupervisor()">
+            <mat-icon>build_circle</mat-icon>
+            Cerrar (cuadrilla)
+          </button>
+        }
+
+        @if (canSendToAttention()) {
+          <button mat-stroked-button color="accent" type="button" (click)="sendTicketToAttention()">
+            <mat-icon>outgoing_mail</mat-icon>
+            Enviar a atención
+          </button>
+        }
+
+        @if (canVerifyWithCitizen()) {
+          <button mat-stroked-button color="primary" type="button" (click)="verifyResolved()">
+            <mat-icon>verified</mat-icon>
+            Confirmar resuelto
+          </button>
+        }
+
+        @if (canReopen()) {
+          <button mat-raised-button color="warn" (click)="reopenFromAttention()">
+            <mat-icon>restart_alt</mat-icon>
+            Reabrir
+          </button>
+        }
+      </div>
     </div>
-    }
-
-    <!-- ACCIONES DEL HEADER -->
-    <div class="header-actions">
-      <button mat-stroked-button color="primary" type="button" (click)="generatePdfs()">
-        <mat-icon>picture_as_pdf</mat-icon>
-        Generar Orden - PDF
-      </button>
-
-      @if (canTechClose()) {
-      <button mat-stroked-button color="primary" type="button" (click)="closeAsSupervisor()">
-        <mat-icon>build_circle</mat-icon>
-        Cerrar (cuadrilla)
-      </button>
-      }
-
-      @if (canSendToAttention()) {
-      <button mat-stroked-button color="accent" type="button" (click)="sendTicketToAttention()">
-        <mat-icon>outgoing_mail</mat-icon>
-        Enviar a atención
-      </button>
-      }
-
-      @if (canVerifyWithCitizen()) {
-      <button mat-stroked-button color="primary" type="button" (click)="verifyResolved()">
-        <mat-icon>verified</mat-icon>
-        Confirmar resuelto
-      </button>
-      }
-
-      @if (canReopen()) {
-      <button mat-raised-button color="warn" (click)="reopenFromAttention()">
-        <mat-icon>restart_alt</mat-icon>
-        Reabrir
-      </button>
-      }
-    </div>
-  </div>
   }
 
   <!-- TIMELINE + COLUMNA DERECHA (2 filas: cuadrilla auto, comentario 1fr) -->
   @if (ticketFound) {
-  <div class="timeline-comments-grid">
-    <!-- TIMELINE (columna izquierda) -->
-    <section class="form-section timeline">
-      <h2 class="section-title"><mat-icon>track_changes</mat-icon>Seguimiento del Ticket</h2>
-      <div class="timeline">
-        @for (item of reportForm.get('tracking')?.value.slice().reverse() || []; let i = $index; track i) {
-        <div class="timeline-item">
-          <div class="timeline-marker">
-            <mat-icon>
-              @switch (item.event) {
-                @case ('creación') { add_circle }
-                @case ('Asignación de área') { groups }
-                @case ('Asignación de cuadrilla') { engineering }
-                @case ('Actualización') { edit }
-                @default { info }
-              }
-            </mat-icon>
-          </div>
-          <div class="timeline-content">
-            <div class="timeline-header">
-              <div class="user-info">
-                <mat-icon>person</mat-icon>
-                {{ item.user?.name || 'Desconocido' }}
+    <div class="timeline-comments-grid">
+      <!-- TIMELINE (columna izquierda) -->
+      <section class="form-section timeline">
+        <h2 class="section-title"><mat-icon>track_changes</mat-icon>Seguimiento del Ticket</h2>
+
+        <div class="timeline">
+          @for (item of reportForm.get('tracking')?.value.slice().reverse() || []; let i = $index; track i) {
+            <div class="timeline-item">
+              <div class="timeline-marker">
+                <mat-icon>
+                  @switch (item.event) {
+                    @case ('creación') { add_circle }
+                    @case ('Asignación de área') { groups }
+                    @case ('Asignación de cuadrilla') { engineering }
+                    @case ('Actualización') { edit }
+                    @default { info }
+                  }
+                </mat-icon>
               </div>
-              <span class="timeline-date">
-                {{ item.date ? (item.date | date:'dd MMM yyyy HH:mm') : 'Sin fecha' }}
-              </span>
+
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <div class="user-info">
+                    <mat-icon>person</mat-icon>
+                    {{ item.user?.name || 'Desconocido' }}
+                  </div>
+                  <span class="timeline-date">
+                    {{ item.date ? (item.date | date:'dd MMM yyyy HH:mm') : 'Sin fecha' }}
+                  </span>
+                </div>
+
+                <mat-card class="timeline-card">
+                  <mat-card-title class="status">
+                    {{ item.event || 'Evento desconocido' }}
+                  </mat-card-title>
+                  <mat-card-content>
+                    <p>{{ item.description || 'Sin descripción' }}</p>
+                  </mat-card-content>
+                </mat-card>
+              </div>
             </div>
-            <mat-card class="timeline-card">
-              <mat-card-title class="status">{{ item.event || 'Evento desconocido' }}</mat-card-title>
+          }
+        </div>
+      </section>
+
+      <!-- COLUMNA DERECHA: 2 filas -->
+      <div class="right-stack">
+
+        <!-- Fila 1 (auto): Cuadrilla asignada -->
+        @if (currentCuadrilla(); as crew) {
+          <section class="form-section crew-section">
+            <h2 class="section-title"><mat-icon>engineering</mat-icon>Cuadrilla asignada</h2>
+
+            <mat-card class="glass-container">
               <mat-card-content>
-                <p>{{ item.description || 'Sin descripción' }}</p>
+                <div class="form-grid">
+                  <div>
+                    <strong>Nombre de cuadrilla</strong><br>
+                    <span>{{ crew.name }}</span>
+                  </div>
+
+                  <div>
+                    <strong>Área</strong><br>
+                    <span>{{ displayArea(crew.area) }}</span>
+                  </div>
+
+                  <div>
+                    <strong>Turno</strong><br>
+                    <span>{{ displayShift(crew.shift) }}</span>
+                  </div>
+
+                  <div>
+                    <strong>Disponible</strong><br>
+                    <span>{{ crew.available ? 'Sí' : 'No' }}</span>
+                  </div>
+
+                  <div class="full-width">
+                    <strong>Supervisor</strong><br>
+                    <span>
+                      @if (currentSupervisor(); as sup) {
+                        {{
+                          (sup.name || '')
+                          + (sup.first_lastname ? ' ' + sup.first_lastname : '')
+                          + (sup.second_lastname ? ' ' + sup.second_lastname : '')
+                        }}
+                        @if (sup.phone) { · {{ sup.phone }} }
+                        @if (sup.email) { · {{ sup.email }} }
+                      } @else { — }
+                    </span>
+                  </div>
+
+                  <div class="full-width">
+                    <strong>Integrantes</strong><br>
+                    <span>
+                      @if (crew.members && crew.members.length > 0) {
+                        @for (m of crew.members; let i = $index; track i) {
+                          <span class="member-chip">{{ displayMemberName(m) }}</span>
+                        }
+                      } @else { — }
+                    </span>
+                  </div>
+                </div>
               </mat-card-content>
             </mat-card>
-          </div>
-        </div>
+          </section>
         }
-      </div>
-    </section>
 
-    <!-- COLUMNA DERECHA: 2 filas -->
-    <div class="right-stack">
-      <!-- Fila 1 (auto): Cuadrilla asignada -->
-      @if (currentCuadrilla(); as crew) {
-      <section class="form-section crew-section">
-        <h2 class="section-title"><mat-icon>engineering</mat-icon>Cuadrilla asignada</h2>
-        <mat-card class="glass-container">
-          <mat-card-content>
-            <div class="form-grid">
-              <div>
-                <strong>Nombre de cuadrilla</strong><br>
-                <span>{{ crew.name }}</span>
-              </div>
+        <!-- Fila 2 (1fr): Agregar comentario (ocupa el resto) -->
+        <section class="form-section comment-section">
+          <h2 class="section-title"><mat-icon>comment</mat-icon>Agregar Comentario</h2>
 
-              <div>
-                <strong>Área</strong><br>
-                <span>{{ displayArea(crew.area) }}</span>
-              </div>
+          <form [formGroup]="commentForm" (ngSubmit)="submitComment()" class="comment-form">
+            <mat-form-field appearance="outline" class="full-width fill-height">
+              <mat-label>Comentario</mat-label>
+              <textarea matInput formControlName="description" class="grow-textarea"></textarea>
 
-              <div>
-                <strong>Turno</strong><br>
-                <span>{{ displayShift(crew.shift) }}</span>
-              </div>
+              @if (commentForm.get('description')?.hasError('required')) {
+                <mat-error>El comentario es obligatorio</mat-error>
+              }
+            </mat-form-field>
 
-              <div>
-                <strong>Disponible</strong><br>
-                <span>{{ crew.available ? 'Sí' : 'No' }}</span>
-              </div>
-
-              <div class="full-width">
-                <strong>Supervisor</strong><br>
-                <span>
-                  @if (currentSupervisor(); as sup) {
-                    {{
-                      (sup.name || '')
-                      + (sup.first_lastname ? ' ' + sup.first_lastname : '')
-                      + (sup.second_lastname ? ' ' + sup.second_lastname : '')
-                    }}
-                    @if (sup.phone) { · {{ sup.phone }} }
-                    @if (sup.email) { · {{ sup.email }} }
-                  } @else { — }
-                </span>
-              </div>
-
-              <div class="full-width">
-                <strong>Integrantes</strong><br>
-                <span>
-                  @if (crew.members && crew.members.length > 0) {
-                    @for (m of crew.members; let i = $index; track i) {
-                      <span class="member-chip">{{ displayMemberName(m) }}</span>
-                    }
-                  } @else { — }
-                </span>
-              </div>
+            <div class="full-width align-end">
+              <button mat-raised-button color="primary" type="submit" [disabled]="!commentForm.valid">
+                <mat-icon>send</mat-icon> Enviar Comentario
+              </button>
             </div>
-          </mat-card-content>
-        </mat-card>
-      </section>
-      }
-
-      <!-- Fila 2 (1fr): Agregar comentario (ocupa el resto) -->
-      <section class="form-section comment-section">
-        <h2 class="section-title"><mat-icon>comment</mat-icon>Agregar Comentario</h2>
-        <form [formGroup]="commentForm" (ngSubmit)="submitComment()" class="comment-form">
-          <mat-form-field appearance="outline" class="full-width fill-height">
-            <mat-label>Comentario</mat-label>
-            <textarea matInput formControlName="description" class="grow-textarea"></textarea>
-          </mat-form-field>
-          <div class="full-width align-end">
-            <button mat-raised-button color="primary" type="submit" [disabled]="!commentForm.valid">
-              <mat-icon>send</mat-icon> Enviar Comentario
-            </button>
-          </div>
-        </form>
-      </section>
+          </form>
+        </section>
+      </div>
     </div>
-  </div>
   }
 
   <div class="datos-container">
@@ -195,92 +208,115 @@
 
       <!-- CIUDADANO -->
       @if (currentUser?.role?.name !== 'user') {
-      <section class="form-section">
-        <h2 class="section-title"><mat-icon>person</mat-icon>Datos del Ciudadano</h2>
-        <div class="form-grid">
-          <mat-form-field appearance="outline">
-            <mat-icon matPrefix>badge</mat-icon>
-            <mat-label>Nombre(s)</mat-label>
-            <input matInput formControlName="name" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-icon matPrefix>person</mat-icon>
-            <mat-label>Primer Apellido</mat-label>
-            <input matInput formControlName="first_lastname" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-icon matPrefix>person</mat-icon>
-            <mat-label>Segundo Apellido</mat-label>
-            <input matInput formControlName="second_lastname" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-icon matPrefix>call</mat-icon>
-            <mat-label>Teléfono</mat-label>
-            <input matInput formControlName="phone" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-icon matPrefix>email</mat-icon>
-            <mat-label>Correo electrónico</mat-label>
-            <input matInput type="email" formControlName="email" />
-          </mat-form-field>
-        </div>
-      </section>
+        <section class="form-section">
+          <h2 class="section-title"><mat-icon>person</mat-icon>Datos del Ciudadano</h2>
+
+          <div class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-icon matPrefix>badge</mat-icon>
+              <mat-label>Nombre(s)</mat-label>
+              <input matInput formControlName="name" />
+              @if (reportForm.get('name')?.hasError('required')) {
+                <mat-error>Nombre obligatorio</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-icon matPrefix>person</mat-icon>
+              <mat-label>Primer Apellido</mat-label>
+              <input matInput formControlName="first_lastname" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-icon matPrefix>person</mat-icon>
+              <mat-label>Segundo Apellido</mat-label>
+              <input matInput formControlName="second_lastname" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-icon matPrefix>call</mat-icon>
+              <mat-label>Teléfono</mat-label>
+              <input matInput formControlName="phone" />
+              @if (reportForm.get('phone')?.hasError('required')) {
+                <mat-error>Teléfono obligatorio</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-icon matPrefix>email</mat-icon>
+              <mat-label>Correo electrónico</mat-label>
+              <input matInput type="email" formControlName="email" />
+              @if (reportForm.get('email')?.hasError('required')) {
+                <mat-error>Correo obligatorio</mat-error>
+              }
+              @if (reportForm.get('email')?.hasError('email')) {
+                <mat-error>Correo inválido</mat-error>
+              }
+            </mat-form-field>
+          </div>
+        </section>
       }
 
       <div class="report-columns">
         <!-- UBICACIÓN -->
         <section class="form-section location-section">
           <div class="form-grid grouped-fields" formGroupName="location">
+
             <!-- Dirección Manual -->
             @if (!showMap) {
-            <div class="location-group full-width">
-              <h3 class="group-label"><mat-icon>home</mat-icon> Dirección</h3>
-              <button matButton="filled" type="button" color="primary" (click)="toggleMap()">
-                <mat-icon>map</mat-icon> Seleccionar en Mapa
-              </button>
-              <div class="form-grid">
-                <mat-form-field appearance="outline"><mat-label>Calle</mat-label><input matInput formControlName="street" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>No. exterior</mat-label><input matInput formControlName="extNumber" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>No. interior</mat-label><input matInput formControlName="intNumber" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Entre calles</mat-label><input matInput formControlName="crossStreets" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Colonia / Barrio</mat-label><input matInput formControlName="neighborhood" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Municipio</mat-label><input matInput formControlName="locality" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Ciudad</mat-label><input matInput formControlName="city" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Estado</mat-label><input matInput formControlName="state" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Código Postal</mat-label><input matInput formControlName="postalCode" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>País</mat-label><input matInput formControlName="country" /></mat-form-field>
-                <mat-form-field appearance="outline"><mat-label>Referencias</mat-label><input matInput formControlName="references" /></mat-form-field>
+              <div class="location-group full-width">
+                <h3 class="group-label"><mat-icon>home</mat-icon> Dirección</h3>
+
+                <button matButton="filled" type="button" color="primary" (click)="toggleMap()">
+                  <mat-icon>map</mat-icon> Seleccionar en Mapa
+                </button>
+
+                <div class="form-grid">
+                  <mat-form-field appearance="outline"><mat-label>Calle</mat-label><input matInput formControlName="street" /></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>No. exterior</mat-label><input matInput formControlName="extNumber" /></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>No. interior</mat-label><input matInput formControlName="intNumber" /></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>Entre calles</mat-label><input matInput formControlName="crossStreets" /></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>Colonia / Barrio</mat-label><input matInput formControlName="neighborhood" /></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>Municipio</mat-label><input matInput formControlName="locality" /></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>Ciudad</mat-label><input matInput formControlName="city" /></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>Estado</mat-label><input matInput formControlName="state" /></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>Código Postal</mat-label><input matInput formControlName="postalCode" /></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>País</mat-label><input matInput formControlName="country" /></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>Referencias</mat-label><input matInput formControlName="references" /></mat-form-field>
+                </div>
               </div>
-            </div>
             }
 
             <!-- Mapa -->
             @if (showMap) {
-            <div class="location-group full-width map-section">
-              <h3 class="group-label"><mat-icon>pin_drop</mat-icon> Selección en Mapa</h3>
-              <div class="map-container-wrapper">
-                <div class="map-toolbar">
-                  <button matIconButton type="button" color="warn" (click)="toggleMap()" matTooltip="Cerrar mapa">
-                    <mat-icon>close</mat-icon>
-                  </button>
+              <div class="location-group full-width map-section">
+                <h3 class="group-label"><mat-icon>pin_drop</mat-icon> Selección en Mapa</h3>
+
+                <div class="map-container-wrapper">
+                  <div class="map-toolbar">
+                    <button matIconButton type="button" color="warn" (click)="toggleMap()" matTooltip="Cerrar mapa">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                  <div #mapContainer id="map" class="map-container"></div>
                 </div>
-                <div #mapContainer id="map" class="map-container"></div>
               </div>
-            </div>
             }
+
           </div>
         </section>
 
         <!-- DETALLES DEL REPORTE -->
         <section class="form-section">
           <h2 class="section-title"><mat-icon>assignment</mat-icon>Detalles del Reporte</h2>
+
           <div class="form-grid">
             <mat-form-field appearance="outline">
               <mat-icon matPrefix>alternate_email</mat-icon>
               <mat-label>Origen</mat-label>
               <mat-select formControlName="source">
                 @for (source of sources(); track source._id) {
-                <mat-option [value]="source._id">{{ source.name }}</mat-option>
+                  <mat-option [value]="source._id">{{ source.name }}</mat-option>
                 }
               </mat-select>
             </mat-form-field>
@@ -290,39 +326,45 @@
               <mat-label>Problema</mat-label>
               <mat-select formControlName="problem" (selectionChange)="onTemaSelected($event.value)">
                 @for (option of temas(); track option._id) {
-                <mat-option [value]="option._id">{{ option.name }}</mat-option>
+                  <mat-option [value]="option._id">{{ option.name }}</mat-option>
                 }
               </mat-select>
+              @if (reportForm.get('problem')?.hasError('required')) {
+                <mat-error>Selecciona un problema</mat-error>
+              }
             </mat-form-field>
 
             @if (areaEditable() || reportForm.get('problem')?.value) {
-            <mat-form-field appearance="outline">
-              <mat-icon matPrefix>groups</mat-icon>
-              <mat-label>Seleccionar Área</mat-label>
-              <mat-select [value]="selectedAreaId" (selectionChange)="onManualAreaSelected($event.value)">
-                @for (area of areas(); track area._id) {
-                <mat-option [value]="area._id">{{ area.name }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-icon matPrefix>groups</mat-icon>
+                <mat-label>Seleccionar Área</mat-label>
+                <mat-select [value]="selectedAreaId" (selectionChange)="onManualAreaSelected($event.value)">
+                  @for (area of areas(); track area._id) {
+                    <mat-option [value]="area._id">{{ area.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
             }
 
             @if (showLuminarias()) {
-            <mat-form-field appearance="outline">
-              <mat-icon matPrefix>lightbulb</mat-icon>
-              <mat-label>Luminaria</mat-label>
-              <mat-select formControlName="luminaria">
-                @for (l of luminarias(); track l._id) {
-                <mat-option [value]="l._id">{{ l.code }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-icon matPrefix>lightbulb</mat-icon>
+                <mat-label>Luminaria</mat-label>
+                <mat-select formControlName="luminaria">
+                  @for (l of luminarias(); track l._id) {
+                    <mat-option [value]="l._id">{{ l.code }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
             }
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-icon matPrefix>notes</mat-icon>
               <mat-label>Descripción del problema</mat-label>
               <textarea matInput formControlName="description" rows="3"></textarea>
+              @if (reportForm.get('description')?.hasError('required')) {
+                <mat-error>Describe el problema</mat-error>
+              }
             </mat-form-field>
           </div>
         </section>
@@ -350,24 +392,24 @@
           </div>
 
           @if (previewUrls.length > 0) {
-          <div class="image-preview-grid">
-            @for (url of previewUrls; track url) {
-            <div class="preview-card">
-              <img [src]="url" alt="Preview" />
-              <div class="preview-actions">
-                <button mat-icon-button type="button" (click)="removeImage(url)" matTooltip="Eliminar">
-                  <mat-icon color="warn">delete</mat-icon>
-                </button>
-              </div>
+            <div class="image-preview-grid">
+              @for (url of previewUrls; track url) {
+                <div class="preview-card">
+                  <img [src]="url" alt="Preview" />
+                  <div class="preview-actions">
+                    <button mat-icon-button type="button" (click)="removeImage(url)" matTooltip="Eliminar">
+                      <mat-icon color="warn">delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
-            }
-          </div>
           } @else {
-          <div class="empty-upload">
-            <mat-icon (click)="fileInput.click()">add_photo_alternate</mat-icon>
-            <p>No has subido imágenes aún.</p>
-            <small>Puedes subir hasta 5 imágenes como evidencia.</small>
-          </div>
+            <div class="empty-upload">
+              <mat-icon (click)="fileInput.click()">add_photo_alternate</mat-icon>
+              <p>No has subido imágenes aún.</p>
+              <small>Puedes subir hasta 5 imágenes como evidencia.</small>
+            </div>
           }
         </section>
       </div>
@@ -377,7 +419,9 @@
 
 <!-- BOTÓN FLOTANTE DE GUARDADO -->
 <div class="fab-submit">
-  <button mat-fab extended (click)="submitForm()">
+  <button mat-fab extended
+          (click)="submitForm()"
+          [disabled]="!reportForm.valid">
     <mat-icon>save</mat-icon>
     Guardar
   </button>

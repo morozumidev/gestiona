@@ -7,16 +7,15 @@ import { provideRouter } from '@angular/router';
 import { CookieService } from 'ngx-cookie-service';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { routes } from './app.routes';
-import {
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
 import { authInterceptor } from './interceptors/auth-interceptor';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideHttpClient, withInterceptorsFromDi, withFetch, withInterceptors } from '@angular/common/http';
+import {
+  provideHttpClient,
+  withInterceptorsFromDi,
+  withFetch,
+  withInterceptors,
+} from '@angular/common/http';
 import { JWT_OPTIONS, JwtHelperService } from '@auth0/angular-jwt';
-import { provideServerRendering, withRoutes } from '@angular/ssr';
-import { serverRoutes } from './app.routes.server';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,15 +24,16 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes),
-    provideServerRendering(withRoutes(serverRoutes)),
-    provideClientHydration(withEventReplay()),
+
+    // ❌ REMOVE provideServerRendering from here
+
     provideHttpClient(
       withInterceptorsFromDi(),
       withInterceptors([authInterceptor]),
-      withFetch()),
+      withFetch(),
+    ),
     provideNativeDateAdapter(),
     JwtHelperService,
     { provide: JWT_OPTIONS, useValue: {} },
-
   ],
 };
