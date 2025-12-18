@@ -4,11 +4,11 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:pm2": "node scripts/start-pm2.cjs",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:gestiona": "node dist/gestiona/server/server.mjs",
-    "postbuild": "bash deploy/deploy_gestiona.sh"
+    "serve:ssr:gestiona": "node dist/gestiona/server/server.mjs"
   },
   "private": true,
   "dependencies": {

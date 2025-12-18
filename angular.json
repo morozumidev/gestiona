@@ -66,18 +66,19 @@
           "builder": "@angular/build:dev-server",
           "options": {
             "host": "0.0.0.0",
-            "port": 8787,
+            "port": 4200,
             "ssl": false,
             "buildTarget": "gestiona:build:development",
             "allowedHosts": [
-              "civis-laantigua.morozumi.com.mx",
+              "civis.creativamin.com",
               "localhost",
               "127.0.0.1"
             ]
           },
           "configurations": {
             "production": {
-              "buildTarget": "gestiona:build:production"
+              "buildTarget": "gestiona:build:production",
+              "port": 8787
             },
             "development": {
               "buildTarget": "gestiona:build:development"

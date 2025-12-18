@@ -45,10 +45,14 @@ app.use(fallback);
 
 // levanta en HTTP (Nginx hace el TLS)
 if (isMainModule(import.meta.url) || process.env['pm_id']) {
-  const port = Number(process.env['PORT'] ?? 7002);
+  const nodeEnv = (process.env['NODE_ENV'] ?? '').toLowerCase();
+  const runningInPm2 = Boolean(process.env['pm_id']);
+  const isProd = runningInPm2 || nodeEnv === 'production';
+  const defaultPort = isProd ? 8787 : 4200;
+  const port = Number(process.env['PORT'] ?? defaultPort);
   const host = '0.0.0.0';
   app.listen(port, host, () => {
-    console.log(`SSR listening on http://${host}:${port}`);
+    console.log(`SSR listening on http://${host}:${port} (${isProd ? 'prod' : 'dev'})`);
   });
 }
 
