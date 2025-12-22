@@ -9,8 +9,9 @@ export interface User {
   email: string;
   phone: string;
   password?: string; // opcional porque no se debe exponer
-  role?: string; // Puede ser ID o modelo expandido
-  area?: string; // Puede ser ID o modelo expandido
+  role?: Role | string | null; // Puede ser ID o modelo expandido
+  area?: Area | string | null; // Puede ser ID o modelo expandido
+  status?: 'active' | 'inactive';
   createdAt?: string;
   updatedAt?: string;
 }

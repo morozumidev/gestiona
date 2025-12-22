@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { of } from 'rxjs';
 import { Luminarias } from './luminarias';
+import { CatalogsService } from '../../../services/catalog-service';
 
 describe('Luminarias', () => {
   let component: Luminarias;
@@ -8,7 +9,13 @@ describe('Luminarias', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Luminarias]
+      imports: [Luminarias],
+      providers: [
+        {
+          provide: CatalogsService,
+          useValue: { getLuminariasOverview: () => of([]) },
+        },
+      ],
     })
     .compileComponents();
 

@@ -375,7 +375,7 @@
           <h2 class="section-title">
             <mat-icon>photo_camera</mat-icon>
             Evidencia Fotográfica
-            <span class="image-badge">({{ previewUrls.length }} imágenes)</span>
+            <span class="image-badge">({{ galleryImagesCount }} en galería)</span>
           </h2>
 
           <div class="image-actions">
@@ -384,9 +384,15 @@
               Subir Imágenes
             </button>
 
-            <button mat-raised-button color="accent" type="button" (click)="openGallery()">
+            <button mat-raised-button color="accent" type="button" class="gallery-button"
+              (click)="openGallery()" [disabled]="galleryImagesCount === 0">
               <mat-icon>photo_library</mat-icon>
               Ver Galería
+              @if (galleryImagesCount > 0) {
+                <span class="gallery-count">{{ galleryImagesCount }}</span>
+              } @else {
+                <span class="gallery-count gallery-count--empty">Sin fotos</span>
+              }
             </button>
 
             <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" hidden multiple />

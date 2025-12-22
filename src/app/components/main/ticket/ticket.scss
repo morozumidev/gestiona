@@ -355,6 +355,28 @@
 
       mat-icon { margin-right: 0.5rem; }
     }
+
+    .gallery-button {
+      display: inline-flex;
+      align-items: center;
+
+      .gallery-count {
+        margin-left: 0.6rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        background: var(--mat-sys-primary);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: 0.2px;
+      }
+
+      .gallery-count--empty {
+        background: rgba(0, 0, 0, 0.15);
+        color: #444;
+      }
+    }
   }
 
   .image-preview-grid {

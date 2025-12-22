@@ -1070,6 +1070,16 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   }
 
   // ---------- Imágenes ----------
+  private get storedImages(): string[] {
+    const images = this.reportForm.get('images')?.value;
+    if (!Array.isArray(images)) return [];
+    return images.filter((img): img is string => typeof img === 'string' && img.trim().length > 0);
+  }
+
+  protected get galleryImagesCount(): number {
+    return this.storedImages.length;
+  }
+
   protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -1104,7 +1114,11 @@ export class TicketManagement implements AfterViewInit, OnDestroy, OnInit {
   }
 
   protected openGallery(): void {
-    const images = this.reportForm.get('images')?.value || [];
+    const images = this.storedImages;
+    if (!images.length) {
+      this.snack.open('Este ticket no tiene fotos en la galería.', 'Ok', { duration: 2500 });
+      return;
+    }
     this.dialog.open(GalleryDialog, {
       data: { images },
       panelClass: 'image-dialog',

@@ -1,164 +1,402 @@
-<div class="users-container container fadeIn">
-  <!-- Toolbar -->
-  <header class="toolbar glass-card compact-header">
-    <div class="title">
-      <mat-icon aria-hidden="true">group</mat-icon>
-      <span>Usuarios</span>
-      <span class="counter">· {{ total() }}</span>
+<div class="users-page">
+  <header class="hero glass-card">
+    <div class="hero-left">
+      <span class="eyebrow">Administracion</span>
+      <h1>Usuarios</h1>
+      <p class="subtitle">Controla roles, areas y accesos con un panel en tiempo real.</p>
+      <div class="hero-actions">
+        <button mat-stroked-button (click)="refresh()" [disabled]="loading()">
+          <mat-icon>refresh</mat-icon>
+          Actualizar
+        </button>
+        <button mat-flat-button color="primary" (click)="newUser()">
+          <mat-icon>person_add</mat-icon>
+          Nuevo usuario
+        </button>
+      </div>
     </div>
-    <div class="spacer"></div>
-    <button mat-flat-button color="primary" class="btn-new scaleIn" (click)="newUser()">
-      <mat-icon>person_add</mat-icon>
-      Nuevo
-    </button>
+    <div class="hero-stats">
+      <div class="stat-card">
+        <span class="label">Total</span>
+        <span class="value">{{ stats().total }}</span>
+      </div>
+      <div class="stat-card tone-good">
+        <span class="label">Activos</span>
+        <span class="value">{{ stats().active }}</span>
+      </div>
+      <div class="stat-card tone-bad">
+        <span class="label">Inactivos</span>
+        <span class="value">{{ stats().inactive }}</span>
+      </div>
+      <div class="stat-card tone-warn">
+        <span class="label">Altas 30d</span>
+        <span class="value">{{ stats().recent30 }}</span>
+      </div>
+    </div>
   </header>
 
-  <!-- Filtros -->
-  <section class="search-field glass-card">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="w-flex">
-      <mat-label>Buscar</mat-label>
-      <mat-icon matPrefix>search</mat-icon>
-      <input matInput [formControl]="filtersForm.controls.search" (keyup.enter)="page.set(1)"
-        placeholder="Nombre, correo, teléfono" />
-      <button mat-icon-button matSuffix type="button" aria-label="Limpiar búsqueda"
-        (click)="filtersForm.controls.search.setValue(''); page.set(1)">
-        <mat-icon>close</mat-icon>
+  <section class="filters glass-card">
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [formControl]="filtersForm.controls.search" placeholder="Nombre, correo, telefono" />
+        <button mat-icon-button matSuffix type="button" (click)="filtersForm.controls.search.setValue('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Rol</mat-label>
+        <mat-icon matPrefix>verified_user</mat-icon>
+        <mat-select [formControl]="filtersForm.controls.role">
+          <mat-option [value]="">Todos los roles</mat-option>
+          @for (role of roles(); track role._id) {
+            <mat-option [value]="role._id">{{ role.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Area</mat-label>
+        <mat-icon matPrefix>apartment</mat-icon>
+        <mat-select [formControl]="filtersForm.controls.area">
+          <mat-option [value]="">Todas las areas</mat-option>
+          @for (area of areas(); track area._id) {
+            <mat-option [value]="area._id">{{ area.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="chip-row">
+      <button type="button" class="chip" [class.active]="filtersForm.controls.status.value === ''" (click)="setStatusFilter('')">
+        Todos <span class="count">{{ stats().total }}</span>
       </button>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Seleccionar Rol</mat-label>
-      <mat-icon matPrefix>verified_user</mat-icon>
-      <mat-select [formControl]="filtersForm.controls.role">
-        <mat-option [value]="">Todos los roles</mat-option>
-        @for (role of roles(); track role._id) {
-        <mat-option [value]="role._id">{{ role.name }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Seleccionar Área</mat-label>
-      <mat-icon matPrefix>apartment</mat-icon>
-      <mat-select [formControl]="filtersForm.controls.area">
-        <mat-option [value]="">Todas las áreas</mat-option>
-        @for (area of areas(); track area._id) {
-        <mat-option [value]="area._id">{{ area.name }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <div class="filters-actions">
-      <button mat-stroked-button type="button" (click)="clearFilters()">
+      <button type="button" class="chip tone-good" [class.active]="filtersForm.controls.status.value === 'active'" (click)="setStatusFilter('active')">
+        Activos <span class="count">{{ stats().active }}</span>
+      </button>
+      <button type="button" class="chip tone-bad" [class.active]="filtersForm.controls.status.value === 'inactive'" (click)="setStatusFilter('inactive')">
+        Inactivos <span class="count">{{ stats().inactive }}</span>
+      </button>
+      <div class="chip tone-warn static">
+        Altas 7d <span class="count">{{ stats().recent7 }}</span>
+      </div>
+      <button mat-stroked-button class="chip-clear" type="button" (click)="clearFilters()">
         <mat-icon>filter_alt_off</mat-icon>
-        Limpiar
+        Limpiar filtros
       </button>
+    </div>
+
+    <div class="insights">
+      <div class="insight">
+        <span class="insight-label">Roles principales</span>
+        <div class="pill-group">
+          @if (overview()?.byRole?.length) {
+            @for (role of overview()?.byRole; track role._id) {
+              <span class="pill">{{ role.name }} <strong>{{ role.count }}</strong></span>
+            }
+          } @else {
+            <span class="pill muted">Sin datos</span>
+          }
+        </div>
+      </div>
+      <div class="insight">
+        <span class="insight-label">Areas principales</span>
+        <div class="pill-group">
+          @if (overview()?.byArea?.length) {
+            @for (area of overview()?.byArea; track area._id) {
+              <span class="pill">{{ area.name }} <strong>{{ area.count }}</strong></span>
+            }
+          } @else {
+            <span class="pill muted">Sin datos</span>
+          }
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- Tabla -->
-  <section class="table-container glass-card">
+  @if (selectionState().selected > 0) {
+    <section class="bulk-bar glass-card">
+      <div class="bulk-left">
+        <mat-icon>task_alt</mat-icon>
+        <span>{{ selectionState().selected }} seleccionados</span>
+        <button mat-button type="button" (click)="clearBulkSelection()">
+          Limpiar
+        </button>
+      </div>
+      <div class="bulk-actions">
+        <button mat-stroked-button type="button" (click)="bulkSetStatus('active')" [disabled]="actionBusy()">
+          Activar
+        </button>
+        <button mat-stroked-button type="button" (click)="bulkSetStatus('inactive')" [disabled]="actionBusy()">
+          Desactivar
+        </button>
+        <button mat-stroked-button type="button" [matMenuTriggerFor]="bulkRoleMenu" [disabled]="actionBusy()">
+          Asignar rol
+        </button>
+        <button mat-stroked-button type="button" [matMenuTriggerFor]="bulkAreaMenu" [disabled]="actionBusy()">
+          Asignar area
+        </button>
+        <button mat-stroked-button color="warn" type="button" (click)="bulkDelete()" [disabled]="actionBusy()">
+          Eliminar
+        </button>
+      </div>
+    </section>
+  }
 
-
-    <table mat-table [dataSource]="items()" class="glass-table" aria-label="Tabla de usuarios">
-      <!-- Colgroup para alineación perfecta -->
-      <colgroup>
-        <col class="col-name" />
-        <col class="col-email" />
-        <col class="col-role" />
-        <col class="col-area" />
-        <col class="col-actions" />
-      </colgroup>
-
-      <!-- Nombre -->
-      <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef (click)="onSort('name')" class="sortable" scope="col">
-          <span>Nombre</span>
-          <mat-icon class="sort" [class.active]="sortField() === 'name'">
-            {{ sortField() === 'name' && sortDirection() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
-          </mat-icon>
-        </th>
-        <td mat-cell *matCellDef="let row">
-          <div class="name">
-            <mat-icon class="avatar-icon" aria-hidden="true">person</mat-icon>
-            <div class="name-stack">
-              <div class="primary" [matTooltip]="row.name">{{ row.name }}</div>
-              @if (row.first_lastname || row.second_lastname) {
-              <div class="secondary lastname">
-                {{ (row.first_lastname || '') + ' ' + (row.second_lastname || '') }}
-              </div>
-              }
-            </div>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Correo -->
-      <ng-container matColumnDef="email">
-        <th mat-header-cell *matHeaderCellDef (click)="onSort('email')" class="sortable" scope="col">
-          <span>Correo</span>
-          <mat-icon class="sort" [class.active]="sortField() === 'email'">
-            {{ sortField() === 'email' && sortDirection() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
-          </mat-icon>
-        </th>
-        <td mat-cell *matCellDef="let row">
-          <span class="cell-ellipsis" [matTooltip]="row.email">{{ row.email }}</span>
-        </td>
-      </ng-container>
-
-      <!-- Rol -->
-      <ng-container matColumnDef="role">
-        <th mat-header-cell *matHeaderCellDef (click)="onSort('role')" class="sortable" scope="col">
-          <span>Rol</span>
-          <mat-icon class="sort" [class.active]="sortField() === 'role'">
-            {{ sortField() === 'role' && sortDirection() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
-          </mat-icon>
-        </th>
-        <td mat-cell *matCellDef="let row">
-          <span class="role-chip badge badge-primary" appearance="outlined" [matTooltip]="row?.role?.name">
-            {{ row.role.name }}
-          </span>
-        </td>
-      </ng-container>
-
-      <!-- Área -->
-      <ng-container matColumnDef="area">
-        <th mat-header-cell *matHeaderCellDef scope="col">Área</th>
-        <td mat-cell *matCellDef="let row">
-          <span class="cell-ellipsis" [matTooltip]="row?.area?.name || 'Sin área'">
-            {{ row.area.name || 'Sin área' }}
-          </span>
-        </td>
-      </ng-container>
-
-      <!-- Acciones -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef scope="col" class="th-actions">Acciones</th>
-        <td mat-cell *matCellDef="let row" class="td-actions">
-          <button mat-icon-button matTooltip="Editar" (click)="editUser(row)" aria-label="Editar usuario"
-            class="mat-primary">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button matTooltip="Eliminar" (click)="deleteUser(row)" aria-label="Eliminar usuario"
-            class="mat-accent">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns" class="header-sticky"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns" class="data-row example-element-row"></tr>
-    </table>
-
-    @if (!loading() && items().length === 0) {
-    <div class="empty-state glass-card" aria-live="polite">
-      <mat-icon>group_off</mat-icon>
-      <h3>Sin resultados</h3>
-      <p>Intenta ajustar tu búsqueda o filtros.</p>
-    </div>
+  <mat-menu #bulkRoleMenu="matMenu">
+    @for (role of roles(); track role._id) {
+      <button mat-menu-item type="button" (click)="bulkAssignRole(role._id)">
+        {{ role.name }}
+      </button>
     }
+  </mat-menu>
 
-    <mat-paginator [length]="total()" [pageIndex]="page() - 1" [pageSize]="pageSize()"
-      [pageSizeOptions]="[5, 10, 25, 50]" (page)="onPage($event)" aria-label="Paginador de usuarios"></mat-paginator>
+  <mat-menu #bulkAreaMenu="matMenu">
+    @for (area of areas(); track area._id) {
+      <button mat-menu-item type="button" (click)="bulkAssignArea(area._id)">
+        {{ area.name }}
+      </button>
+    }
+  </mat-menu>
+
+  <section class="content-grid">
+    <div class="table-panel glass-card">
+      <div class="panel-header">
+        <div>
+          <h2>Listado de usuarios</h2>
+          <p>{{ total() }} registros encontrados</p>
+        </div>
+        <button mat-icon-button (click)="refresh()" [disabled]="loading()" matTooltip="Actualizar">
+          <mat-icon>sync</mat-icon>
+        </button>
+      </div>
+
+      <table mat-table [dataSource]="items()" class="users-table">
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef>
+            <mat-checkbox
+              [checked]="selectionState().all"
+              [indeterminate]="selectionState().some"
+              (change)="toggleAllCurrent()">
+            </mat-checkbox>
+          </th>
+          <td mat-cell *matCellDef="let row" (click)="$event.stopPropagation()">
+            <mat-checkbox
+              [checked]="isSelected(row)"
+              (change)="toggleRowSelection(row)">
+            </mat-checkbox>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef (click)="onSort('name')" class="sortable">
+            Nombre
+            <mat-icon class="sort" [class.active]="sortField() === 'name'">
+              {{ sortField() === 'name' && sortDirection() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <div class="name-cell">
+              <mat-icon class="avatar">person</mat-icon>
+              <div>
+                <div class="primary">{{ row.name }}</div>
+                <div class="secondary">{{ (row.first_lastname || '') + ' ' + (row.second_lastname || '') }}</div>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="contact">
+          <th mat-header-cell *matHeaderCellDef (click)="onSort('email')" class="sortable">
+            Contacto
+            <mat-icon class="sort" [class.active]="sortField() === 'email'">
+              {{ sortField() === 'email' && sortDirection() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <div class="contact-cell">
+              <span>{{ row.email }}</span>
+              <span class="muted">{{ row.phone || 'Sin telefono' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef (click)="onSort('role')" class="sortable">
+            Rol
+            <mat-icon class="sort" [class.active]="sortField() === 'role'">
+              {{ sortField() === 'role' && sortDirection() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <span class="role-chip">{{ roleName(row) }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="area">
+          <th mat-header-cell *matHeaderCellDef (click)="onSort('area')" class="sortable">
+            Area
+            <mat-icon class="sort" [class.active]="sortField() === 'area'">
+              {{ sortField() === 'area' && sortDirection() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <span class="area-chip">{{ areaName(row) }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef (click)="onSort('status')" class="sortable">
+            Estado
+            <mat-icon class="sort" [class.active]="sortField() === 'status'">
+              {{ sortField() === 'status' && sortDirection() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <span class="status-chip" [class.inactive]="statusTone(row) === 'inactive'">
+              {{ statusLabel(row) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="activity">
+          <th mat-header-cell *matHeaderCellDef (click)="onSort('updatedAt')" class="sortable">
+            Actividad
+            <mat-icon class="sort" [class.active]="sortField() === 'updatedAt'">
+              {{ sortField() === 'updatedAt' && sortDirection() === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+            </mat-icon>
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <div class="activity-cell">
+              <span>Alta {{ row.createdAt | date:'mediumDate' }}</span>
+              <span class="muted">Actualizado {{ row.updatedAt | date:'short' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let row" class="actions-cell">
+            <button mat-icon-button (click)="selectUser(row); $event.stopPropagation()" matTooltip="Ver detalle">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button (click)="editUser(row); $event.stopPropagation()" matTooltip="Editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button [matMenuTriggerFor]="rowMenu" (click)="setMenuUser(row); $event.stopPropagation()" matTooltip="Mas acciones">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" (click)="selectUser(row)" [class.selected]="selectedUser()?._id === row._id"></tr>
+      </table>
+
+      @if (loading()) {
+        <div class="table-state">
+          <mat-icon>sync</mat-icon>
+          <span>Cargando usuarios...</span>
+        </div>
+      }
+
+      @if (!loading() && errorMessage()) {
+        <div class="table-state empty">
+          <mat-icon>error</mat-icon>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      @if (!loading() && items().length === 0) {
+        <div class="table-state empty">
+          <mat-icon>group_off</mat-icon>
+          <span>No hay usuarios con los filtros actuales.</span>
+        </div>
+      }
+
+      <mat-paginator [length]="total()" [pageIndex]="page() - 1" [pageSize]="pageSize()"
+        [pageSizeOptions]="[10, 25, 50, 100]" (page)="onPage($event)">
+      </mat-paginator>
+    </div>
+
+    @if (selectedUser(); as user) {
+      <aside class="detail-panel glass-card">
+        <div class="detail-header">
+          <div>
+            <span class="eyebrow">Detalle</span>
+            <h3>{{ user.name }}</h3>
+            <span class="detail-sub">{{ user.email }}</span>
+          </div>
+          <button mat-icon-button (click)="clearSelection()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-card">
+            <span class="label">Rol</span>
+            <span class="value">{{ roleName(user) }}</span>
+          </div>
+          <div class="detail-card">
+            <span class="label">Area</span>
+            <span class="value">{{ areaName(user) }}</span>
+          </div>
+          <div class="detail-card">
+            <span class="label">Estado</span>
+            <span class="value">{{ statusLabel(user) }}</span>
+          </div>
+          <div class="detail-card">
+            <span class="label">Telefono</span>
+            <span class="value">{{ user.phone || 'Sin telefono' }}</span>
+          </div>
+          <div class="detail-card wide">
+            <span class="label">Creado</span>
+            <span class="value">{{ user.createdAt | date:'fullDate' }}</span>
+          </div>
+          <div class="detail-card wide">
+            <span class="label">Ultima actualizacion</span>
+            <span class="value">{{ user.updatedAt | date:'medium' }}</span>
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          <button mat-stroked-button (click)="toggleStatus(user)" [disabled]="actionBusy()">
+            {{ statusTone(user) === 'inactive' ? 'Activar' : 'Desactivar' }}
+          </button>
+          <button mat-stroked-button (click)="resetPassword(user)" [disabled]="actionBusy()">
+            Resetear contraseña
+          </button>
+          <button mat-flat-button color="primary" (click)="editUser(user)">
+            Editar perfil
+          </button>
+          <button mat-stroked-button color="warn" (click)="deleteUser(user)" [disabled]="actionBusy()">
+            Eliminar usuario
+          </button>
+        </div>
+      </aside>
+    } @else {
+      <aside class="detail-panel glass-card empty">
+        <mat-icon>account_circle</mat-icon>
+        <h3>Selecciona un usuario</h3>
+        <p>Consulta datos, asignaciones y acciones avanzadas.</p>
+      </aside>
+    }
   </section>
 </div>
+
+<mat-menu #rowMenu="matMenu">
+  <button mat-menu-item type="button" (click)="menuUser && toggleStatus(menuUser)">
+    <mat-icon>swap_horiz</mat-icon>
+    Cambiar estado
+  </button>
+  <button mat-menu-item type="button" (click)="menuUser && resetPassword(menuUser)">
+    <mat-icon>vpn_key</mat-icon>
+    Resetear contraseña
+  </button>
+  <button mat-menu-item type="button" (click)="menuUser && deleteUser(menuUser)">
+    <mat-icon>delete</mat-icon>
+    Eliminar
+  </button>
+</mat-menu>

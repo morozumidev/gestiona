@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CoreService } from './core-service';
 import { CatalogSearchRequest, CatalogSearchResponse, Catalog } from '../models/Catalog';
+import { LuminariaOverview } from '../models/LuminariaOverview';
 
 @Injectable({ providedIn: 'root' })
 export class CatalogsService {
@@ -25,4 +26,8 @@ export class CatalogsService {
   }
 
   getTypes() { return this.http.get<string[]>(`${this.base}/types`); }
+
+  getLuminariasOverview() {
+    return this.http.post<LuminariaOverview[]>(`${this.base}/luminarias/overview`, {});
+  }
 }

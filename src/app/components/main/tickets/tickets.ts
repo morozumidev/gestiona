@@ -156,19 +156,23 @@ export class Tickets {
     return ticket.crewAssignments?.filter(a => a.valid !== false).at(-1) || null;
   }
 
-  getAreaName(id: string): string {
+  getAreaName(id: string | null | undefined): string {
+    if (!id) return 'Desconocida';
     return this.areaMap?.get(id) || 'Desconocida';
   }
 
-  getStatusName(statusId: string): string {
+  getStatusName(statusId: string | null | undefined): string {
+    if (!statusId) return 'Sin estado';
     return this.statusMap?.get(statusId) || 'Sin estado';
   }
 
-  getStatusCssClass(statusId: string): string {
+  getStatusCssClass(statusId: string | null | undefined): string {
+    if (!statusId) return 'default';
     return this.statusClassMap?.get(statusId) || 'default';
   }
 
-  getProblemName(problemId: string): string {
+  getProblemName(problemId: string | null | undefined): string {
+    if (!problemId) return 'Sin problema';
     return this.problemMap?.get(problemId) || 'Sin problema';
   }
 

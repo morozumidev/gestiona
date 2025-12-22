@@ -1,4 +1,4 @@
-import { Component, DOCUMENT, Inject, PLATFORM_ID, ViewEncapsulation } from '@angular/core';
+import { Component, DOCUMENT, Inject, OnDestroy, PLATFORM_ID, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { MatCardModule } from '@angular/material/card';
@@ -25,10 +25,14 @@ import { isPlatformBrowser } from '@angular/common';
   ],
 
 })
-export class Login {
+export class Login implements OnDestroy {
   loginForm;
   loginError: string | null = null;
   hidePassword = true;
+  private canvas: HTMLCanvasElement | null = null;
+  private animationFrameId: number | null = null;
+  private resizeHandler?: () => void;
+  private stopAnimation = false;
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
@@ -49,22 +53,36 @@ export class Login {
 
 
   createCanvas(): void {
-    const canvas = document.createElement('canvas');
+    const existing = this.document.getElementById('wave-canvas') as HTMLCanvasElement | null;
+    if (existing) {
+      this.canvas = existing;
+      return;
+    }
+
+    const canvas = this.document.createElement('canvas');
     canvas.id = 'wave-canvas';
-    document.body.appendChild(canvas);
+    canvas.setAttribute('aria-hidden', 'true');
+    this.document.body.appendChild(canvas);
+    this.canvas = canvas;
   }
 
   animateNeuralNet(): void {
-    const canvas = document.getElementById('wave-canvas') as HTMLCanvasElement;
-    const ctx = canvas.getContext('2d')!;
+    const canvas = this.canvas ?? (this.document.getElementById('wave-canvas') as HTMLCanvasElement | null);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    this.canvas = canvas;
+    this.stopAnimation = false;
     let width = canvas.width = window.innerWidth;
     let height = canvas.height = window.innerHeight;
 
-    window.addEventListener('resize', () => {
+    this.resizeHandler = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
       initNodes();
-    });
+    };
+    window.addEventListener('resize', this.resizeHandler);
 
     const nodeCount = 75;
     const maxDistance = 160;
@@ -87,7 +105,8 @@ export class Login {
 
     initNodes();
 
-    function draw() {
+    const draw = () => {
+      if (this.stopAnimation) return;
       ctx.clearRect(0, 0, width, height);
       ctx.globalCompositeOperation = 'screen';
 
@@ -134,10 +153,10 @@ export class Login {
       }
 
       ctx.globalCompositeOperation = 'source-over';
-      requestAnimationFrame(draw);
-    }
+      this.animationFrameId = requestAnimationFrame(draw);
+    };
 
-    draw();
+    this.animationFrameId = requestAnimationFrame(draw);
   }
 
 login(event: any) {
@@ -151,4 +170,18 @@ login(event: any) {
     });
   }
 }
+
+  ngOnDestroy(): void {
+    this.stopAnimation = true;
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
+    if (this.resizeHandler) {
+      window.removeEventListener('resize', this.resizeHandler);
+    }
+    if (this.canvas?.parentElement) {
+      this.canvas.parentElement.removeChild(this.canvas);
+    }
+    this.canvas = null;
+  }
 }

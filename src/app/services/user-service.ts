@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { User } from '../models/User';
 import { CoreService } from './core-service';
+import { UsersOverview } from '../models/UserOverview';
 
 export type UsersSearchRequest = {
   page: number;
@@ -58,6 +59,11 @@ export class UserService {
   // ======== CRUD general ========
   search(req: UsersSearchRequest): Observable<UsersSearchResponse> {
     return this.http.post<UsersSearchResponse>(`${this.base}search`, req);
+  }
+
+  getOverview(req: UsersSearchRequest): Observable<UsersOverview> {
+    const payload = { search: req.search, filters: req.filters };
+    return this.http.post<UsersOverview>(`${this.base}overview`, payload);
   }
 
   getById(id: string): Observable<User> {

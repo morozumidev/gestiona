@@ -105,7 +105,7 @@
           [attr.data-sort-indicator]="getSortIndicator('folio')">
           <mat-icon>pin</mat-icon>
         </th>
-        <td mat-cell *matCellDef="let ticket">
+        <td mat-cell *matCellDef="let ticket" data-label="Folio">
           <span class="badge folio-badge">{{ ticket.folio }}</span>
         </td>
       </ng-container>
@@ -115,7 +115,7 @@
           [attr.data-sort-indicator]="getSortIndicator('problem')">
           <mat-icon>release_alert</mat-icon>
         </th>
-        <td mat-cell *matCellDef="let ticket">
+        <td mat-cell *matCellDef="let ticket" data-label="Problema">
           <span class="badge badge-problema">{{ getProblemName(ticket.problem) }}</span>
         </td>
       </ng-container>
@@ -125,8 +125,8 @@
           [attr.data-sort-indicator]="getSortIndicator('area')">
           <mat-icon>corporate_fare</mat-icon>
         </th>
-        <td mat-cell *matCellDef="let ticket">
-          @if (ticket.areaAssignments?.length) {
+        <td mat-cell *matCellDef="let ticket" data-label="Área">
+          @if (ticket.areaAssignments.length) {
           <span class="badge area-badge">
             {{ getAreaName(ticket.areaAssignments.at(-1)?.area) }}
             <mat-icon [ngClass]="getAreaStatusIconColor(ticket)" [matTooltip]="getAreaStatusTooltip(ticket)"
@@ -152,7 +152,7 @@
           [attr.data-sort-indicator]="getSortIndicator('cuadrilla')">
           <mat-icon>engineering</mat-icon>
         </th>
-        <td mat-cell *matCellDef="let ticket">
+        <td mat-cell *matCellDef="let ticket" data-label="Cuadrilla">
           @if (getLastValidCrew(ticket)) {
           <span class="badge crew-badge">
             {{ getCuadrillaName(getLastValidCrew(ticket)?.cuadrilla) }}
@@ -181,7 +181,7 @@
           [attr.data-sort-indicator]="getSortIndicator('createdAt')">
           <mat-icon>calendar_check</mat-icon>
         </th>
-        <td mat-cell *matCellDef="let ticket">
+        <td mat-cell *matCellDef="let ticket" data-label="Creado">
           <span class="badge badge-fecha">{{ ticket.createdAt | date: 'dd/MM/yyyy' }}</span>
         </td>
       </ng-container>
@@ -191,7 +191,7 @@
           [attr.data-sort-indicator]="getSortIndicator('updatedAt')">
           <mat-icon>event_repeat</mat-icon>
         </th>
-        <td mat-cell *matCellDef="let ticket">
+        <td mat-cell *matCellDef="let ticket" data-label="Actualizado">
           <span class="badge badge-fecha">{{ ticket.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
         </td>
       </ng-container>
@@ -201,7 +201,7 @@
           [attr.data-sort-indicator]="getSortIndicator('status')">
           <mat-icon>flaky</mat-icon>
         </th>
-        <td mat-cell *matCellDef="let ticket">
+        <td mat-cell *matCellDef="let ticket" data-label="Estado">
           <span class="status-badge" [ngClass]="getStatusCssClass(ticket.status)">
             {{ getStatusName(ticket.status) }}
           </span>
@@ -213,7 +213,7 @@
           [attr.data-sort-indicator]="getSortIndicator('semaforo')">
           <mat-icon>traffic</mat-icon>
         </th>
-        <td mat-cell *matCellDef="let ticket">
+        <td mat-cell *matCellDef="let ticket" data-label="Semáforo">
           <span class="semaforo-dot" [ngClass]="getSemaforoColor(ticket.createdAt)"></span>
         </td>
       </ng-container>
@@ -222,7 +222,7 @@
         <th mat-header-cell *matHeaderCellDef>
           <mat-icon>table_edit</mat-icon>
         </th>
-        <td mat-cell *matCellDef="let ticket">
+        <td mat-cell *matCellDef="let ticket" data-label="Acciones">
           @if (hasAnyMenuAction(ticket)) {
           <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Más acciones" matTooltip="Acciones">
             <mat-icon>more_vert</mat-icon>
@@ -305,6 +305,178 @@
       <tr mat-header-row *matHeaderRowDef="displayedColumns" class="sticky-header-row"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
     </table>
+
+    <div class="tickets-mobile-list" aria-label="Listado de tickets">
+      @for (ticket of visibleTickets(); track ticket._id) {
+      <article class="ticket-mobile-card" [attr.data-status]="getStatusCssClass(ticket.status)">
+        <header class="ticket-mobile-header">
+          <div class="ticket-mobile-id">
+            <span class="ticket-label">Folio</span>
+            <span class="ticket-folio">{{ ticket.folio }}</span>
+          </div>
+
+          <div class="ticket-mobile-actions">
+            @if (hasAnyMenuAction(ticket)) {
+            <button mat-icon-button [matMenuTriggerFor]="menuMobile" aria-label="Más acciones"
+              matTooltip="Acciones">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #menuMobile="matMenu">
+              <button mat-menu-item (click)="editTicket(ticket)">
+                <mat-icon>edit</mat-icon>
+                <span>Ver Ticket/Editar</span>
+              </button>
+
+              @if(isAdmin){
+              <button mat-menu-item (click)="deleteTicket(ticket._id)">
+                <mat-icon color="warn">delete</mat-icon>
+                <span>Eliminar</span>
+              </button>
+              }
+
+              @if (isAdminOrAtencionOrFuncionario) {
+              <button mat-menu-item (click)="openAssignmentDialog(ticket)">
+                <mat-icon>assignment_ind</mat-icon>
+                <span>Asignar</span>
+              </button>
+              }
+
+              @if (canRespondToTicket(ticket)) {
+              <button mat-menu-item (click)="respondToAssignment(ticket._id, true)">
+                <mat-icon color="primary">check</mat-icon>
+                <span>Aceptar</span>
+              </button>
+
+              <button mat-menu-item (click)="respondToAssignment(ticket._id, false)">
+                <mat-icon color="warn">close</mat-icon>
+                <span>Rechazar</span>
+              </button>
+              }
+
+              @if (canTechClose(ticket)) {
+              <button mat-menu-item (click)="crewClose(ticket._id)">
+                <mat-icon>task_alt</mat-icon>
+                <span>Cerrar cuadrilla</span>
+              </button>
+              }
+
+              @if (canSendToAttention(ticket)) {
+              <button mat-menu-item (click)="sendToAttention(ticket._id)">
+                <mat-icon>support_agent</mat-icon>
+                <span>Enviar a atención</span>
+              </button>
+              }
+
+              @if (canVerifyWithCitizen(ticket)) {
+              <button mat-menu-item (click)="verifyCitizen(ticket._id, true)">
+                <mat-icon>verified</mat-icon>
+                <span>Verificar ciudadano (resuelto)</span>
+              </button>
+              <button mat-menu-item (click)="verifyCitizen(ticket._id, false)">
+                <mat-icon>published_with_changes</mat-icon>
+                <span>Verificar ciudadano (no resuelto)</span>
+              </button>
+              }
+
+              @if (canReopen(ticket)) {
+              <button mat-menu-item (click)="openReopenDialog(ticket)">
+                <mat-icon>history_toggle_off</mat-icon>
+                <span>Reabrir</span>
+              </button>
+              }
+            </mat-menu>
+            }
+          </div>
+        </header>
+
+        <div class="ticket-mobile-title">
+          <span class="ticket-label">Problema</span>
+          <span class="ticket-mobile-title-text">{{ getProblemName(ticket.problem) }}</span>
+        </div>
+
+        <div class="ticket-mobile-grid ticket-mobile-grid--meta">
+          <div class="ticket-mobile-tile">
+            <span class="ticket-label">Estado</span>
+            <div class="ticket-status">
+              <span class="status-dot"></span>
+              <span class="ticket-value">{{ getStatusName(ticket.status) }}</span>
+            </div>
+          </div>
+
+          <div class="ticket-mobile-tile">
+            <span class="ticket-label">Semáforo</span>
+            <div class="ticket-semaforo">
+              <span class="semaforo-dot" [ngClass]="getSemaforoColor(ticket.createdAt)"></span>
+              <span class="ticket-value ticket-value--muted">
+                {{ getSemaforoColor(ticket.createdAt) | titlecase }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ticket-mobile-grid">
+          <div class="ticket-mobile-tile">
+            <span class="ticket-label">Área</span>
+            @if (ticket.areaAssignments.length) {
+            <div class="ticket-meta-inline">
+              <span class="ticket-value">{{ getAreaName(ticket.areaAssignments.at(-1)?.area) }}</span>
+              <mat-icon [ngClass]="getAreaStatusIconColor(ticket)" [matTooltip]="getAreaStatusTooltip(ticket)"
+                class="area-status-icon">
+                {{ getAreaStatusIcon(ticket) }}
+              </mat-icon>
+            </div>
+            } @else {
+            @if (hasAreaRejection(ticket)) {
+            <div class="ticket-meta-inline">
+              <span class="ticket-value ticket-value--warn">Rechazado</span>
+              <button mat-icon-button [matTooltip]="'Ver detalles de rechazo'" (click)="openRejectionDialog(ticket)">
+                <mat-icon color="warn">info</mat-icon>
+              </button>
+            </div>
+            } @else {
+            <span class="ticket-value ticket-value--muted">Sin asignar</span>
+            }
+            }
+          </div>
+
+          <div class="ticket-mobile-tile">
+            <span class="ticket-label">Cuadrilla</span>
+            @if (getLastValidCrew(ticket)) {
+            <div class="ticket-meta-inline">
+              <span class="ticket-value">{{ getCuadrillaName(getLastValidCrew(ticket)?.cuadrilla) }}</span>
+              <mat-icon [ngClass]="getCrewStatusIconColor(ticket)" [matTooltip]="getCrewStatusTooltip(ticket)"
+                class="crew-status-icon">
+                {{ getCrewStatusIcon(ticket) }}
+              </mat-icon>
+            </div>
+            } @else {
+            @if (hasCrewRejection(ticket)) {
+            <div class="ticket-meta-inline">
+              <span class="ticket-value ticket-value--warn">Rechazado</span>
+              <button mat-icon-button [matTooltip]="'Ver detalles de rechazo'" (click)="openRejectionDialog(ticket)">
+                <mat-icon color="warn">info</mat-icon>
+              </button>
+            </div>
+            } @else {
+            <span class="ticket-value ticket-value--muted">Sin asignar</span>
+            }
+            }
+          </div>
+
+          <div class="ticket-mobile-tile">
+            <span class="ticket-label">Creado</span>
+            <span class="ticket-value ticket-value--mono">{{ ticket.createdAt | date: 'dd/MM/yyyy' }}</span>
+          </div>
+
+          <div class="ticket-mobile-tile">
+            <span class="ticket-label">Actualizado</span>
+            <span class="ticket-value ticket-value--mono">{{ ticket.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+      </article>
+      }
+    </div>
   </div>
 
   <mat-paginator [length]="totalTickets()" [pageSize]="pageSize()" [pageIndex]="page() - 1"
